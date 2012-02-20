@@ -114,18 +114,28 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def  checkLogin(self):
         url = 'http://real-debrid.com/lib/api/account.php'
         source = self.GetURL(url)
-        if re.search('expiration', source):
+        if source is not None and re.search('expiration', source):
             return False
         else:
             return True
     
     #SiteAuth methods
     def login(self):
-        if self.checkLogin(): 
-            login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
+        if self.checkLogin():
+            cj = cookielib.LWPCookieJar()
+            login_data = urllib.urlencode({'user' : self.username, 'pass' : self.password})
             url = 'https://real-debrid.com/ajax/login.php?' + login_data
-            print url
-            source = self.GetURL(url)
+            req = urllib2.Request(url)
+            req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+            cj = cookielib.LWPCookieJar()
+            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+
+            #do the login and get the response
+            response = opener.open(req)
+            source = response.read()
+            response.close()
+            cj.save(self.cookie_file)
+            print source
             if re.search('OK', source):
                 return True
             else:
