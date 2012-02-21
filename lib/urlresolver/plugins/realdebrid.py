@@ -103,6 +103,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def valid_url(self, url, host):
         print 'in valid_url %s : %s' % (url, host)
         tmp = re.compile('//(.+?)/').findall(url)
+        if len(tmp) == 0:
+            return False
         print 'r is %s ' % tmp[0]
         domain = tmp[0].replace('www.', '')
         print 'domain is %s ' % domain
