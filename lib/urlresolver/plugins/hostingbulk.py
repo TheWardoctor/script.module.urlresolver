@@ -24,69 +24,55 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 
-class VeohResolver(Plugin, UrlResolver, PluginSettings):
+class hostingbulkResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "veoh"
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
-        self.net = Net()
 
     def get_media_url(self, host, media_id):
         
         print 'host %s media_id %s' %(host, media_id)
-##        url = 'http://www.veoh.com/rest/video/'+media_id+'/details'
-##        html = net.http_GET(url).content
-##        if html == "<error>"
-##            print 'coult not obtain video url'
-##            return False
-##        file = re.compile('fullPreviewHashLowPath="(.+?)"').findall(html)
-##        if len(file) == 0
-##            print 'coult not obtain video url'
-##            return False
-
-        html = self.net.http_GET("http://www.veoh.com/iphone/views/watch.php?id=" + media_id + "&__async=true&__source=waBrowse").content
-        if re.search('This video is not available on mobile', html):
-            print 'could not obtain video url'
-            return False
-
-        r = re.compile("watchNow\('(.+?)'").findall(html)
-	if (len(r) > 0 ):
-            return r[0]
+        html = net.http_GET("http://www.hostingbulk.com/" + media_id + ".html").content
+        m = re.match('addParam|(?P<port>)|(?P<ip4>)|(?P<ip3>)|(?P<ip2>)|(?P<ip1>).+?video|(?P<file>)|',html)
+	if (len(m) > 0 ):
+            videoLink = 'http://'+m.group("ip1")+'.'+m.group("ip2")+'.'+m.group("ip3")+'.'+m.group("ip4")+':'+m.group("port")+'/d/'+m.group("file")+'/video.flv?start=0'
+            print 'video id is %' % videoLink
+            return videoLink
 
         print 'could not obtain video url'
         return False
 
 
     def get_url(self, host, media_id):
-        return 'http://veoh.com/watch/%s' % media_id
+        return 'http://hostingbulk.com/%s' % media_id
 
 
     def get_host_and_id(self, url):
         r = None
         video_id = None
         
-        if re.search('permalinkId=', url):
-            r = re.compile('permalinkId=(.+?)(&)').findall(url)
+        if re.search('embed-', url):
+            r = re.compile('embed-(.+?).html').findall(url)
         elif re.search('watch/', url):
-            r = re.compile('watch/(.+?)').findall(url)
+            r = re.compile('.com/(.+?).html').findall(url)
             
         if r is not None and len(r) > 0:
             video_id = r[0]
             
         if video_id:
-            return ('veoh.com', video_id)
+            return ('hostingbulk.com', video_id)
         else:
-            common.addon.log_error('veoh: video id not found')
+            common.addon.log_error('hostingbulk: video id not found')
             return False
 
     def valid_url(self, url, host):
-        return re.match('http://(.+)?veoh.com/[0-9]+',
-                        url) or 'veoh' in host
+        #return re.match('http://(.+)?hostingbulk.com/[0-9]+', url) or 'hostingbulk' in host
+        return False
 
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
-        xml += '<setting label="This plugin calls the veoh addon - '
+        xml += '<setting label="This plugin calls the hostingbulk addon - '
         xml += 'change settings there." type="lsep" />\n'
         return xml
