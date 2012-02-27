@@ -34,7 +34,7 @@ class VeohResolver(Plugin, UrlResolver, PluginSettings):
         self.net = Net()
 
     def get_media_url(self, host, media_id):
-        
+        print 'veoh resolver: in get_media_url'
         print 'host %s media_id %s' %(host, media_id)
 ##        url = 'http://www.veoh.com/rest/video/'+media_id+'/details'
 ##        html = net.http_GET(url).content
@@ -66,11 +66,11 @@ class VeohResolver(Plugin, UrlResolver, PluginSettings):
     def get_host_and_id(self, url):
         r = None
         video_id = None
-        
+        print 'veoh resolver: in get_host_and_id %s ' % url
         if re.search('permalinkId=', url):
-            r = re.compile('permalinkId=(.+?)(&)').findall(url)
+            r = re.compile('permalinkId=(.+)').findall(url)
         elif re.search('watch/', url):
-            r = re.compile('watch/(.+?)').findall(url)
+            r = re.compile('watch/(.+)').findall(url)
             
         if r is not None and len(r) > 0:
             video_id = r[0]
@@ -82,8 +82,7 @@ class VeohResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        return re.match('http://(.+)?veoh.com/[0-9]+',
-                        url) or 'veoh' in host
+        return re.search('www.veoh.com/watch/.+',url) or re.search('www.veoh.com/.+?permalinkId=.+',url) or 'veoh' in host
 
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)

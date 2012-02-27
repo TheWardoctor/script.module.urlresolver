@@ -70,17 +70,17 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def get_host_and_id(self, url):
+        print 'vidpe resolver: in get_host_and_id %s' % url
         r = None
         video_id = None
         
         if re.search('embed-', url):
-            r = re.compile('embed-(.+?).html').findall(url)
+            r = re.compile('embed-(.+?)-|.html').findall(url)
         elif re.search('.com/', url):
             r = re.compile('.com/(.+?).html').findall(url)
             
         if r is not None and len(r) > 0:
             video_id = r[0]
-        print 'video id is %s' % video_id
         if video_id:
             return (self.get_domain(url), video_id)
         else:
@@ -96,7 +96,7 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
         return domain
 
     def valid_url(self, url, host):
-        return re.match('http://(.+)?(vidpe|hostingcup|hostingbulk).com/[0-9]+', url) or 'vidpe' in host or 'hostingbulk' in host or 'hostingcup' in host
+        return re.search('http://(.+)?(vidpe|hostingcup|hostingbulk).com/.+?.html',url) or 'vidpe' in host or 'hostingbulk' in host or 'hostingcup' in host
 
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
