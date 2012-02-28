@@ -26,7 +26,7 @@ from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
-import xbmc
+import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
 import cookielib
 from t0mm0.common.net import Net
 
@@ -53,12 +53,16 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         print 'in get_media_url %s' % media_id
         url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
         source = self.net.http_GET(url).content
+        dialog = xbmcgui.Dialog()
         print '************* %s' % source
         if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
+            dialog.ok(' Real-Debrid ', ' Your file is unavailable on the hoster ', '', '')
             return None
         if re.search('This hoster is not included in our free offer', source):
+            dialog.ok(' Real-Debrid ', ' This hoster is not included in our free offer ', '', '')            
             return None
         if re.search('No server is available for this hoster.', source):
+            dialog.ok(' Real-Debrid ', ' No server is available for this hoster ', '', '')            
             return None
         link =re.compile('ok"><a href="(.+?)"').findall(source)
         print 'link is %s' % link[0]
