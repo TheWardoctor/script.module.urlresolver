@@ -294,4 +294,14 @@ class PluginSettings(Interface):
         value = common.addon.get_setting('%s_%s' % 
                                                 (self.__class__.__name__, key))
         return value
+        
+    
+    def isUniversal():
+    	'''
+    		You need to override this to return True, if you are implementing a univeral resolver 
+    		like real-debrid etc., which handles multiple hosts.
+    	'''
+    	
+    	return False
+
     
