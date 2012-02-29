@@ -55,6 +55,10 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         source = self.net.http_GET(url).content
         print '************* %s' % source
         dialog = xbmcgui.Dialog()
+        
+        if re.search('Upgrade your account now to generate a link', source):
+            dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
+            return None
         if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
             dialog.ok(' Real-Debrid ', ' Your file is unavailable on the hoster ', '', '')
             return None
@@ -83,6 +87,9 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return self.allHosters 
 
     def valid_url(self, url, host):
+
+        if self.get_setting('login') == 'false':
+            return False
         print 'in valid_url %s : %s' % (url, host)
         tmp = re.compile('//(.+?)/').findall(url)
         print 'r is %s ' % tmp[0]
