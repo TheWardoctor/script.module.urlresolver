@@ -98,10 +98,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             print 'domain is %s ' % domain
         print 'allHosters is %s ' % self.get_all_hosters()
         if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
-            print 'in if'
             return True
         else:
-            print 'in else'
             return False
 
     def  checkLogin(self):

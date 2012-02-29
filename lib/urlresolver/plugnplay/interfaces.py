@@ -184,7 +184,7 @@ class UrlResolver(Interface):
     def isUniversal(self):
     	'''
     		You need to override this to return True, if you are implementing a univeral resolver 
-    		like real-debrid etc., which handles multiple hosts.
+    		like real-debrid etc., which handles multiple hosts
     	'''
     	
     	return False
