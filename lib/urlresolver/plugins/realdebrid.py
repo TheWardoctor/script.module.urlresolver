@@ -94,11 +94,10 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         tmp = re.compile('//(.+?)/').findall(url)
         domain = ''
         if len(tmp) > 0 :
-            print 'r is %s ' % tmp[0]
             domain = tmp[0].replace('www.', '')
             print 'domain is %s ' % domain
         print 'allHosters is %s ' % self.get_all_hosters()
-        if (re.search(domain, self.get_all_hosters()) is not None) or (host in self.get_all_hosters()):
+        if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
             print 'in if'
             return True
         else:
