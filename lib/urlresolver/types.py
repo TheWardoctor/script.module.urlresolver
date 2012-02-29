@@ -80,6 +80,7 @@ class HostedMediaFile:
                 if len(self._resolvers) > 1:
                     print 'HostedMedia isUniversal: In else'
                     self._url = self._resolvers[1].get_url(host, media_id)
+                    self._host, self._media_id = self._resolvers[0].get_host_and_id(self._url)
             else:    
                 self._url = self._resolvers[0].get_url(host, media_id)
             
