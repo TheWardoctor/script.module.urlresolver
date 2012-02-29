@@ -50,7 +50,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
     #UrlResolver methods
     def get_media_url(self, host, media_id):
-        print 'in get_media_url %s' % media_id
+        print 'in get_media_url %s : %s' % (host, media_id)
         url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
         source = self.net.http_GET(url).content
         print '************* %s' % source
@@ -92,11 +92,13 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             return False
         print 'in valid_url %s : %s' % (url, host)
         tmp = re.compile('//(.+?)/').findall(url)
-        print 'r is %s ' % tmp[0]
-        domain = tmp[0].replace('www.', '')
-        print 'domain is %s ' % domain
+        domain = ''
+        if len(tmp) > 0 :
+            print 'r is %s ' % tmp[0]
+            domain = tmp[0].replace('www.', '')
+            print 'domain is %s ' % domain
         print 'allHosters is %s ' % self.get_all_hosters()
-        if re.search(domain, self.get_all_hosters()) is not None:
+        if (re.search(domain, self.get_all_hosters()) is not None) or (host in self.get_all_hosters()):
             print 'in if'
             return True
         else:
