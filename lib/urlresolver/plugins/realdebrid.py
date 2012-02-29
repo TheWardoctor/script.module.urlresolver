@@ -53,8 +53,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         print 'in get_media_url %s' % media_id
         url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
         source = self.net.http_GET(url).content
-        dialog = xbmcgui.Dialog()
         print '************* %s' % source
+        dialog = xbmcgui.Dialog()
         if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
             dialog.ok(' Real-Debrid ', ' Your file is unavailable on the hoster ', '', '')
             return None
@@ -111,7 +111,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         if self.checkLogin(): 
             login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
             url = 'https://real-debrid.com/ajax/login.php?' + login_data
-            print url
             source = self.net.http_GET(url).content
             if re.search('OK', source):
                 self.net.save_cookies(self.cookie_file)
