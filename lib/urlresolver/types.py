@@ -83,7 +83,6 @@ class HostedMediaFile:
                     self._host, self._media_id = self._resolvers[0].get_host_and_id(self._url)
             else:    
                 self._url = self._resolvers[0].get_url(host, media_id)
-            
         
         if title:
             self.title = title
