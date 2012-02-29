@@ -139,3 +139,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         xml += '<setting id="RealDebridResolver_password" enable="eq(-2,true)" '
         xml += 'type="text" label="password" option="hidden" default=""/>\n'
         return xml
+        
+    #to indicate if this is a universal resolver
+    def isUniversal(self):
+        
+        return True
