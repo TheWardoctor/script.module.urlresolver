@@ -75,13 +75,20 @@ class HostedMediaFile:
         if url and self._resolvers:
             self._host, self._media_id = self._resolvers[0].get_host_and_id(url)
         elif self._resolvers:
-            self._url = self._resolvers[0].get_url(host, media_id)
-            
+            if self._resolvers[0].isUniversal():
+                if len(self._resolvers) > 1:
+                    self._url = self._resolvers[1].get_url(host, media_id)
+                    self._host, self._media_id = self._resolvers[0].get_host_and_id(self._url)
+                else:
+                    self._resolvers = []
+            else:    
+                self._url = self._resolvers[0].get_url(host, media_id)
         
         if title:
             self.title = title
         else:
             self.title = self._host
+            
 
     def get_url(self):
         '''

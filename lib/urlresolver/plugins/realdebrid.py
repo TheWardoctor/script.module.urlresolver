@@ -26,8 +26,9 @@ from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
-import xbmc
+import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
 import cookielib
+from t0mm0.common.net import Net
 
 
 class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
@@ -41,46 +42,31 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def __init__(self):
         p = self.get_setting('priority') or 1
         self.priority = int(p)
+        self.net = Net()
         try:
             os.makedirs(os.path.dirname(self.cookie_file))
         except OSError:
             pass
 
-    def GetURL(self, url):
-    #print 'processing url: '+url
-
-    # use cookie, if logged in.
-        if self.cookie_file is not None and os.path.exists(self.cookie_file):
-            cj = cookielib.LWPCookieJar()
-            cj.load(self.cookie_file)
-            req = urllib2.Request(url)
-            req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')   
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-            response = opener.open(req)
-
-            #check if we might have been redirected (megapremium Direct Downloads...)
-            finalurl = response.geturl()
-
-            #if we weren't redirected, return the page source
-            if finalurl is url:
-                link=response.read()
-                response.close()
-                return link
-
-            #if we have been redirected, return the redirect url
-            elif finalurl is not url:               
-                return finalurl
-    
-
     #UrlResolver methods
     def get_media_url(self, host, media_id):
-        print 'in get_media_url %s' % media_id
+        print 'in get_media_url %s : %s' % (host, media_id)
         url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
-        source = self.GetURL(url)
+        source = self.net.http_GET(url).content
         print '************* %s' % source
+        dialog = xbmcgui.Dialog()
+        
+        if re.search('Upgrade your account now to generate a link', source):
+            dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
+            return None
         if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
+            dialog.ok(' Real-Debrid ', ' Your file is unavailable on the hoster ', '', '')
             return None
         if re.search('This hoster is not included in our free offer', source):
+            dialog.ok(' Real-Debrid ', ' This hoster is not included in our free offer ', '', '')            
+            return None
+        if re.search('No server is available for this hoster.', source):
+            dialog.ok(' Real-Debrid ', ' No server is available for this hoster ', '', '')            
             return None
         link =re.compile('ok"><a href="(.+?)"').findall(source)
         print 'link is %s' % link[0]
@@ -97,48 +83,44 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_all_hosters(self):
         if self.allHosters is None:
             url = 'http://real-debrid.com/lib/api/hosters.php'
-            self.allHosters = self.GetURL(url)
+            self.allHosters = self.net.http_GET(url).content
         return self.allHosters 
 
     def valid_url(self, url, host):
+
+        if self.get_setting('login') == 'false':
+            return False
         print 'in valid_url %s : %s' % (url, host)
         tmp = re.compile('//(.+?)/').findall(url)
-        if len(tmp) == 0:
-            return False
-        print 'r is %s ' % tmp[0]
-        domain = tmp[0].replace('www.', '')
-        print 'domain is %s ' % domain
-        if re.search(domain, self.get_all_hosters()) is not None:
+        domain = ''
+        if len(tmp) > 0 :
+            domain = tmp[0].replace('www.', '')
+            print 'domain is %s ' % domain
+        print 'allHosters is %s ' % self.get_all_hosters()
+        if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
             return True
         else:
             return False
 
     def  checkLogin(self):
         url = 'http://real-debrid.com/lib/api/account.php'
-        source = self.GetURL(url)
-        if source is not None and re.search('expiration', source):
+        if not os.path.exists(self.cookie_file):
+               return True
+        source =  self.net.http_GET(url).content
+        if re.search('expiration', source):
             return False
         else:
             return True
     
     #SiteAuth methods
     def login(self):
-        if self.checkLogin():
-            cj = cookielib.LWPCookieJar()
-            login_data = urllib.urlencode({'user' : self.username, 'pass' : self.password})
+        if self.checkLogin(): 
+            login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
             url = 'https://real-debrid.com/ajax/login.php?' + login_data
-            req = urllib2.Request(url)
-            req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
-            cj = cookielib.LWPCookieJar()
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-
-            #do the login and get the response
-            response = opener.open(req)
-            source = response.read()
-            response.close()
-            cj.save(self.cookie_file)
-            print source
+            source = self.net.http_GET(url).content
             if re.search('OK', source):
+                self.net.save_cookies(self.cookie_file)
+                self.net.set_cookies(self.cookie_file)
                 return True
             else:
                 return False
@@ -155,3 +137,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         xml += '<setting id="RealDebridResolver_password" enable="eq(-2,true)" '
         xml += 'type="text" label="password" option="hidden" default=""/>\n'
         return xml
+        
+    #to indicate if this is a universal resolver
+    def isUniversal(self):
+        
+        return True

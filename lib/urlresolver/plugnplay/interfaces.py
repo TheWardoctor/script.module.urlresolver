@@ -179,6 +179,15 @@ class UrlResolver(Interface):
             if valid:
                 ret_val.append(web_url)
         return
+        
+    
+    def isUniversal(self):
+    	'''
+    		You need to override this to return True, if you are implementing a univeral resolver 
+    		like real-debrid etc., which handles multiple hosts
+    	'''
+    	
+    	return False
 
 
 
@@ -294,4 +303,3 @@ class PluginSettings(Interface):
         value = common.addon.get_setting('%s_%s' % 
                                                 (self.__class__.__name__, key))
         return value
-    
