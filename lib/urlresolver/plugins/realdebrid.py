@@ -69,19 +69,34 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             dialog.ok(' Real-Debrid ', ' No server is available for this hoster ', '', '')            
             return None
         link =re.compile('ok"><a href="(.+?)"').findall(source)
+
+        if len(link) == 0:
+            return None
+        
         print 'link is %s' % link[0]
         self.media_url = link[0]
 
-        if self.get_setting('chooseserver') == 'true':
+        if self.get_setting('avoidserver') == 'true':
             print 'in chooseserver'
-            num = int(self.get_setting('server'))
-            server = "s08."
-            if num >  1 and num < 10:
-                server = "s0" + str(num) + '.'
-            elif num < 19:
-                server = 's' + str(num) + '.'
-            link[0] = re.sub('s.+?\.', server, link[0], count = 1)
-            print 'link is %s' % link[0]
+            server = re.compile('//(.+?)\.').findall(link[0])
+            if len(server) > 0:
+                avoid = (self.get_setting('server')).split(',')
+                if server[0] in avoid:
+                    check = True
+                    while check:
+                        check = False
+                        new = ''
+                        gen = random.randint(1, 18)
+                        if len(str(gen)) == 1:
+                            new = 's0' + str(gen)
+                        else:
+                            new = 's' + str(gen)
+
+                        if new in avoid:
+                            check = True
+
+                    link[0] = re.sub('//.+?\.', '//' +new + '.', link[0], count = 1)
+                    print 'link is %s' % link[0]
         return link[0]
         
     def get_url(self, host, media_id):
@@ -107,7 +122,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         if len(tmp) > 0 :
             domain = tmp[0].replace('www.', '')
             print 'domain is %s ' % domain
-        print 'allHosters is %s ' % self.get_all_hosters()
         if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
             return True
         else:
@@ -147,10 +161,10 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         xml += 'type="text" label="username" default=""/>\n'
         xml += '<setting id="RealDebridResolver_password" enable="eq(-2,true)" '
         xml += 'type="text" label="password" option="hidden" default=""/>\n'
-        xml += '<setting id="RealDebridResolver_chooseserver" '
-        xml += 'type="bool" label="Choose Server" default="false"/>\n'        
+        xml += '<setting id="RealDebridResolver_avoidserver" '
+        xml += 'type="bool" label="Avoid Servers" default="false"/>\n'        
         xml += '<setting id="RealDebridResolver_server" '
-        xml += 'type="number" label="Server : (1 - 18)" default="8"/>\n'
+        xml += 'type="text" label="Avoid Servers # (Eg. s01,s02)" default="s01,s18"/>\n'
         return xml
         
     #to indicate if this is a universal resolver
