@@ -71,6 +71,17 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         link =re.compile('ok"><a href="(.+?)"').findall(source)
         print 'link is %s' % link[0]
         self.media_url = link[0]
+
+        if self.get_setting('chooseserver') == 'true':
+            print 'in chooseserver'
+            num = int(self.get_setting('server'))
+            server = "s08."
+            if num >  1 and num < 10:
+                server = "s0" + str(num) + '.'
+            elif num < 19:
+                server = 's' + str(num) + '.'
+            link[0] = re.sub('s.+?\.', server, link[0], count = 1)
+            print 'link is %s' % link[0]
         return link[0]
         
     def get_url(self, host, media_id):
@@ -136,6 +147,10 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         xml += 'type="text" label="username" default=""/>\n'
         xml += '<setting id="RealDebridResolver_password" enable="eq(-2,true)" '
         xml += 'type="text" label="password" option="hidden" default=""/>\n'
+        xml += '<setting id="RealDebridResolver_chooseserver" '
+        xml += 'type="bool" label="Choose Server" default="false"/>\n'        
+        xml += '<setting id="RealDebridResolver_server" '
+        xml += 'type="number" label="Server : (1 - 18)" default="8"/>\n'
         return xml
         
     #to indicate if this is a universal resolver
