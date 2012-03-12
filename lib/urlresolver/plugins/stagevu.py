@@ -59,7 +59,6 @@ class StagevuResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
-        print 'stagevu: in valid_url %s %s' % (url, host)
         return (re.match('http://(www.)?stagevu.com/video/' +
                          '[0-9A-Za-z]+', url) or
                          'stagevu' in host)
