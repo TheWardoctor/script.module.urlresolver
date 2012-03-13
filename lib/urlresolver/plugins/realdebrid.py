@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
+import os, sys
 import random
 import re
 import urllib, urllib2
@@ -51,10 +51,17 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     #UrlResolver methods
     def get_media_url(self, host, media_id):
         print 'in get_media_url %s : %s' % (host, media_id)
-        url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
-        source = self.net.http_GET(url).content
-        print '************* %s' % source
         dialog = xbmcgui.Dialog()
+        try:
+            url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
+            source = self.net.http_GET(url).content
+        except Exception, e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            dialog.ok(' Real-Debrid ', ' Real-Debrid server timed out ', '', '')
+            return None
+        print '************* %s' % source
         
         if re.search('Upgrade your account now to generate a link', source):
             dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
@@ -69,8 +76,35 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             dialog.ok(' Real-Debrid ', ' No server is available for this hoster ', '', '')            
             return None
         link =re.compile('ok"><a href="(.+?)"').findall(source)
+
+        if len(link) == 0:
+            return None
+        
         print 'link is %s' % link[0]
         self.media_url = link[0]
+
+        # avoid servers as configured in the settings to get better playback of your video on XBMC
+##        if self.get_setting('avoidserver') == 'true':
+##            print 'in chooseserver'
+##            server = re.compile('//(.+?)\.').findall(link[0])
+##            if len(server) > 0:
+##                avoid = (self.get_setting('server')).split(',')
+##                if server[0] in avoid:
+##                    check = True
+##                    while check:
+##                        check = False
+##                        new = ''
+##                        gen = random.randint(1, 18)
+##                        if len(str(gen)) == 1:
+##                            new = 's0' + str(gen)
+##                        else:
+##                            new = 's' + str(gen)
+##
+##                        if new in avoid:
+##                            check = True
+##
+##                    link[0] = re.sub('//.+?\.', '//' +new + '.', link[0], count = 1)
+##                    print 'link is %s' % link[0]
         return link[0]
         
     def get_url(self, host, media_id):
@@ -96,7 +130,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         if len(tmp) > 0 :
             domain = tmp[0].replace('www.', '')
             print 'domain is %s ' % domain
-        print 'allHosters is %s ' % self.get_all_hosters()
         if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
             return True
         else:
@@ -136,6 +169,10 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         xml += 'type="text" label="username" default=""/>\n'
         xml += '<setting id="RealDebridResolver_password" enable="eq(-2,true)" '
         xml += 'type="text" label="password" option="hidden" default=""/>\n'
+##        xml += '<setting id="RealDebridResolver_avoidserver" '
+##        xml += 'type="bool" label="Avoid Servers" default="false"/>\n'        
+##        xml += '<setting id="RealDebridResolver_server" '
+##        xml += 'type="text" label="Avoid Servers # (Eg. s01,s02)" default="s09,s18"/>\n'
         return xml
         
     #to indicate if this is a universal resolver
