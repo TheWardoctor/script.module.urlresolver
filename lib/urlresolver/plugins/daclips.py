@@ -36,7 +36,7 @@ class DaclipsResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
         self.net = Net()
         #e.g. http://daclips.com/vb80o1esx2eb
-        self.pattern = 'http://((?:www.)?daclips.com)/([0-9a-zA-Z]+)'
+        self.pattern = 'http://((?:www.)?daclips.(?:in|com))/([0-9a-zA-Z]+)'
 
 
     def get_media_url(self, host, media_id):
