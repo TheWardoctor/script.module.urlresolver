@@ -60,25 +60,25 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             dialog.ok(' Real-Debrid ', ' Real-Debrid server timed out ', '', '')
-            return None
+            return False
         print '************* %s' % source
         
         if re.search('Upgrade your account now to generate a link', source):
             dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
-            return None
+            return False
         if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
             dialog.ok(' Real-Debrid ', ' Your file is unavailable on the hoster ', '', '')
-            return None
+            return False
         if re.search('This hoster is not included in our free offer', source):
             dialog.ok(' Real-Debrid ', ' This hoster is not included in our free offer ', '', '')            
-            return None
+            return False
         if re.search('No server is available for this hoster.', source):
             dialog.ok(' Real-Debrid ', ' No server is available for this hoster ', '', '')            
-            return None
+            return False
         link =re.compile('ok"><a href="(.+?)"').findall(source)
 
         if len(link) == 0:
-            return None
+            return False
         
         print 'link is %s' % link[0]
         self.media_url = link[0]
