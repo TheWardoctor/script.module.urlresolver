@@ -23,7 +23,9 @@ from urlresolver.plugnplay import Plugin
 import re
 import urllib2
 from urlresolver import common
-import os
+import os, xbmcgui
+from vidxden import unpack_js
+
 
 class OvfileResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -41,37 +43,37 @@ class OvfileResolver(Plugin, UrlResolver, PluginSettings):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
 
+        dialog = xbmcgui.Dialog()
+
+        if 'file has been removed' in html:
+            dialog.ok(' UrlResolver ', ' File has been removed. ', '', '')
+            return False
+
         form_values = {}
         for i in re.finditer('<input type="hidden" name="(.+?)" value="(.+?)">', html):
             form_values[i.group(1)] = i.group(2)
 
         html = self.net.http_POST(web_url, form_data=form_values).content
-        
-        match = re.search('s1\|(.+?)\|var', html, re.DOTALL | re.MULTILINE )
-        
-        if not match:
-            print 'could not find video'
-            return False
-        arrayString = match.group(1)
-        arrayString = arrayString.replace('||', '|')
-        print arrayString
-        if 'http|' in arrayString:
-            match = re.search( 'http\|(.+?)\|add', arrayString, re.DOTALL | re.MULTILINE)
-            ip = match.group(1).split('|')
-            print ip
-            server = ""
-            if len(ip) == 5 :
-                server = "http://" + ip[4] + "." + ip[1] + "." + ip[0]
-            print server
-            match = re.search( 'addParam\|(.+?)\|flvplayer', arrayString, re.DOTALL | re.MULTILINE)
-            videoData =  match.group(1).split('|')
-            print videoData
-            vidURL = server + ':' + videoData[4] + '/d/' + videoData[3] + '/video.' + videoData[1]
-            print vidURL
+       
+        page = ''.join(html.splitlines()).replace('\t','')
+        r = re.compile("return p\}\(\'(.+?)\',\d+,\d+,\'(.+?)\'").findall(page)
+        if r:
+            p = r[1][0]
+            k = r[1][1]
         else:
-            print 'could not find video'
+            common.addon.log_error(self.name + '- packed javascript embed code not found')
             return False
-        return vidURL
+        decrypted_data = unpack_js(p, k)
+        r = re.search('file.\',.\'(.+?).\'', decrypted_data)
+        if not r:
+            r = re.search('src="(.+?)"', decrypted_data)
+        if r:
+            stream_url = r.group(1)
+        else:
+            common.addon.log_error(self.name + '- stream url not found')
+            return False
+
+        return stream_url
     
 
     def get_url(self, host, media_id):
