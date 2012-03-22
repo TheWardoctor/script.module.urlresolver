@@ -38,6 +38,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     cookie_file = os.path.join(profile_path, '%s.cookies' % name)
     media_url = None
     allHosters = None
+    dialog = xbmcgui.Dialog()
+
 
     def __init__(self):
         p = self.get_setting('priority') or 1
@@ -51,7 +53,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     #UrlResolver methods
     def get_media_url(self, host, media_id):
         print 'in get_media_url %s : %s' % (host, media_id)
-        dialog = xbmcgui.Dialog()
         try:
             url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
             source = self.net.http_GET(url).content
@@ -147,14 +148,18 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     
     #SiteAuth methods
     def login(self):
-        if self.checkLogin(): 
-            login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
-            url = 'https://real-debrid.com/ajax/login.php?' + login_data
-            source = self.net.http_GET(url).content
-            if re.search('OK', source):
-                self.net.save_cookies(self.cookie_file)
-                self.net.set_cookies(self.cookie_file)
-                return True
+        if self.checkLogin():
+            try:
+                login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
+                url = 'https://real-debrid.com/ajax/login.php?' + login_data
+                source = self.net.http_GET(url).content
+                if re.search('OK', source):
+                    self.net.save_cookies(self.cookie_file)
+                    self.net.set_cookies(self.cookie_file)
+                    return True
+            except:
+                    print 'error with http_GET'
+                    dialog.ok(' Real-Debrid ', ' Unexpected error, Please try again.', '', '')            
             else:
                 return False
         else:
