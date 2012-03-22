@@ -38,7 +38,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     cookie_file = os.path.join(profile_path, '%s.cookies' % name)
     media_url = None
     allHosters = None
-    dialog = xbmcgui.Dialog()
 
 
     def __init__(self):
@@ -53,6 +52,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     #UrlResolver methods
     def get_media_url(self, host, media_id):
         print 'in get_media_url %s : %s' % (host, media_id)
+        dialog = xbmcgui.Dialog()
+
         try:
             url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
             source = self.net.http_GET(url).content
@@ -159,6 +160,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     return True
             except:
                     print 'error with http_GET'
+                    dialog = xbmcgui.Dialog()
                     dialog.ok(' Real-Debrid ', ' Unexpected error, Please try again.', '', '')            
             else:
                 return False
