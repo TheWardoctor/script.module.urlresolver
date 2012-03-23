@@ -141,16 +141,21 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         url = 'http://real-debrid.com/lib/api/account.php'
         if not os.path.exists(self.cookie_file):
                return True
+        self.net.set_cookies(self.cookie_file)
         source =  self.net.http_GET(url).content
+        print source
         if re.search('expiration', source):
+            print 'checkLogin returning False'
             return False
         else:
+            print 'checkLogin returning True'
             return True
     
     #SiteAuth methods
     def login(self):
         if self.checkLogin():
             try:
+                print 'Need to login since session is invalid'
                 login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
                 url = 'https://real-debrid.com/ajax/login.php?' + login_data
                 source = self.net.http_GET(url).content

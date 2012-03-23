@@ -35,7 +35,7 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
 
     def get_media_url(self, host, media_id):
-        print '******* vidpe: in get_media_url'
+        print '******* vidpe: in get_media_url %s %s' %(host, media_id)
         web_url = self.get_url(host, media_id)
         try:
             html = self.net.http_GET(web_url).content
@@ -43,8 +43,9 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error(self.name + '- got http error %d fetching %s' %
                                    (e.code, web_url))
             return False
-
+        
         page = ''.join(html.splitlines()).replace('\t','')
+        print ' *************************** %s' % page
         r = re.search("return p\}\(\'(.+?)\',\d+,\d+,\'(.+?)\'", page)
         if r:
             p, k = r.groups()
@@ -66,27 +67,30 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def get_url(self, host, media_id):
-        return 'http://'+host+'/%s' % media_id
+        if 'vidpe' in host or 'hostingcup' in host:
+            return 'http://'+host+'/%s.html' % media_id
+        else:
+            return 'http://'+host+'/%s' % media_id
 
 
     def get_host_and_id(self, url):
         print 'vidpe resolver: in get_host_and_id %s' % url
-        r = None
-        video_id = None
-        
-        if re.search('embed-', url):
-            r = re.compile('embed-(.+?)-|.html').findall(url)
-        elif re.search('.com/', url):
-            r = re.compile('.com/(.+?).html').findall(url)
-            
-        if r is not None and len(r) > 0:
-            video_id = r[0]
-        if video_id:
-            return (self.get_domain(url), video_id)
-        else:
-            common.addon.log_error('host: video id not found')
-            return False
 
+        r = re.search('http://(.+?)/embed-([\w]+)-', url)
+        if r:
+            return r.groups()
+        else:
+            r = re.search('http://(.+?)/embed-([\w]+).html', url)
+            if r:
+                return r.groups()
+            else:
+                r = re.search('//(.+?)/([\w]+)', url)
+                if r:
+                    return r.groups()
+                else:
+                    return False
+    
+        
     def get_domain(self, url):
         tmp = re.compile('//(.+?)/').findall(url)
         if len(tmp) == 0:

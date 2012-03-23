@@ -83,11 +83,15 @@ class OvfileResolver(Plugin, UrlResolver, PluginSettings):
         
     def get_host_and_id(self, url):
         print 'ovfile: in get_host_and_id %s' % (url)
-        r = re.search('//(.+?)/([0-9a-zA-Z/]+)', url)
+        r = re.search('http://(.+?)/embed-([\w]+)-', url)
         if r:
             return r.groups()
         else:
-            return False
+            r = re.search('//(.+?)/([\w]+)', url)
+            if r:
+                return r.groups()
+            else:
+                return False
 
 
     def valid_url(self, url, host):
