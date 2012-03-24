@@ -45,7 +45,6 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
             return False
         
         page = ''.join(html.splitlines()).replace('\t','')
-        print ' *************************** %s' % page
         r = re.search("return p\}\(\'(.+?)\',\d+,\d+,\'(.+?)\'", page)
         if r:
             p, k = r.groups()
