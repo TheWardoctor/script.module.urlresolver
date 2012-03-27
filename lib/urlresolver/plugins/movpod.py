@@ -36,7 +36,7 @@ class MovpodResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
         self.net = Net()
         #e.g. http://movpod.com/vb80o1esx2eb
-        self.pattern = 'http://((?:www.)?movpod.net)/([0-9a-zA-Z]+)'
+        self.pattern = 'http://((?:www.)?movpod.(?:net|in))/([0-9a-zA-Z]+)'
 
 
     def get_media_url(self, host, media_id):

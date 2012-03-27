@@ -72,7 +72,7 @@ class HostedMediaFile:
         self._media_id = media_id
         
         self._resolvers = self._find_resolvers()
-        if url and self._resolvers:
+        if url and self._resolvers and self._resolvers[0].get_host_and_id(url):
             self._host, self._media_id = self._resolvers[0].get_host_and_id(url)
         elif self._resolvers:
             if self._resolvers[0].isUniversal():

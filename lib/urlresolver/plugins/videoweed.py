@@ -23,6 +23,7 @@ from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
+import xbmcgui
 
 class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -35,6 +36,8 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
+        dialog = xbmcgui.Dialog()
+        
         #grab stream details
         try:
             html = self.net.http_GET(web_url).content
@@ -52,7 +55,7 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
             api_call = ('%s/api/player.api.php?user=undefined&codes=1&file=%s' +
                         '&pass=undefined&key=%s') % (domain, fileid, filekey)
         else:
-            common.addon.log_error('videoweed: api url not found')
+            dialog.ok(' Videoweed ', ' The video no longer exists ', '', '')
             return False
 
         try:
@@ -77,7 +80,8 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
         
         
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/file/([0-9a-z]+)', url)
+        r = re.search('//(?:embed.)?(.+?)/(?:video/|embed.php\?v=)' + 
+                      '([0-9a-z]+)', url)
         if r:
             return r.groups()
         else:
@@ -85,6 +89,6 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
-        return re.match('http://(www.)?videoweed.(es|com)/file/[0-9a-z]+', 
-                       url) or 'videoweed' in host
+        return re.match('http://(www.|embed.)?videoweed.(?:es|com)/(video/|embed.php\?)' +
+                        '(?:[0-9a-z]+|width)', url) or 'videoweed' in host
 

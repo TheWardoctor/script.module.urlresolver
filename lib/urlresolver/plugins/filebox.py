@@ -24,6 +24,7 @@ from urlresolver.plugnplay import Plugin
 import urllib2
 from urlresolver import common
 from lib import jsunpack
+import xbmcgui
 
 # Custom imports
 import re
@@ -48,8 +49,15 @@ class FileboxResolver(Plugin, UrlResolver, PluginSettings):
             resp = self.net.http_GET(web_url)
             html = resp.content
             post_url = resp.get_url()
-            print post_url
 
+            dialog = xbmcgui.Dialog()
+
+            if "video is not available for streaming right now. It's still converting..." in html:
+                dialog.ok('UrlResolver', "video is not available for streaming right now.", "It's still converting...", '')
+                
+            if "File was deleted" in html:
+                dialog.ok( 'UrlResolver', 'File was deleted', '', '')
+                
             form_values = {}
             for i in re.finditer('<input type="hidden" name="(.+?)" value="(.+?)">', html):
                 form_values[i.group(1)] = i.group(2)

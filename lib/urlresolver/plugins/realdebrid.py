@@ -39,6 +39,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     media_url = None
     allHosters = None
 
+
     def __init__(self):
         p = self.get_setting('priority') or 1
         self.priority = int(p)
@@ -52,6 +53,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_media_url(self, host, media_id):
         print 'in get_media_url %s : %s' % (host, media_id)
         dialog = xbmcgui.Dialog()
+
         try:
             url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
             source = self.net.http_GET(url).content
@@ -60,25 +62,25 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             dialog.ok(' Real-Debrid ', ' Real-Debrid server timed out ', '', '')
-            return None
+            return False
         print '************* %s' % source
         
         if re.search('Upgrade your account now to generate a link', source):
             dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
-            return None
+            return False
         if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
             dialog.ok(' Real-Debrid ', ' Your file is unavailable on the hoster ', '', '')
-            return None
+            return False
         if re.search('This hoster is not included in our free offer', source):
             dialog.ok(' Real-Debrid ', ' This hoster is not included in our free offer ', '', '')            
-            return None
+            return False
         if re.search('No server is available for this hoster.', source):
             dialog.ok(' Real-Debrid ', ' No server is available for this hoster ', '', '')            
-            return None
+            return False
         link =re.compile('ok"><a href="(.+?)"').findall(source)
 
         if len(link) == 0:
-            return None
+            return False
         
         print 'link is %s' % link[0]
         self.media_url = link[0]
@@ -139,22 +141,32 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         url = 'http://real-debrid.com/lib/api/account.php'
         if not os.path.exists(self.cookie_file):
                return True
+        self.net.set_cookies(self.cookie_file)
         source =  self.net.http_GET(url).content
+        print source
         if re.search('expiration', source):
+            print 'checkLogin returning False'
             return False
         else:
+            print 'checkLogin returning True'
             return True
     
     #SiteAuth methods
     def login(self):
-        if self.checkLogin(): 
-            login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
-            url = 'https://real-debrid.com/ajax/login.php?' + login_data
-            source = self.net.http_GET(url).content
-            if re.search('OK', source):
-                self.net.save_cookies(self.cookie_file)
-                self.net.set_cookies(self.cookie_file)
-                return True
+        if self.checkLogin():
+            try:
+                print 'Need to login since session is invalid'
+                login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
+                url = 'https://real-debrid.com/ajax/login.php?' + login_data
+                source = self.net.http_GET(url).content
+                if re.search('OK', source):
+                    self.net.save_cookies(self.cookie_file)
+                    self.net.set_cookies(self.cookie_file)
+                    return True
+            except:
+                    print 'error with http_GET'
+                    dialog = xbmcgui.Dialog()
+                    dialog.ok(' Real-Debrid ', ' Unexpected error, Please try again.', '', '')            
             else:
                 return False
         else:
