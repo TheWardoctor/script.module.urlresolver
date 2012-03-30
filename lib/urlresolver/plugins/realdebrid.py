@@ -131,6 +131,10 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         domain = ''
         if len(tmp) > 0 :
             domain = tmp[0].replace('www.', '')
+            if 'megashares' in domain:
+                domain = 'megashares.com'
+            elif 'megashare' in domain:
+                domain = 'megashare.com'
             print 'domain is %s ' % domain
         if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
             return True
