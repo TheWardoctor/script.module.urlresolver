@@ -72,25 +72,40 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
 									(e.code, web_url))
 			return False
 		# get url from packed javascript
-#		sPattern =  '<div id="player_code"><script type=(?:"|\')text/javascript(?:"|\')>'
-#		sPattern += '(eval\(function\(p,a,c,k,e,d\)\{while.+?DivXBrowserPlugin.+?)</script>'
-		sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>'
-		sPattern += '(eval\(function\(p,a,c,k,e,d\)\{while.*SWFObject.*)'
+		sPattern =  '<div id="player_code"><script type=(?:"|\')text/javascript(?:"|\')>'
+		sPattern += '(eval\(function\(p,a,c,k,e,d\)\{while.+?DivXBrowserPlugin.+?)</script>'
 		
-#		r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-		r = re.search(sPattern, html, re.IGNORECASE)
+		r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
+		
 		if r:
 			sJavascript = r.group(1) + ")))"
 #			print("1")
 #			print(sJavascript)
 			sUnpacked = jsunpack.unpack(sJavascript)
 			print(sUnpacked)
-#			sPattern = 'type="video/divx"src="(.+?)"custommode='
-			sPattern = "'file','([^']*)'";
+			sPattern = 'type="video/divx"src="(.+?)"custommode='
+#			sPattern = "'file','([^']*)'";
 			r = re.search(sPattern, sUnpacked)
 			if r:
 				return r.group(1)
-
+		else:
+			sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>'
+			sPattern += '(eval\(function\(p,a,c,k,e,d\)\{while.*SWFObject.*)'
+	    	
+			r2 = re.search(sPattern, html, re.IGNORECASE)
+            
+			if r2:
+				sJavascript = r2.group(1) + ")))"
+#				print("1")
+#				print(sJavascript)
+				sUnpacked = jsunpack.unpack(sJavascript)
+				print(sUnpacked)
+				sPattern = "'file','([^']*)'";
+				r = re.search(sPattern, sUnpacked)
+				if r:
+					return r.group(1)
+                
+            
 		return False
 
 	def get_url(self, host, media_id):
