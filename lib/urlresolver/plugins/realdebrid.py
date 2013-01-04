@@ -55,7 +55,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         dialog = xbmcgui.Dialog()
 
         try:
-            url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id
+            url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id.replace('|User-Agent=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0','')
             source = self.net.http_GET(url).content
         except Exception, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
