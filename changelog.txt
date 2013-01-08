@@ -5,6 +5,7 @@
 - Fixed flashx.tv - new pattern and embed code
 - Fixed vidstream - new url
 - Fixed ecostream - new embed url pattern
+- Reverted putlocker code, added option for higher vid quality
 
 [B]Version 1.0.4[/B]
 - Updated putlocker and vidxden resolvers
