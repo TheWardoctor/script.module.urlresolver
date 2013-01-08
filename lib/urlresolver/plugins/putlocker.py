@@ -77,28 +77,29 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error('putlocker: got http error %d posting %s' %(e.code, web_url))
             return False
         
-        #find playlist code
+        #find playlist code  
         r = re.search('\?stream=(.+?)\'', html)
         if r:
             playlist_code = r.group(1)
         else:
-            common.addon.log_error('putlocker: playlist code not found')
-            return False
+            r = re.search('key=(.+?)&',html)
+            playlist_code = r.group(1)
         
         #find download link
         q = self.get_setting('quality')
         
         #Try to grab highest quality link available
         if q == '1':
+            #download & return link.
             if 'putlocker' in host:
                 Avi = "http://putlocker.com/get_file.php?stream=%s&original=1"%playlist_code
                 html = self.net.http_GET(Avi).content
-                final=re.compile('url="(.+?)"').findall(html)[0]
+                final=re.compile('url="(.+?)"').findall(html)[0].replace('&amp;','&')
                 return "%s|User-Agent=%s"%(final,'Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0')
             else:
                 Avi = "http://sockshare.com/get_file.php?stream=%s&original=1"%playlist_code
                 html = self.net.http_GET(Avi).content
-                final=re.compile('url="(.+?)"').findall(html)[0]
+                final=re.compile('url="(.+?)"').findall(html)[0].replace('&amp;','&')
                 return "%s|User-Agent=%s"%(final,'Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0')
 
         #Else grab standard flv link
