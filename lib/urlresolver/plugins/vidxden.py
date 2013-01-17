@@ -23,7 +23,7 @@ vidxden hosts both avi and flv videos
 In testing there seems to be a timing issue with files coming up as not playable.
 This happens on both the addon and in a browser.
 """
-import urllib2,urllib,xbmcaddon,socket,re,xbmc,os,xbmcgui
+import urllib2,urllib,xbmcaddon,socket,re,xbmc,os,xbmcgui,time
 from t0mm0.common.net import Net
 from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
@@ -47,6 +47,7 @@ class InputWindow(xbmcgui.WindowDialog):# Cheers to Bastardsmkr code already don
 
     def get(self):
         self.show()
+        time.sleep(5)        
         self.kbd.doModal()
         if (self.kbd.isConfirmed()):
             text = self.kbd.getText()
