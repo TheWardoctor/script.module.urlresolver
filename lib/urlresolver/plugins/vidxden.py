@@ -41,13 +41,17 @@ img="%s/resources/puzzle.png"%local.getAddonInfo('path')
 class InputWindow(xbmcgui.WindowDialog):# Cheers to Bastardsmkr code already done in Putlocker PRO resolver.
     def __init__(self, *args, **kwargs):
         self.cptloc = kwargs.get('captcha')
-        self.img = xbmcgui.ControlImage(335,30,624,180,self.cptloc)
+        xposition = self.get_setting('vidxden_keyboardx')
+        yposition = self.get_setting('vidxden_keyboardy')
+        hposition = self.get_setting('vidxden_keyboardh')
+        wposition = self.get_setting('vidxden_keyboardw')
+        self.img = xbmcgui.ControlImage(vidxden_keyboardx,vidxden_keyboardy,vidxden_keyboardw,vidxden_keyboardh,self.cptloc)
         self.addControl(self.img)
         self.kbd = xbmc.Keyboard()
 
     def get(self):
         self.show()
-        time.sleep(5)        
+        time.sleep(3)        
         self.kbd.doModal()
         if (self.kbd.isConfirmed()):
             text = self.kbd.getText()
@@ -139,7 +143,19 @@ class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
                 'vidxden' in host or 'divxden' in host or
                 'vidbux' in host)
 
-        
+    #PluginSettings methods
+    def get_settings_xml(self):
+        xml = PluginSettings.get_settings_xml(self)
+        xml += '<setting id="vidxden_keyboardx" '
+        xml += 'type="slider" label="Keyboard X Position" range="0,500" default="335"/>\n'
+        xml += '<setting id="vidxden_keyboardy" '
+        xml += 'type="slider" label="Keyboard Y Position" range="0,500" default="30"/>\n'
+        xml += '<setting id="vidxden_keyboardh" '
+        xml += 'type="slider" label="Keyboard Height Position" range="0,500" default="180"/>\n'
+        xml += '<setting id="vidxden_keyboardw" '
+        xml += 'type="slider" label="Keyboard Width Position" range="0,1000" default="624"/>\n'
+        return xml
+
 def unpack_js(p, k):
     '''emulate js unpacking code'''
     k = k.split('|')
