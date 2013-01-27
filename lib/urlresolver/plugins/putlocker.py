@@ -28,10 +28,7 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from threading import Thread
-<<<<<<< HEAD
-=======
 import time
->>>>>>> master
 
 class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -216,10 +213,7 @@ class InputWindow(xbmcgui.WindowDialog):
 
     def get(self):
         self.show()
-<<<<<<< HEAD
-=======
         time.sleep(5)        
->>>>>>> master
         self.kbd.doModal()
         if (self.kbd.isConfirmed()):
             text = self.kbd.getText()
