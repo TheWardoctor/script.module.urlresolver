@@ -56,7 +56,7 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
 
         if (len(metadata) > 0):
             metadata = metadata[0]
-            stream_url="http://"+metadata[3]+"."+metadata[2]+"." + metadata[1] + "."+ metadata[0] + "/d/" + metadata[4] + "/video.flv"
+            stream_url="http://"+metadata[3]+"."+metadata[2]+"."+metadata[1]+"."+metadata[0]+"/d/"+ metadata[4]+"/video.flv?start=0"
             return stream_url
 
         dialog.ok(' UrlResolver ' , ' Error while retrieving playable link. ', '', '')
