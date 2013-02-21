@@ -1,4 +1,4 @@
-"""
+""" 
     urlresolver XBMC Addon
     Copyright (C) 2013 Vinnydude
 
