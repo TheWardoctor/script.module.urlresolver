@@ -70,6 +70,5 @@ class ZoouploadResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return re.match('http://(www.)?zooupload.com/[0-9A-Za-z]+', url) or 'zooupload' in host
-
-

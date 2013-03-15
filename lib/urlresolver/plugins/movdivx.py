@@ -49,7 +49,6 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
 			common.addon.log_error(self.name + ': got http error %d fetching %s' %
 									(e.code, web_url))
 			return False
-		#print 'XXXXXXXXXXXXXXXX Printing HTML:\n%s' % html
 		r =  'name="op" value="(.+?)">.+?'
 		r += 'name="usr_login" value="(.+?)?">.+?'
 		r += 'name="id" value="(.+?)".+?'
@@ -66,7 +65,6 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
 
 		try:
 			html = self.net.http_POST(web_url, data).content
-			print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXX Post response:\n %s' % html
 		except urllib2.URLError, e:
 			common.addon.log_error(self.name + ': got http error %d fetching %s' %
 									(e.code, web_url))
@@ -79,12 +77,8 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
 		
 		if r:
 			sJavascript = r.group(1) + ")))"
-#			print("1")
-#			print(sJavascript)
 			sUnpacked = jsunpack.unpack(sJavascript)
-			print(sUnpacked)
 			sPattern = 'type="video/divx"src="(.+?)"custommode='
-#			sPattern = "'file','([^']*)'";
 			r = re.search(sPattern, sUnpacked)
 			if r:
 				return r.group(1)
@@ -96,10 +90,7 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
             
 			if r2:
 				sJavascript = r2.group(1) + ")))"
-#				print("1")
-#				print(sJavascript)
 				sUnpacked = jsunpack.unpack(sJavascript)
-				print(sUnpacked)
 				sPattern = "'file','([^']*)'";
 				r = re.search(sPattern, sUnpacked)
 				if r:
@@ -120,4 +111,5 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
 
 
 	def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
 		return re.match(self.pattern, url) or self.name in host

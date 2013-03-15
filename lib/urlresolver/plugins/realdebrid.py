@@ -51,7 +51,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
     #UrlResolver methods
     def get_media_url(self, host, media_id):
-        print 'in get_media_url %s : %s' % (host, media_id)
         dialog = xbmcgui.Dialog()
 
         try:
@@ -63,7 +62,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             print(exc_type, fname, exc_tb.tb_lineno)
             dialog.ok(' Real-Debrid ', ' Real-Debrid server timed out ', '', '')
             return False
-        print '************* %s' % source
         
         if re.search('Upgrade your account now to generate a link', source):
             dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
@@ -81,8 +79,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
         if len(link) == 0:
             return False
-        
-        print 'link is %s' % link[0]
+
         self.media_url = link[0]
 
         # avoid servers as configured in the settings to get better playback of your video on XBMC
@@ -123,10 +120,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return self.allHosters 
 
     def valid_url(self, url, host):
-
-        if self.get_setting('login') == 'false':
-            return False
-        print 'in valid_url %s : %s' % (url, host)
+        if self.get_setting('enabled') == 'false': return False
+        if self.get_setting('login') == 'false': return False
         tmp = re.compile('//(.+?)/').findall(url)
         domain = ''
         if len(tmp) > 0 :

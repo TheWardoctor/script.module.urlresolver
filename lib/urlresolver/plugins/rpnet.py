@@ -53,7 +53,6 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             url   = url %(username, password, media_id)
             response = self.net.http_GET(url).content
             response = json.loads(response)
-            print response
             link = response['links'][0]['generated']
         except Exception, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()

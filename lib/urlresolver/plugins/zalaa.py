@@ -50,7 +50,6 @@ class ZalaaResolver(Plugin, UrlResolver, PluginSettings):
 			common.addon.log_error(self.name + ': got http error %d fetching %s' %
 									(e.code, web_url))
 			return False
-		#print 'XXXXXXXXXXXXXXXX Printing HTML:\n%s' % html
 		r =  'method="POST"\s+name=\'frmdownload\'.+?"ipcount_val" value="'
 		r += '([0-9]+)".+?"op"\s+value="(.+?)".+?name="fname"\s+value="(.+?)"'
 
@@ -66,8 +65,6 @@ class ZalaaResolver(Plugin, UrlResolver, PluginSettings):
 
 		try:
 			html = self.net.http_POST(web_url, data).content
-			#print 'Sending post'
-			#print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXX Post response:\n %s' % html
 		except urllib2.URLError, e:
 			common.addon.log_error(self.name + ': got http error %d fetching %s' %
 									(e.code, web_url))
@@ -101,4 +98,5 @@ class ZalaaResolver(Plugin, UrlResolver, PluginSettings):
 
 
 	def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
 		return re.match(self.pattern, url) or self.name in host

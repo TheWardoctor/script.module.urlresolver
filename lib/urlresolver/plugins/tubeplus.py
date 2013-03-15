@@ -70,6 +70,7 @@ class TubeplusResolver(Plugin, UrlResolver):
 
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return re.match('http://(www.)?tubeplus.me/player/\d+', 
                         url) or 'tubeplus' in host
 

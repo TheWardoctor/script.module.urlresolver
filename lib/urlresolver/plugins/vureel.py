@@ -52,4 +52,5 @@ class vureelResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return (re.match(r'http://www.(vureel).com/video/([0-9]+)/', url) or 'vureel' in host)
