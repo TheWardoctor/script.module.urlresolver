@@ -22,9 +22,10 @@ import urllib2
 import urlresolver
 from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
+from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 
-class TubeplusResolver(Plugin, UrlResolver):
+class TubeplusResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver]
     name = "tubeplus.me"
     
@@ -68,6 +69,9 @@ class TubeplusResolver(Plugin, UrlResolver):
         else:
             return False
 
+    def get_settings_xml(self):
+        xml = PluginSettings.get_settings_xml(self)
+        return xml
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False

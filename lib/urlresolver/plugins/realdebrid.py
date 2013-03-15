@@ -37,13 +37,13 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     profile_path = common.profile_path    
     cookie_file = os.path.join(profile_path, '%s.cookies' % name)
     media_url = None
-    allHosters = None
 
 
     def __init__(self):
         p = self.get_setting('priority') or 1
         self.priority = int(p)
         self.net = Net()
+        self.patterns = None
         try:
             os.makedirs(os.path.dirname(self.cookie_file))
         except OSError:
@@ -114,27 +114,21 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return 'www.real-debrid.com', url
 
     def get_all_hosters(self):
-        if self.allHosters is None:
-            url = 'http://real-debrid.com/lib/api/hosters.php'
-            self.allHosters = self.net.http_GET(url).content
-        return self.allHosters 
+        if self.patterns is None:
+            url = 'http://www.real-debrid.com/api/regex.php?type=all'
+            response = self.net.http_GET(url).content
+            hosters = response.split('/g,/')
+            print 'RealDebrid patterns: %s' %hosters
+            self.patterns = [re.compile(pattern) for pattern in hosters]
+        return self.patterns
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        if self.get_setting('login') == 'false': return False
-        tmp = re.compile('//(.+?)/').findall(url)
-        domain = ''
-        if len(tmp) > 0 :
-            domain = tmp[0].replace('www.', '')
-            if 'megashares' in domain:
-                domain = 'megashares.com'
-            elif 'megashare' in domain:
-                domain = 'megashare.com'
-            print 'domain is %s ' % domain
-        if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
-            return True
-        else:
+        if self.get_setting('enabled') == 'false':
             return False
+        for pattern in self.get_all_hosters():
+            if pattern.findall(url):
+                return True
+        return False
 
     def  checkLogin(self):
         url = 'http://real-debrid.com/lib/api/account.php'
