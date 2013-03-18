@@ -123,7 +123,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return self.allHosters 
 
     def valid_url(self, url, host):
-
         if self.get_setting('login') == 'false':
             return False
         print 'in valid_url %s : %s' % (url, host)
@@ -135,6 +134,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 domain = 'megashares.com'
             elif 'megashare' in domain:
                 domain = 'megashare.com'
+            elif 'mixturecloud' in domain :
+                domain = 'mixturevideo.com'
             print 'domain is %s ' % domain
         if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
             return True
