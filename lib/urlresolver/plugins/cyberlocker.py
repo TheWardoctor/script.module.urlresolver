@@ -55,8 +55,6 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
         method_free = re.search('<input disabled style=".+?" type="submit" id="btn_download" name="method_free" value="(.+?)">', html).group(1)
         referer = 'method_free'
         data = {'op': op, 'usr_login': usr_login, 'id': postid, 'fname': fname, 'referer': referer, 'method_free': method_free}
-            
-        print 'Cyberlocker - Requesting POST URL: %s DATA: %s' % (url, data)
         html = net.http_POST(url, data).content
 
         dialog.update(50)
@@ -64,38 +62,34 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
         sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
         sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
         sPattern += '\s+?</script>'
-  r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-	if r:
-		sJavascript = r.group(1)
-		sUnpacked = jsunpack.unpack(sJavascript)
-		print(sUnpacked)
-		sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
-		sPattern += '"custommode='
-		r = re.search(sPattern, sUnpacked)
-		if r:
-                        dialog.update(100)
-                        dialog.close()
-			return r.group(1)
+        r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
+        if r:
+            sJavascript = r.group(1)
+            sUnpacked = jsunpack.unpack(sJavascript)
+            print(sUnpacked)
+            sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
+            sPattern += '"custommode='
+            r = re.search(sPattern, sUnpacked)
+            if r:
+                dialog.update(100)
+                dialog.close()
+                return r.group(1)
         
     def get_url(self, host, media_id):
-        print 'Cyberlocker: in get_url %s %s' % (host, media_id)
         return 'http://cyberlocker.ch/%s' % media_id 
         
 
     def get_host_and_id(self, url):
-        print 'GET_HOST_AND_ID URL: '+url
         r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
         if r:
-            print r.groups()
             return r.groups()
         else:
             return False
-        print 'G_H_I: host: '+str(host)
-        print 'G_H_I MEDIA_ID: '+str(media_id)
         return('host', 'media_id')
 
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?cyberlocker.ch/' +
                          '[0-9A-Za-z]+', url) or
                          'cyberlocker' in host)

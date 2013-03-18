@@ -54,8 +54,6 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
         method_free = re.search('<input type="submit" name="method_free" value="(.+?)" class="freebtn right">', html).group(1)
         referer = 'method_free'
         data = {'op': op, 'usr_login': usr_login, 'id': postid, 'fname': fname, 'referer': referer, 'method_free': method_free}
-            
-        print 'Vidhog - Requesting POST URL: %s DATA: %s' % (url, data)
         html = net.http_POST(url, data).content
 
         captchaimg = re.search('<img src="(http://www.vidhog.com/captchas/.+?)"', html).group(1)
@@ -88,10 +86,7 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
         time.sleep(15)
         
         data = {'op': op, 'id': postid, 'rand': rand, 'referer': url, 'method_free': method_free, 'down_direct': down_direct, 'code': capcode}
-
-        print 'Vidhog - Requesting POST URL: %s DATA: %s' % (url, data)
         html = net.http_POST(url, data).content
-        print 'html done'+html
 
         match = re.search("product_download_url=(.+?)'", html)
 
@@ -102,23 +97,20 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
     
         
     def get_url(self, host, media_id):
-        print 'vidhog: in get_url %s %s' % (host, media_id)
         return 'http://www.vidhog.com/%s' % media_id 
         
 
     def get_host_and_id(self, url):
-        print 'GET_HOST_AND_ID URL: '+url
         r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
         if r:
             return r.groups()
         else:
             return False
-        print 'G_H_I: host: '+str(host)
-        print 'G_H_I MEDIA_ID: '+str(media_id)
         return('host', 'media_id')
 
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?vidhog.com/' +
                          '[0-9A-Za-z]+', url) or
                          'vidhog' in host)
