@@ -28,9 +28,9 @@ import re
 import time
 
 
-class ZoouploadResolver(Plugin, UrlResolver, PluginSettings):
+class TheFileResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "zooupload"
+    name = "thefile"
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -43,7 +43,6 @@ class ZoouploadResolver(Plugin, UrlResolver, PluginSettings):
         r = re.search("<script type='text/javascript'>(.+?)</script>",html,re.DOTALL)
         if r:
             js = jsunpack.unpack(r.group(1))
-            print js
             r = re.search("'file','(.+?)'", js)
             if r:
                 return r.group(1)
@@ -61,6 +60,7 @@ class ZoouploadResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return re.match(r'http://(thefile).me/([0-9a-zA-Z]+)', url) or 'thefile' in host
 
 

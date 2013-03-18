@@ -142,6 +142,7 @@ class MovreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?movreel.com/' +
                          '[0-9A-Za-z]+', url) or
                          'movreel' in host)
