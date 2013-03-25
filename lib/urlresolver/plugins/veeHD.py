@@ -95,7 +95,7 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-
+        if self.get_setting('enabled') == 'false': return False
         if self.get_setting('login') == 'false':
             return False
         return re.match('http://veehd.com/video/[0-9A-Za-z]+', url) or \
@@ -125,5 +125,4 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         
     #to indicate if this is a universal resolver
     def isUniversal(self):
-        
-        return True
+        return False

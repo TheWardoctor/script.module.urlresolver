@@ -37,7 +37,6 @@ class StagevuResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def get_media_url(self, host, media_id):
-        print 'stagevu: in get_media_url %s %s' % (host, media_id)
         web_url = self.get_url(host, media_id)
         link = self.net.http_GET(web_url).content
         p=re.compile('<embed type="video/divx" src="(.+?)"')
@@ -45,12 +44,10 @@ class StagevuResolver(Plugin, UrlResolver, PluginSettings):
         return match[0]
 
     def get_url(self, host, media_id):
-        print 'stagevu: in get_url %s %s' % (host, media_id)
         return 'http://www.stagevu.com/video/%s' % media_id 
         
         
     def get_host_and_id(self, url):
-        print 'stagevu: in get_host_and_id %s' % (url)
         r = re.search('//(.+?)/video/([0-9a-zA-Z/]+)', url)
         if r:
             return r.groups()
@@ -59,6 +56,7 @@ class StagevuResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?stagevu.com/video/' +
                          '[0-9A-Za-z]+', url) or
                          'stagevu' in host)
