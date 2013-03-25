@@ -124,11 +124,24 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        if self.get_setting('login') == 'false': return False
-        for pattern in self.get_all_hosters():
-            if pattern.findall(url):
-                return True
-        return False
+        if self.get_setting('login') == 'false':
+            return False
+        print 'in valid_url %s : %s' % (url, host)
+        tmp = re.compile('//(.+?)/').findall(url)
+        domain = ''
+        if len(tmp) > 0 :
+            domain = tmp[0].replace('www.', '')
+            if 'megashares' in domain:
+                domain = 'megashares.com'
+            elif 'megashare' in domain:
+                domain = 'megashare.com'
+            elif 'mixturecloud' in domain :
+                domain = 'mixturevideo.com'
+            print 'domain is %s ' % domain
+        if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
+            return True
+        else:
+            return False
 
     def  checkLogin(self):
         url = 'http://real-debrid.com/lib/api/account.php'
