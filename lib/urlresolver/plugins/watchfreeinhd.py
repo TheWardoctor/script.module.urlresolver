@@ -1,6 +1,6 @@
-"""
-zooupload urlresolver plugin
-Copyright (C) 2012 Lynx187
+'''
+watchfreeinhd urlresolver plugin
+Copyright (C) 2013 voinage
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,55 +14,40 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
+'''
 
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
+import re
 import urllib2
 from urlresolver import common
-from lib import jsunpack
-import xbmcgui
-import re
-import time
+import os
 
-
-class ZoouploadResolver(Plugin, UrlResolver, PluginSettings):
+class watchfreeResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "zooupload"
+    name = "watchfreeinhd"
+
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
 
+
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        try:
-            lang = ({'Cookie':'lang=english;'})
-            html = self.net.http_GET(web_url, headers = lang).content
-        except urllib2.URLError, e:
-            common.addon.log_error('zooupload: got http error %d fetching %s' %
-                                  (e.code, web_url))
-            return False
-        dialog = xbmcgui.Dialog()            
-        if re.search('>File Not Found<',html):
-            dialog.ok( 'UrlResolver', 'File was deleted', '', '')
-            return False #1
-        r = re.search('<div id="player_code"><script type=.+?text/javascript.+?>(.+?)</script>',html,re.DOTALL)
-        if r:
-            js = jsunpack.unpack(r.group(1))
-            r = re.search('src="([^"]+)"', js)
-            if r:
-                return r.group(1)
-        return False
+        html=self.net.http_POST(web_url,{'agree':'Yes, let me watch'}).content
+        link=re.compile('<a href="(.+?)" id="player" name="player">').findall(html)[0]
+        return link
 
     def get_url(self, host, media_id):
-            return 'http://zooupload.com/%s' % (media_id)
-
+        return 'http://www.%s.com/%s' % (host,media_id)
+        
+        
     def get_host_and_id(self, url):
-        r = re.search('http://(?:www.)?(.+?)/([0-9A-Za-z]+)', url)
+        r = re.match(r'http://www.(watchfreeinhd).com/([0-9A-Za-z]+)',url)
         if r:
             return r.groups()
         else:
@@ -70,6 +55,4 @@ class ZoouploadResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
-        return re.match('http://(www.)?zooupload.com/[0-9A-Za-z]+', url) or 'zooupload' in host
-
-
+        return (re.match(r'http://www.(watchfreeinhd).com/([0-9A-Za-z]+)',url) or 'watchfree' in host)
