@@ -47,13 +47,15 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
         dialog.create('Resolving', 'Resolving Vidhog Link...')       
         dialog.update(0)
 
-        op = 'download1'
+        op = re.search('<input type="hidden" name="op" value="(.+?)">', html).group(1)
         usr_login = ''
         postid = re.search('<input type="hidden" name="id" value="(.+?)">', html).group(1)
         fname = re.search('<input type="hidden" name="fname" value="(.+?)">', html).group(1)
-        method_free = re.search('<input type="submit" name="method_free" value="(.+?)" class="freebtn right">', html).group(1)
-        referer = 'method_free'
-        data = {'op': op, 'usr_login': usr_login, 'id': postid, 'fname': fname, 'referer': referer, 'method_free': method_free}
+        method_free = 'Free Download'
+
+        data = {'op': op, 'usr_login': usr_login, 'id': postid, 'fname': fname, 'referer': url, 'method_free': method_free}
+
+        print 'Vidhog - Requesting POST URL: %s DATA: %s' % (url, data)
         html = net.http_POST(url, data).content
 
         captchaimg = re.search('<img src="(http://www.vidhog.com/captchas/.+?)"', html).group(1)
@@ -76,16 +78,17 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
         dialog.create('Resolving', 'Resolving Vidhog Link...') 
         dialog.update(50)
 
-
-        op = re.search('<input type="hidden" name="op" value="(.+?)">', html).group(1)
+        op = 'download2'
         postid = re.search('<input type="hidden" name="id" value="(.+?)">', html).group(1)
         rand = re.search('<input type="hidden" name="rand" value="(.+?)">', html).group(1)
-        method_free = re.search('<input type="hidden" name="method_free" value="(.+?)">', html).group(1)
-        down_direct = int(re.search('<input type="hidden" name="down_direct" value="(.+?)">', html).group(1))
+        method_free = 'Free Download'
+        down_direct = 1
 
-        time.sleep(15)
+        time.sleep(10)
         
         data = {'op': op, 'id': postid, 'rand': rand, 'referer': url, 'method_free': method_free, 'down_direct': down_direct, 'code': capcode}
+
+        print 'Vidhog - Requesting POST URL: %s DATA: %s' % (url, data)
         html = net.http_POST(url, data).content
 
         match = re.search("product_download_url=(.+?)'", html)
@@ -97,6 +100,7 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
     
         
     def get_url(self, host, media_id):
+        print 'vidhog: in get_url %s %s' % (host, media_id)
         return 'http://www.vidhog.com/%s' % media_id 
         
 
