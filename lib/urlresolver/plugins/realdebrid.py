@@ -1,6 +1,6 @@
 """
 urlresolver XBMC Addon
-Copyright (C) 2011 JUL1EN094
+Copyright (C) 2013 JUL1EN094
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -87,15 +87,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         if self.hosters is None:
             url = 'http://www.real-debrid.com/api/regex.php?type=all'
             response = self.net.http_GET(url).content
-            hosters_first = response.split('/g,/')
-            self.hosters = []
-            for host in hosters_first :
-                if re.search('/g|-|/',host) :
-                    hosts = host.split('/g|-|/')
-                    self.hosters = self.hosters + hosts
-                else :
-                    self.hosters.append(host)
-            print 'RealDebrid hosters : %s' %self.hosters
+            self.hosters = re.split('/g,/|/g\|-\|/', response)
+            common.addon.log_debug( 'RealDebrid hosters : %s' %self.hosters)
         return self.hosters
 
     def valid_url(self, url, host):
