@@ -1,6 +1,6 @@
 """
 urlresolver XBMC Addon
-Copyright (C) 2013 JUL1EN094
+Copyright (C) 2013 t0mm0, JUL1EN094, bstrdsmkr
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
