@@ -58,7 +58,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             dialog.ok(' Real-Debrid ', ' Real-Debrid server timed out ', '', '')
-            return False        
+            return False
         if re.search('Upgrade your account now to generate a link', source):
             dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
             return False
@@ -78,7 +78,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return link[0]
         
     def get_url(self, host, media_id):
-        return media_id        
+        return media_id
 
     def get_host_and_id(self, url):
         return 'www.real-debrid.com', url
@@ -86,24 +86,23 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_all_hosters(self):
         if self.hosters is None:
             url = 'http://www.real-debrid.com/api/regex.php?type=all'
-            response = self.net.http_GET(url).content
+            response = self.net.http_GET(url).content.lstrip('/').rstrip('/g')
             self.hosters = re.split('/g,/|/g\|-\|/', response)
             common.addon.log_debug( 'RealDebrid hosters : %s' %self.hosters)
         return self.hosters
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        if self.get_setting('login') == 'false':
-            return False
-        print 'in valid_url %s : %s' % (url, host)
+        if self.get_setting('login') == 'false': return False
+        common.addon.log_debug('in valid_url %s : %s' % (url, host))
         self.get_all_hosters()
         for host in self.hosters :
-            print str(host)
+            common.addon.log_debug('RealDebrid valid host : '+str(host))
             test = re.search(host,url)
             if test :
-                print 'Host OK'
+                common.addon.log_debug('Host OK')
                 return True
-        return False      
+        return False
 
     def checkLogin(self):
         url = 'http://real-debrid.com/lib/api/account.php'
@@ -111,19 +110,19 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                return True
         self.net.set_cookies(self.cookie_file)
         source = self.net.http_GET(url).content
-        print source
+        common.addon.log_debug(source)
         if re.search('expiration', source):
-            print 'checkLogin returning False'
+            common.addon.log_debug('checkLogin returning False')
             return False
         else:
-            print 'checkLogin returning True'
+            common.addon.log_debug('checkLogin returning True')
             return True
     
     #SiteAuth methods
     def login(self):
         if self.checkLogin():
             try:
-                print 'Need to login since session is invalid'
+                common.addon.log_debug('Need to login since session is invalid')
                 login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
                 url = 'https://real-debrid.com/ajax/login.php?' + login_data
                 source = self.net.http_GET(url).content
@@ -132,7 +131,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     self.net.set_cookies(self.cookie_file)
                     return True
             except:
-                    print 'error with http_GET'
+                    common.addon.log_debug('error with http_GET')
                     dialog = xbmcgui.Dialog()
                     dialog.ok(' Real-Debrid ', ' Unexpected error, Please try again.', '', '')
             else:
