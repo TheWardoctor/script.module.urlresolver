@@ -17,9 +17,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os, sys
-import random
 import re
-import urllib, urllib2
+import urllib
 
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import SiteAuth
@@ -27,7 +26,6 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
-import cookielib
 from t0mm0.common.net import Net
 
 class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
@@ -87,20 +85,19 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         if self.hosters is None:
             url = 'http://www.real-debrid.com/api/regex.php?type=all'
             response = self.net.http_GET(url).content.lstrip('/').rstrip('/g')
-            self.hosters = re.split('/g,/|/g\|-\|/', response)
+            delim = '/g,/|/g\|-\|/'
+            self.hosters = [re.compile(host) for host in re.split(delim, response)]
             common.addon.log_debug( 'RealDebrid hosters : %s' %self.hosters)
         return self.hosters
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        if self.get_setting('login') == 'false': return False
         common.addon.log_debug('in valid_url %s : %s' % (url, host))
         self.get_all_hosters()
         for host in self.hosters :
-            common.addon.log_debug('RealDebrid valid host : '+str(host))
-            test = re.search(host,url)
-            if test :
-                common.addon.log_debug('Host OK')
+            common.addon.log_debug('RealDebrid checking host : %s' %str(host))
+            if re.search(host,url):
+                common.addon.log_debug('RealDebrid Match found')
                 return True
         return False
 
