@@ -33,7 +33,7 @@ import string
 def detect(source):
     """Detects whether `source` is P.A.C.K.E.R. coded."""
     source = source.replace(' ','')
-    if re.search('eval(function(p,a,c,k,e,(?:r|d)') return True
+    if re.search('eval(function(p,a,c,k,e,(?:r|d)',source): return True
     else: return False
 
 def unpack(source):
