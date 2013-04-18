@@ -16,10 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import re,cookielib,xbmcplugin,xbmcgui,xbmcaddon,xbmc
-import urllib2,time
+import re,xbmcgui,time
 from urlresolver import common
-from t0mm0.common.net import Net 
+from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
@@ -37,67 +36,56 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         try:
             url = 'http://'+host+'/'+media_id
-            #Show dialog box so user knows something is happening
             dialog = xbmcgui.DialogProgress()
             dialog.create('Resolving', 'Resolving BillionUploads Link...')       
             dialog.update(0)
         
-            print 'BillionUploads - Requesting GET URL: %s' %url
             html = net.http_GET(url).content
-               
-            #Check page for any error msgs
-            if re.search('This server is in maintenance mode', html):
-                print '***** BillionUploads - Site reported maintenance mode'
-                raise Exception('File is currently unavailable on the host')
+            if re.search('File Not Found', html):
+                common.addon.log_error('BillionUploads - File Not Found')
+                raise Exception ('File Not Found')
+            
+            common.addon.show_countdown(3, title='BillionUploads', text='Loading Video...')
+            
+            data = {}
+            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
+            for name, value in r:
+                data[name] = value
 
-            #Captcha
-            captchaimg = re.search('<img src="((http://)?[bB]illion[uU]ploads.com/captchas/.+?)"', html).group(1)
+            captchaimg = re.search('<img src="((?:http://|www\.)?BillionUploads.com/captchas/.+?)"', html)
         
-            dialog.close()
+            if captchaimg:
+                dialog.close()
+                img = xbmcgui.ControlImage(550,15,240,100,captchaimg.group(1))
+                wdlg = xbmcgui.WindowDialog()
+                wdlg.addControl(img)
+                wdlg.show()
         
-            #Grab Image and display it
-            img = xbmcgui.ControlImage(550,15,240,100,captchaimg)
-            wdlg = xbmcgui.WindowDialog()
-            wdlg.addControl(img)
-            wdlg.show()
+                time.sleep(3)
         
-            #Small wait to let user see image
-            time.sleep(3)
+                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
+                kb.doModal()
+                capcode = kb.getText()
         
-            #Prompt keyboard for user input
-            kb = xbmc.Keyboard('', 'Type the letters in the image', False)
-            kb.doModal()
-            capcode = kb.getText()
-        
-            #Check input
-            if (kb.isConfirmed()):
-              userInput = kb.getText()
-              if userInput != '':
-                  capcode = kb.getText()
-              elif userInput == '':
-                   Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
-                   return None
-            else:
-                return None
-            wdlg.close()
+                if (kb.isConfirmed()):
+                    userInput = kb.getText()
+                    if userInput != '':
+                        capcode = kb.getText()
+                    elif userInput == '':
+                        Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
+                        return False
+                else:
+                    return False
+                wdlg.close()
+                dialog.close() 
+                dialog.create('Resolving', 'Resolving BillionUploads Link...') 
+                dialog.update(50)
+                data.update({'code':capcode})
 
-            #They need to wait for the link to activate in order to get the proper 2nd page
-            dialog.close()
-            #do_wait('Waiting on link to activate', '', 3)
-            time.sleep(3)  
-            dialog.create('Resolving', 'Resolving BillionUploads Link...') 
-            dialog.update(50)
-        
-            #Set POST data values
-            op = 'download2'
-            rand = re.search('<input type="hidden" name="rand" value="(.+?)">', html).group(1)
-            postid = re.search('<input type="hidden" name="id" value="(.+?)">', html).group(1)
-            method_free = re.search('<input type="hidden" name="method_free" value="(.*?)">', html).group(1)
-            down_direct = re.search('<input type="hidden" name="down_direct" value="(.+?)">', html).group(1)
-                
-            data = {'op': op, 'rand': rand, 'id': postid, 'referer': url, 'method_free': method_free, 'down_direct': down_direct, 'code': capcode}
-        
-            print 'BillionUploads - Requesting POST URL: %s DATA: %s' % (url, data)
+            else:  
+                dialog.create('Resolving', 'Resolving BillionUploads Link...') 
+                dialog.update(50)
+                    
             html = net.http_POST(url, data).content
             dialog.update(100)
             link = re.search('&product_download_url=(.+?)"', html).group(1)
@@ -108,10 +96,10 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             return mediaurl
 
         except Exception, e:
-            print '**** BillionUploads Error occured: %s' % e
-            raise
+            common.addon.log('**** BillionUploads Error occured: %s' % e)
+            common.addon.show_small_popup('Error', str(e), 5000, '')
+            return False
     
-
     def get_url(self, host, media_id):
         return 'http://www.BillionUploads.com/%s' % media_id
 

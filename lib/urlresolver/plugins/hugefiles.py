@@ -20,10 +20,8 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re
-import urllib2, xbmcgui
+import re, xbmcgui
 from urlresolver import common
-import os
 from lib import jsunpack
 
 net = Net()
@@ -40,46 +38,42 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def get_media_url(self, host, media_id):
-        print 'Hugefiles: in get_media_url %s %s' % (host, media_id)
-        url = self.get_url(host, media_id)
-        html = self.net.http_GET(url).content
-        #Show dialog box so user knows something is happening
-        dialog = xbmcgui.DialogProgress()
-        dialog.create('Resolving', 'Resolving Hugefiles Link...')       
-        dialog.update(0)
-
-        op = 'download1'
-        usr_login = ''
-        postid = re.search('<input type="hidden" name="id" value="(.+?)">', html).group(1)
-        fname = re.search('<input type="hidden" name="fname" value="(.+?)">', html).group(1)
-        referer = ''
-        method_free = 'Free Download'
-        data = {'op': op, 'usr_login': usr_login, 'id': postid, 'fname': fname, 'referer': referer, 'method_free': method_free, 'down_direct': 1}
-            
-        print 'Hugefiles - Requesting POST URL: %s DATA: %s' % (url, data)
-        html = net.http_POST(url, data).content
-
-        dialog.update(50)
-
-        sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
-        r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-        
-        if r:
-            sJavascript = r.group(1)
-            sUnpacked = jsunpack.unpack(sJavascript)
-            sPattern  = '''("video/divx"src="|addVariable\('file',')(.+?)video[.]'''
-            r = re.search(sPattern, sUnpacked)              
+        try:
+            url = self.get_url(host, media_id)
+            html = self.net.http_GET(url).content
+            dialog = xbmcgui.DialogProgress()
+            dialog.create('Resolving', 'Resolving Hugefiles Link...')       
+            dialog.update(0)
+    
+            data = {}
+            r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)">', html)
+            for name, value in r:
+                data[name] = value
+                data.update({'method_free':'Free Download'})
+            html = net.http_POST(url, data).content
+    
+            dialog.update(50)
+    
+            sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
+            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
+    
             if r:
-                link = r.group(2) + fname
-                dialog.close()
-                return link
+                sJavascript = r.group(1)
+                sUnpacked = jsunpack.unpack(sJavascript)
+                sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
+                sPattern += '"custommode='
+                r = re.search(sPattern, sUnpacked)
+                if r:
+                    dialog.update(100)
+                    dialog.close()
+                    return r.group(1)
 
-        if not link:
-            print '***** Hugefiles - Link Not Found'
-            raise Exception("Unable to resolve Hugefiles")
+        except Exception, e:
+            common.addon.log('**** Hugefiles Error occured: %s' % e)
+            common.addon.show_small_popup('Error', str(e), 5000, '')
+            return False
         
     def get_url(self, host, media_id):
-        print 'Hugefiles: in get_url %s %s' % (host, media_id)
         return 'http://hugefiles.net/%s' % media_id 
         
 
