@@ -97,8 +97,7 @@ class purevid(Plugin, UrlResolver, SiteAuth, PluginSettings):
         print 'login to purevid'
         url = 'http://www.purevid.com/?m=login'
                         
-        data = {'username' : self.get_setting('username'), 'password' : self.get_setting('password')}
-        time.sleep(1)
+        data = {'username' : self.get_setting('username'), 'password' : self.get_setting('password')}        
         source = self.net.http_POST(url,data).content        
                 
         if re.search(self.get_setting('username'), source):            
