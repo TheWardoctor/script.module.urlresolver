@@ -86,9 +86,7 @@ class purevid(Plugin, UrlResolver, SiteAuth, PluginSettings):
         else:
             return False
 
-    def valid_url(self, url, host): 
-        return 'purevid' in url
-        
+    def valid_url(self, url, host):                 
         if self.get_setting('login') == 'false':        
             return False
         print url
