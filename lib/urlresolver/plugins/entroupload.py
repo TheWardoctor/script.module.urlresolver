@@ -1,5 +1,5 @@
 '''
-Cyberlocker urlresolver plugin
+Entroupload urlresolver plugin
 Copyright (C) 2013 Vinnydude
 
 This program is free software: you can redistribute it and/or modify
@@ -20,16 +20,15 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re
-import xbmcgui
+import re, xbmcgui
 from urlresolver import common
 from lib import jsunpack
 
 net = Net()
 
-class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
+class EntrouploadResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "cyberlocker"
+    name = "entroupload"
 
 
     def __init__(self):
@@ -43,17 +42,15 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
             dialog = xbmcgui.DialogProgress()
-            dialog.create('Resolving', 'Resolving Cyberlocker Link...')       
+            dialog.create('Resolving', 'Resolving Entroupload Link...')       
             dialog.update(0)
     
             data = {}
-            r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)">', html)
+            r = re.findall(r'type="(?:hidden|submit)?" name="((?!(?:.+premium)).+?)"\s* value="?(.+?)">', html)
             for name, value in r:
                 data[name] = value
-                data['method_free'] = 'Wait for 0 seconds'
                 
             html = net.http_POST(url, data).content
-            dialog.update(50)
             
             sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
             sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
@@ -71,22 +68,22 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
                     return r.group(1)
 
             else:
-                num = re.compile('cyberlocker\|(.+?)\|http').findall(html)
-                pre = 'http://'+num[0]+'.cyberlocker.ch:182/d/'
-                preb = re.compile('image\|(.+?)\|video\|(.+?)\|').findall(html)
+                fold = re.compile('l\/([0-9])\/k').findall(html)
+                pre = 'http://s6.entroupload.com/files/'+fold[0]+'/'
+                preb = re.compile('image(?:\|)?\|(.+?)\|(.+?)\|files').findall(html)
                 for ext, link in preb:
                     r = pre+link+'/video.'+ext
                     dialog.update(100)
                     dialog.close()
                     return r
-                
+
         except Exception, e:
-            common.addon.log('**** Cyberlocker Error occured: %s' % e)
+            common.addon.log('**** Entroupload Error occured: %s' % e)
             common.addon.show_small_popup('Error', str(e), 5000, '')
             return False
         
     def get_url(self, host, media_id):
-        return 'http://cyberlocker.ch/%s' % media_id 
+        return 'http://entroupload.com/%s' % media_id 
         
 
     def get_host_and_id(self, url):
@@ -100,6 +97,6 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?cyberlocker.ch/' +
+        return (re.match('http://(www.)?entroupload.com/' +
                          '[0-9A-Za-z]+', url) or
-                         'cyberlocker' in host)
+                         'entroupload' in host)
