@@ -72,7 +72,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
                     if userInput != '':
                         capcode = kb.getText()
                     elif userInput == '':
-                        Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
+                        common.addon.show_error_dialog("You must enter the text from the image to access video")
                         return False
                 else:
                     return False
@@ -96,7 +96,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             return mediaurl
 
         except Exception, e:
-            common.addon.log('**** BillionUploads Error occured: %s' % e)
+            common.addon.log_error('**** BillionUploads Error occured: %s' % e)
             common.addon.show_small_popup('Error', str(e), 5000, '')
             return False
     
