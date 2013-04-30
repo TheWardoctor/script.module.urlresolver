@@ -50,16 +50,21 @@ class MovreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         
 
     def login(self):
-        loginurl = 'http://movreel.com/login.html'
-        op = 'login'
-        login = selfAddon.getSetting('movreelResolver_username')
-        password = selfAddon.getSetting('movreelResolver_password')
-        data = {'op': op, 'login': login, 'password': password}
-        html = net.http_POST(loginurl, data).content
-        self.net.save_cookies(self.cookie_file)
-        if re.search('op=logout', html):
-            return True
+        if self.get_setting('login') == 'true': 
+            loginurl = 'http://movreel.com/login.html'
+            login = selfAddon.getSetting('movreelResolver_username')
+            password = selfAddon.getSetting('movreelResolver_password')
+            data = {'op': 'login', 'login': login, 'password': password}
+            html = net.http_POST(loginurl, data).content
+            if re.search('op=logout', html):
+                self.net.save_cookies(self.cookie_file)
+                common.addon.log('LOGIN SUCCESSFUL') 
+                return True
+            else:
+                common.addon.log('LOGIN FAILED') 
+                return False
         else:
+            common.addon.log('No account info entered') 
             return False
         
 
