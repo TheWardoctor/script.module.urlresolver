@@ -29,8 +29,6 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 
 net = Net()
-addon_id = 'plugin.video.dailyflix'
-selfAddon = xbmcaddon.Addon(id=addon_id)
 
 class MovreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
@@ -52,8 +50,8 @@ class MovreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def login(self):
         if self.get_setting('login') == 'true': 
             loginurl = 'http://movreel.com/login.html'
-            login = selfAddon.getSetting('movreelResolver_username')
-            password = selfAddon.getSetting('movreelResolver_password')
+            login = self.get_setting('movreelResolver_username')
+            password = self.get_setting('movreelResolver_password')
             data = {'op': 'login', 'login': login, 'password': password}
             html = net.http_POST(loginurl, data).content
             if re.search('op=logout', html):
