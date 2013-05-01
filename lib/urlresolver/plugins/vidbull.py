@@ -21,11 +21,8 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 import re
-import urllib2, xbmcgui, time, xbmc
 from urlresolver import common
-import os
-
-
+from lib import jsunpack
 
 net = Net()
 
@@ -41,42 +38,48 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def get_media_url(self, host, media_id):
-        print 'Vidbull: in get_media_url %s %s' % (host, media_id)
-        url = self.get_url(host, media_id)
-        html = self.net.http_GET(url).content
-        #Show dialog box so user knows something is happening
-        dialog = xbmcgui.DialogProgress()
-        dialog.create('Resolving', 'Resolving Vidbull Link...')       
-        dialog.update(0)
+        try:
+            url = self.get_url(host, media_id)
+            html = self.net.http_GET(url).content
+            check = re.compile('File Not Found').findall(html)
+            if check:
+                raise Exception(str(check))
 
-        time.sleep(4)
+            data = {}
+            r = re.findall(r'type="hidden" name="((?!(?:.+premium)).+?)"\s* value="?(.+?)">', html)
+            for name, value in r:
+                data[name] = value
 
-        dialog.create('Resolving', 'Resolving Vidbull Link...') 
-        dialog.update(50)
+            common.addon.show_countdown(4, title='Muchshare', text='Loading Video...')
+            html = net.http_POST(url, data).content
 
-        op = re.search('<input type="hidden" name="op" value="(.+?)">', html).group(1)
-        postid = re.search('<input type="hidden" name="id" value="(.+?)">', html).group(1)
-        rand = re.search('<input type="hidden" name="rand" value="(.+?)">', html).group(1)
-        referer = ''
-        method_free = ''
-        down_direct = 1
-        
-        data = {'op': op, 'id': postid, 'rand': rand, 'referer': referer, 'method_free': method_free, 'down_direct': down_direct}
+            sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
+            sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
+            sPattern += '\s+?</script>'
+            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
+            if r:
+    		sJavascript = r.group(1)
+		sUnpacked = jsunpack.unpack(sJavascript)
+		sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
+		sPattern += '"custommode='
+		r = re.search(sPattern, sUnpacked)
+		if r:
+		    return r.group(1)
 
-        print 'Vidbull - Requesting POST URL: %s DATA: %s' % (url, data)
-        html = net.http_POST(url, data).content
-
-        num = re.compile('event\|(.+?)\|aboutlink').findall(html)
-        pre = 'http://'+num[0]+'.vidbull.com:182/d/'
-        preb = re.compile('image\|(.+?)\|video\|(.+?)\|').findall(html)
-        for ext, link in preb:
+            else: 
+                num = re.compile('event\|(.+?)\|aboutlink').findall(html)
+                pre = 'http://'+num[0]+'.vidbull.com:182/d/'
+                preb = re.compile('image\|(.+?)\|video\|(.+?)\|').findall(html)
+                for ext, link in preb:
                     r = pre+link+'/video.'+ext
-                    dialog.update(100)
-                    dialog.close()
                     return r
+                
+        except Exception, e:
+            common.addon.log('**** Vidbull Error occured: %s' % e)
+            common.addon.show_small_popup('Error', str(e), 5000, '')
+            return False
     
     def get_url(self, host, media_id):
-        print 'vidbull: in get_url %s %s' % (host, media_id)
         return 'http://www.vidbull.com/%s' % media_id 
         
 
