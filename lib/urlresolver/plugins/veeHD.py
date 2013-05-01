@@ -17,17 +17,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-import random
 import re
-import urllib, urllib2
-import xbmc
+import urllib2
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
-import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
-import cookielib
 from t0mm0.common.net import Net
 
 net = Net()
@@ -59,7 +55,6 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
         fragment = re.search('playeriframe".+?attr.+?src : "(.+?)"', html)
         frag = 'http://%s%s'%(host,fragment.group(1))
-        xbmc.log(frag)
         try:
             html = self.net.http_GET(frag).content
         except urllib2.URLError, e:
