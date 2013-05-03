@@ -72,11 +72,11 @@ class vidto(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Vidto.me got http error: '+str(e), 5000, '')
+            common.addon.show_small_popup('Error','Vidto.me got http error: '+str(e), 5000, error_log)
             return False
         except Exception, e:
             common.addon.log_error('**** Vidto.me Error Occured : %s' % e)
-            common.addon.show_small_popup('Error','Vidto.me Error Occured : %s', 5000, '') %e
+            common.addon.show_small_popup('Error','An error has occured, unable to resolve link', 5000, error_log)
             return False
         
     def get_url(self, host, media_id):
