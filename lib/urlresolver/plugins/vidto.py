@@ -68,11 +68,15 @@ class vidto(Plugin, UrlResolver, PluginSettings):
                         r = re.findall(r'label:"360p",file:"(.+?)"}',unpacked)
                     if not r:
                         r = re.findall(r"var file_link = '(.+?)';",html)
-                        
-            return r[0]
+            return r[0]            
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                    (e.code, web_url))
+                                   (e.code, web_url))
+            common.addon.show_small_popup('Error','Vidto.me got http error: '+str(e), 5000, '')
+            return False
+        except Exception, e:
+            common.addon.log_error('**** Vidto.me Error Occured : %s' % e)
+            common.addon.show_small_popup('Error','Vidto.me Error Occured : %s', 5000, '') %e
             return False
         
     def get_url(self, host, media_id):
