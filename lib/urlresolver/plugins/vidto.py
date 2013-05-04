@@ -44,7 +44,7 @@ class vidto(Plugin, UrlResolver, PluginSettings):
             r = re.findall(r'<font class="err">File was removed</font>',html,re.I)
             if r:
                 common.addon.log_error(self.name + ': File was removed')
-                common.addon.show_small_popup(title='[B][COLOR white]VIDTO.ME[/COLOR][/B]', msg='[COLOR red]No such file or the file has been removed due to copyright infringement issues[/COLOR]', delay=8000, image=error_logo)
+                common.addon.show_small_popup(title='[B][COLOR white]VIDTO.ME[/COLOR][/B]', msg='[COLOR red]No such file or the file has been removed[/COLOR]', delay=5000, image=error_logo)
                 return False            
             if not r:
                 r = re.findall(r'(eval\(function\(p,a,c,k,e,d\)\{while.+?flvplayer.+?)</script>'
@@ -72,11 +72,11 @@ class vidto(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Vidto.me got http error: '+str(e), 5000, error_log)
+            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return False
         except Exception, e:
             common.addon.log_error('**** Vidto.me Error Occured : %s' % e)
-            common.addon.show_small_popup('Error','An error has occured, unable to resolve link', 5000, error_log)
+            common.addon.show_small_popup('Error','An error has occured, unable to resolve link', 5000, error_logo)
             return False
         
     def get_url(self, host, media_id):
