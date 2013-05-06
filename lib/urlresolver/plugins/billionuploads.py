@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import re,xbmcgui,time, os
+import re, xbmcgui, time, os
 from urlresolver import common
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
@@ -46,9 +46,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             html = net.http_GET(url).content
             if re.search('File Not Found', html):
                 common.addon.log_error('BillionUploads - File Not Found')
-                common.addon.show_small_popup(title='[B][COLOR white]BILLIONUPLOADS[/COLOR][/B]', msg='[COLOR red]No such file or the file has been removed[COLOR]', delay=5000, image=error_logo)
                 raise Exception ('File Not Found')
-            
             common.addon.show_countdown(3, title='BillionUploads', text='Loading Video...')
             
             data = {}
@@ -101,7 +99,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
 
         except Exception, e:
             common.addon.log_error('**** BillionUploads Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
+            common.addon.show_small_popup(title='[B][COLOR white]BILLIONUPLOADS[/COLOR][/B]', msg='[COLOR red]No such file or the file has been removed[/COLOR]', delay=5000, image=error_logo)
             return False
     
     def get_url(self, host, media_id):
