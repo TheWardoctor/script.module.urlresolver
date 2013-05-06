@@ -99,7 +99,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
 
         except Exception, e:
             common.addon.log_error('**** BillionUploads Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]BILLIONUPLOADS[/COLOR][/B]', msg='[COLOR red] str(e)[/COLOR]' % e, delay=5000, image=error_logo)
+            common.addon.show_small_popup(title='[B][COLOR white]BILLIONUPLOADS[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
     
     def get_url(self, host, media_id):
