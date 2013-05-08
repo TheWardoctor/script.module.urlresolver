@@ -58,16 +58,18 @@ class GorillavidResolver(Plugin, UrlResolver, PluginSettings):
                 return r.group(1)
 
             raise Exception ('File Not Found or removed')
-        except Exception, e:
-            common.addon.log_error('**** Gorillavid Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]GORILLAVID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return False
-        
         except urllib2.URLError, e:
             common.addon.log_error('gorillavid: got http error %d fetching %s' %
                                   (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return False
+        
+        except Exception, e:
+            common.addon.log_error('**** Gorillavid Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]GORILLAVID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+            return False
+        
+        
 
     def get_url(self, host, media_id):
         return 'http://gorillavid.in/%s' % (media_id)

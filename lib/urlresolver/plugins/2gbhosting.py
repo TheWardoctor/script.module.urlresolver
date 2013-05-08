@@ -60,18 +60,17 @@ class TwogbhostingResolver(Plugin, UrlResolver, PluginSettings):
                     return r[0]
                 if not r:
                     raise Exception ('File Not Found or removed')
+
+        except urllib2.URLError, e:
+            common.addon.log_error('2gb-hosting: http error %d fetching %s' %
+                                    (e.code, web_url))
+            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
+            return False
+
         except Exception, e:
             common.addon.log_error('**** 2GB-hosting Error occured: %s' % e)
             common.addon.show_small_popup(title='[B][COLOR white]2GBHOSTING[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
-        
-        except urllib2.URLError, e:
-            common.addon.log_error('2gb-hosting: http error %d fetching %s' %
-                                    (e.code, web_url))
-            return False
-
-
-        
 
     def get_url(self, host, media_id):
         return 'http://www.2gb-hosting.com/videos/%s' % media_id + '.html'
