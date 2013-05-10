@@ -20,10 +20,13 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re
+import re, os, urllib2
 import xbmcgui
 from urlresolver import common
 from lib import jsunpack
+
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 net = Net()
 
@@ -42,15 +45,19 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
         try:
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
-            dialog = xbmcgui.DialogProgress()
-            dialog.create('Resolving', 'Resolving Cyberlocker Link...')       
-            dialog.update(0)
+            r = re.findall('<center><h3>File Not Found</h3></center><br>',html,re.I)
+            if r:
+                raise Exception ('File Not Found or removed')
+            if not r:
+                dialog = xbmcgui.DialogProgress()
+                dialog.create('Resolving', 'Resolving Cyberlocker Link...')       
+                dialog.update(0)
     
-            data = {}
-            r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)">', html)
-            for name, value in r:
-                data[name] = value
-                data['method_free'] = 'Wait for 0 seconds'
+                data = {}
+                r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)">', html)
+                for name, value in r:
+                    data[name] = value
+                    data['method_free'] = 'Wait for 0 seconds'
                 
             html = net.http_POST(url, data).content
             dialog.update(50)
@@ -80,9 +87,15 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
                     dialog.close()
                     return r
                 
+        except urllib2.URLError, e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %
+                                   (e.code, web_url))
+            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
+            return False
+        
         except Exception, e:
             common.addon.log('**** Cyberlocker Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
+            common.addon.show_small_popup(title='[B][COLOR white]CYBERLOCKER[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
         
     def get_url(self, host, media_id):
