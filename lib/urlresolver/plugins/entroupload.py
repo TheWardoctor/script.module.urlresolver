@@ -20,9 +20,13 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, xbmcgui
+import re, xbmcgui, urllib2, os
 from urlresolver import common
 from lib import jsunpack
+
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+
 
 net = Net()
 
@@ -41,6 +45,8 @@ class EntrouploadResolver(Plugin, UrlResolver, PluginSettings):
         try:
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
+            if r:
+                raise Exception ('File Not Found or removed')
             dialog = xbmcgui.DialogProgress()
             dialog.create('Resolving', 'Resolving Entroupload Link...')       
             dialog.update(0)
@@ -77,9 +83,14 @@ class EntrouploadResolver(Plugin, UrlResolver, PluginSettings):
                     dialog.close()
                     return r
 
+        except urllib2.URLError, e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %
+                                   (e.code, web_url))
+            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
+            return False
         except Exception, e:
-            common.addon.log('**** Entroupload Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
+            common.addon.log_error('**** Entroupload Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]ENTROUPLOAD[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
         
     def get_url(self, host, media_id):
