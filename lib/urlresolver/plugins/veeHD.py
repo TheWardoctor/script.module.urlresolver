@@ -16,15 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
-import re
-import urllib2
+import re, os, urllib2
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from t0mm0.common.net import Net
+
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 net = Net()
 
@@ -48,34 +49,35 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         web_url = self.get_url(host, media_id)
         try:
             html = self.net.http_GET(web_url).content
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + '- got http error %d fetching %s' %
-                                   (e.code, web_url))
-            return False
 
-        fragment = re.search('playeriframe".+?attr.+?src : "(.+?)"', html)
-        frag = 'http://%s%s'%(host,fragment.group(1))
-        try:
+            fragment = re.search('playeriframe".+?attr.+?src : "(.+?)"', html)
+            frag = 'http://%s%s'%(host,fragment.group(1))
+
             html = self.net.http_GET(frag).content
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + '- got http error %d fetching %s' %
-                                   (e.code, web_url))
-            return False
-        r = re.search('"video/divx" src="(.+?)"', html)
-        if r:
-            stream_url = r.group(1)
-        else:
-            message = self.name + '- 1st attempt at finding the stream_url failed probably an Mp4, finding Mp4'
-            common.addon.log_debug(message)
-            a = re.search('"url":"(.+?)"', html)
-            r=urllib.unquote(a.group(1))
+
+            r = re.search('"video/divx" src="(.+?)"', html)
             if r:
-                stream_url = r
+                stream_url = r.group(1)
             else:
-                message = self.name + '- Giving up on finding the stream_url'
-                common.addon.log_error(message)
-                return False
-        return stream_url
+                message = self.name + '- 1st attempt at finding the stream_url failed probably an Mp4, finding Mp4'
+                common.addon.log_debug(message)
+                a = re.search('"url":"(.+?)"', html)
+                r=urllib.unquote(a.group(1))
+                if r:
+                    stream_url = r
+                else:
+                    raise Exception ('File Not Found or removed')
+            return stream_url
+        except urllib2.URLError, e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %
+                                   (e.code, web_url))
+            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
+            return False
+        except Exception, e:
+            common.addon.log('**** VeeHD Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]VEEHD[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+            return False
+        
     
         
     def get_url(self, host, media_id):
