@@ -18,7 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys
 import re
-import urllib
+import urllib, urllib2
 
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import SiteAuth
@@ -27,6 +27,9 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
 from t0mm0.common.net import Net
+
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
@@ -51,29 +54,29 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         try:
             url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id.replace('|User-Agent=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0','')
             source = self.net.http_GET(url).content
+
+            if re.search('Upgrade your account now to generate a link', source):
+                raise Exception ('Upgrade your account now to generate a link')
+            if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
+                raise Exception ('Your file is unavailable on the hoster')
+            if re.search('This hoster is not included in our free offer', source):
+                raise Exception ('This hoster is not included in our free offer')
+            if re.search('No server is available for this hoster.', source):
+                raise Exception ('No server is available for this hoster')
+            link =re.compile('ok"><a href="(.+?)"').findall(source)
+            if len(link) == 0:
+                raise Exception ('File Not Found or removed')
+            self.media_url = link[0]
+            return link[0]
+        except urllib2.URLError, e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %
+                                   (e.code, web_url))
+            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
+            return False
         except Exception, e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            dialog.ok(' Real-Debrid ', ' Real-Debrid server timed out ', '', '')
+            common.addon.log('**** Real Debrid Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]REAL-DEBRID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
-        if re.search('Upgrade your account now to generate a link', source):
-            dialog.ok(' Real-Debrid ', ' Upgrade your account now to generate a link ', '', '')
-            return False
-        if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
-            dialog.ok(' Real-Debrid ', ' Your file is unavailable on the hoster ', '', '')
-            return False
-        if re.search('This hoster is not included in our free offer', source):
-            dialog.ok(' Real-Debrid ', ' This hoster is not included in our free offer ', '', '')
-            return False
-        if re.search('No server is available for this hoster.', source):
-            dialog.ok(' Real-Debrid ', ' No server is available for this hoster ', '', '')
-            return False
-        link =re.compile('ok"><a href="(.+?)"').findall(source)
-        if len(link) == 0:
-            return False
-        self.media_url = link[0]
-        return link[0]
         
     def get_url(self, host, media_id):
         return media_id
