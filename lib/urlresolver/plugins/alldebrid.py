@@ -30,6 +30,8 @@ import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
 import cookielib
 from t0mm0.common.net import Net
 
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
@@ -58,29 +60,29 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             url = 'http://www.alldebrid.com/service.php?link=%s' % media_id
 
             source = self.net.http_GET(url).content
+
+            if re.search('login', source):
+                raise Exception ('Your account may have Expired')
+            if re.search('Hoster unsupported or under maintenance', source):
+                raise Exception ('Sorry this hoster is not supported')
+
+            link =re.compile("href='(.+?)'").findall(source)
+            if len(link) == 0:
+                raise Exception ('File Not Found or removed')
+            print 'link is %s' % link[0]
+            self.media_url = link[0]
+            return link[0]
+        
+        except urllib2.URLError, e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %
+                                   (e.code, web_url))
+            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
+            return False
+        
         except Exception, e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            dialog.ok(' all-Debrid ', ' all-Debrid server timed out ', '', '')
+            common.addon.log('**** Alldebrid Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]ALLDEBRID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
-        print '************* %s' % source
-
-        if re.search('login', source):
-            dialog.ok(' All Debrid Message ', ' Your account may have Expired, please check by going to the website ', '', '')
-            return False
-        if re.search('Hoster unsupported or under maintenance', source):
-            dialog.ok(' All Debrid Message ', ' Sorry this hoster is not supported, change the priority level in resolver settings for this host ', '', '')
-            return False
-        link =re.compile("href='(.+?)'").findall(source)
-
-        if len(link) == 0:
-            return False
-
-        print 'link is %s' % link[0]
-        self.media_url = link[0]
-
-        return link[0]
 
     def get_url(self, host, media_id):
         return media_id
