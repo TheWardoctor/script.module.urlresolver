@@ -62,14 +62,14 @@ class StreamcloudResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search('file: "(.+?)",', html)
             if r:
                 return r.group(1)
-
-            raise Exception ('File Not Found or removed')
+            else:
+                raise Exception ('File Not Found or removed')
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
             return False
-       except Exception, e:
+        except Exception, e:
             common.addon.log('**** Streamcloud Error occured: %s' % e)
             common.addon.show_small_popup(title='[B][COLOR white]STREAMCLOUD[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
