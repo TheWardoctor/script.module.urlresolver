@@ -26,7 +26,6 @@ from lib import jsunpack
 
 #SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
 net = Net()
 
 class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
@@ -44,7 +43,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
         try:
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
-            r = re.findall(r'<b>File Not Found</b><br>',html)
             if r:
                 raise Exception ('File Not Found or removed')
             dialog = xbmcgui.DialogProgress()
@@ -73,6 +71,7 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                     dialog.update(100)
                     dialog.close()
                     return r.group(1)
+
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))

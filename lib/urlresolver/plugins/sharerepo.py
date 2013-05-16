@@ -20,9 +20,12 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, xbmcgui
+import re, xbmcgui, os
 from urlresolver import common
 from lib import jsunpack
+
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 net = Net()
 
@@ -66,13 +69,17 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
                     link = r.group(2) + fname
                     dialog.close()
                     return link
-    
-            if not link:
-                raise Exception("Unable to resolve Sharerepo")
+                raise Exception ('File Not Found or removed')
+            raise Exception ('File Not Found or removed')
 
+        except urllib2.URLError, e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %
+                                   (e.code, web_url))
+            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
+            return False
         except Exception, e:
-            common.addon.log('**** Sharerepo Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
+            common.addon.log('**** sharerepo Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]SHAREREPO[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return False
             
     def get_url(self, host, media_id):
