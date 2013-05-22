@@ -69,36 +69,36 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
 
             if solvemedia:
-               dialog.close()
-               html = net.http_GET(solvemedia.group(1)).content
-               hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
-               open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
-               img = xbmcgui.ControlImage(450,15,400,130, puzzle_img)
-               wdlg = xbmcgui.WindowDialog()
-               wdlg.addControl(img)
-               wdlg.show()
+                dialog.close()
+                html = net.http_GET(solvemedia.group(1)).content
+                hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
+                open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
+                img = xbmcgui.ControlImage(450,15,400,130, puzzle_img)
+                wdlg = xbmcgui.WindowDialog()
+                wdlg.addControl(img)
+                wdlg.show()
         
-               common.addon.show_countdown(3, 'Please Wait', 'Resolving')
+                xbmc.sleep(3000)
 
-               kb = xbmc.Keyboard('', 'Type the letters in the image', False)
-               kb.doModal()
-               capcode = kb.getText()
+                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
+                kb.doModal()
+                capcode = kb.getText()
    
-               if (kb.isConfirmed()):
-                   userInput = kb.getText()
-                   if userInput != '':
-                       solution = kb.getText()
-                   elif userInput == '':
-                       raise Exception('You must enter text in the image to access video')
-                       
-               else:
-                   raise Exception('Unable to resolve 180Upload Link')
+                if (kb.isConfirmed()):
+                    userInput = kb.getText()
+                    if userInput != '':
+                        solution = kb.getText()
+                    elif userInput == '':
+                        Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
+                        return False
+                else:
+                    return False
                
-               wdlg.close()
-               dialog.create('Resolving', 'Resolving 180Upload Link...') 
-               dialog.update(50)
-               if solution:
-                   data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
+                wdlg.close()
+                dialog.create('Resolving', 'Resolving 180Upload Link...') 
+                dialog.update(50)
+                if solution:
+                    data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
 
             print '180Upload - Requesting POST URL: %s' % web_url
             html = net.http_POST(web_url, data).content
