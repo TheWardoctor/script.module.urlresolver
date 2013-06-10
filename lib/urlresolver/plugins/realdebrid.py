@@ -27,6 +27,7 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
 from t0mm0.common.net import Net
+import simplejson as json
 
 #SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
@@ -52,9 +53,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_media_url(self, host, media_id):
         dialog = xbmcgui.Dialog()
         try:
-            url = 'http://real-debrid.com/ajax/deb.php?lang=en&sl=1&link=%s' % media_id.replace('|User-Agent=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0','')
+            url = 'https://real-debrid.com/ajax/unrestrict.php?link=%s' % media_id.replace('|User-Agent=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0','')
             source = self.net.http_GET(url).content
-
             if re.search('Upgrade your account now to generate a link', source):
                 raise Exception ('Upgrade your account now to generate a link')
             if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
@@ -63,14 +63,13 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 raise Exception ('This hoster is not included in our free offer')
             if re.search('No server is available for this hoster.', source):
                 raise Exception ('No server is available for this hoster')
-            link =re.compile('ok"><a href="(.+?)"').findall(source)
-            if len(link) == 0:
-                raise Exception ('File Not Found or removed')
-            self.media_url = link[0]
-            return link[0]
+            jsonresult = json.loads(source)
+            if 'main_link' in jsonresult :
+                return jsonresult['main_link'].encode('utf-8')
+            else :
+                return False
         except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %  (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
             return False
         except Exception, e:
