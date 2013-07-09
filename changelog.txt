@@ -9,6 +9,7 @@
 - Added YouWatch
 - New redx.png graphic file for reporting issues in resolvers
 - Updated all resolvers to display small box on exceptions
+- Updated alldebrid
 
 [B]Version 2.0.9[/B]
 - Fixed VeeHD
