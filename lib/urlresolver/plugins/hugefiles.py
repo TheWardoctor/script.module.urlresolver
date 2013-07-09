@@ -43,6 +43,7 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
         try:
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
+            r = re.findall('File Not Found',html)
             if r:
                 raise Exception ('File Not Found or removed')
             dialog = xbmcgui.DialogProgress()
@@ -59,19 +60,18 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             dialog.update(50)
     
             sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
-            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-    
+            r = re.findall(sPattern, html, re.DOTALL|re.I)
             if r:
-                sJavascript = r.group(1)
-                sUnpacked = jsunpack.unpack(sJavascript)
-                sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
-                sPattern += '"custommode='
-                r = re.search(sPattern, sUnpacked)
-                if r:
-                    dialog.update(100)
-                    dialog.close()
-                    return r.group(1)
-
+                sUnpacked = jsunpack.unpack(r[0])
+                sUnpacked = sUnpacked.replace("\\'","")
+                r = re.findall('file,(.+?)\)\;s1',sUnpacked)
+                if not r:
+                   r = re.findall('"src"value="(.+?)"/><embed',sUnpacked)
+                dialog.update(100)
+                dialog.close()
+                return r[0]
+            if not r:
+                return self.unresolvable()
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))

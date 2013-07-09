@@ -56,7 +56,7 @@ class StreamcloudResolver(Plugin, UrlResolver, PluginSettings):
             for i in re.finditer('<input.*?name="(.*?)".*?value="(.*?)">', html):
                 form_values[i.group(1)] = i.group(2)
             #wait required
-            time.sleep(10)
+            common.addon.show_countdown(11)
             html = self.net.http_POST(post_url, form_data=form_values).content
 
             r = re.search('file: "(.+?)",', html)
@@ -88,5 +88,4 @@ class StreamcloudResolver(Plugin, UrlResolver, PluginSettings):
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
         return re.match('http://(www.)?streamcloud.eu/[0-9A-Za-z]+', url) or 'streamcloud' in host
-
 
