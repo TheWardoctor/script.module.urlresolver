@@ -40,7 +40,6 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         dialog = xbmcgui.Dialog()
-        
         #grab stream details
         try:
             html = self.net.http_GET(web_url).content
@@ -55,23 +54,23 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
             else:
                 raise Exception ('File Not Found or removed')
 
-                api_html = self.net.http_GET(api_call).content
-                rapi = re.search('url=(.+?)&title=', api_html)
-                if rapi:
-                    stream_url = rapi.group(1)
-                else:
-                    raise Exception ('File Not Found or removed')
-                return stream_url
+            api_html = self.net.http_GET(api_call).content
+            rapi = re.search('url=(.+?)&title=', api_html)
+            if rapi:
+                stream_url = rapi.group(1)
+            else:
+                raise Exception ('File Not Found or removed')
+            return stream_url
 
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return False
+            return self.unresolvable() 
         except Exception, e:
             common.addon.log('**** Videoweed Error occured: %s' % e)
             common.addon.show_small_popup(title='[B][COLOR white]VIDEOWEED[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return False
+            return self.unresolvable() 
 
 
     def get_url(self, host, media_id):
