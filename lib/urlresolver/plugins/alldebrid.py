@@ -1,6 +1,6 @@
 """
     urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    Copyright (C) 2011 t0mm0, JUL1EN094
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,12 +26,11 @@ from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
+import simplejson as json
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
 import cookielib
 from t0mm0.common.net import Net
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
@@ -55,33 +54,45 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_media_url(self, host, media_id):
         print 'in get_media_url %s : %s' % (host, media_id)
         dialog = xbmcgui.Dialog()
-
         try:
             url = 'http://www.alldebrid.com/service.php?link=%s' % media_id
-
             source = self.net.http_GET(url).content
-
-            if re.search('login', source):
-                raise Exception ('Your account may have Expired')
-            if re.search('Hoster unsupported or under maintenance', source):
-                raise Exception ('Sorry this hoster is not supported')
-
-            link =re.compile("href='(.+?)'").findall(source)
-            if len(link) == 0:
-                raise Exception ('File Not Found or removed')
-            print 'link is %s' % link[0]
-            self.media_url = link[0]
-            return link[0]
-        
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return False
-        
         except Exception, e:
-            common.addon.log('**** Alldebrid Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]ALLDEBRID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            dialog.ok(' all-Debrid ', ' all-Debrid server timed out ', '', '')
+            return False
+        print '************* %s' % str(source)
+        #if not debriding
+        if re.search('login', source):
+            dialog.ok(' All Debrid Message ', ' Your account may have Expired, please check by going to the website ', '', '')
+            return False
+        if re.search('Hoster unsupported or under maintenance', source):
+            dialog.ok(' All Debrid Message ', ' Sorry this hoster is not supported, change the priority level in resolver settings for this host ', '', '')
+            return False
+        if re.search('Invalid link', source):
+            dialog.ok(' All Debrid Message ', ' Sorry the link seems invalid', '', '')
+            return False            
+        #Go
+        finallink = ''
+        #try json return
+        try:
+            link      = json.loads(source)
+            streaming = link['streaming']
+            finallink = streaming['source file ']   
+        #classic method
+        except :
+            link =re.compile("href='(.+?)'").findall(source)
+            if len(link) != 0:
+                finallink = link[0]              
+        #end
+        if finallink != '' :
+            print 'link is %s' % str(finallink)
+            self.media_url = finallink
+            return finallink
+        #false
+        else :
             return False
 
     def get_url(self, host, media_id):
@@ -110,6 +121,8 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 domain = 'megashares.com'
             elif 'megashare' in domain:
                 domain = 'megashare.com'
+            elif 'mixture' in domain :
+                domain = 'mixturevideo.com'
             print 'domain is %s ' % domain
         if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
             return True
