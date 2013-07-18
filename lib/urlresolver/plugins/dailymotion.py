@@ -42,22 +42,43 @@ class DailymotionResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error(self.name + '- got http error %d fetching %s' %
                                    (e.code, web_url))
             return False
-        sequence = re.compile('"sequence":"(.+?)"').findall(link)
-        newseqeunce = urllib.unquote(sequence[0]).decode('utf8').replace('\\/', '/')
-        imgSrc = re.compile('og:image" content="(.+?)"').findall(link)
-        if(len(imgSrc) == 0):
-                imgSrc = re.compile('/jpeg" href="(.+?)"').findall(link)
-        dm_low = re.compile('"sdURL":"(.+?)"').findall(newseqeunce)
-        dm_high = re.compile('"hqURL":"(.+?)"').findall(newseqeunce)
+        #sequence = re.compile('"sequence":"(.+?)"').findall(link)
+        #newseqeunce = urllib.unquote(sequence[0]).decode('utf8').replace('\\/', '/')
+        imgSrc = re.compile('"imageURL":"(.+?)"').findall(link)[0]
+        
+        
+        print link
+        print 'img:' + imgSrc
+        
+        dm_live = re.compile('"customURL":"(.+?)"', re.DOTALL).findall(link)
+        dm_1080p = re.compile('"hd1080URL":"(.+?)"', re.DOTALL).findall(link)
+        dm_720p = re.compile('"hd720URL":"(.+?)"', re.DOTALL).findall(link)
+        dm_high = re.compile('"hqURL":"(.+?)"', re.DOTALL).findall(link)
+        dm_low = re.compile('"sdURL":"(.+?)"', re.DOTALL).findall(link)
+        dm_low2 = re.compile('"video_url":"(.+?)"', re.DOTALL).findall(link)
+        
         videoUrl = ''
-        if(len(dm_high) == 0):
-                videoUrl = dm_low[0]
-        else:
-                videoUrl = dm_high[0]
+        
+        if dm_live:
+            videoUrl = urllib.unquote_plus(dm_live[0]).replace("\\/", "/")
+            videoUrl = getUrl(videoUrl)
+        elif dm_1080p:
+            videoUrl = urllib.unquote_plus(dm_1080p[0]).replace("\\/", "/")
+        elif dm_720p:
+            videoUrl = urllib.unquote_plus(dm_720p[0]).replace("\\/", "/")
+        elif dm_high:
+            videoUrl = urllib.unquote_plus(dm_high[0]).replace("\\/", "/")
+        elif dm_low:
+            videoUrl = urllib.unquote_plus(dm_low[0]).replace("\\/", "/")
+        elif dm_low2:
+            videoUrl = urllib.unquote_plus(dm_low2[0]).replace("\\/", "/")
+        
+        print 'url:' + videoUrl
+        
         return videoUrl
 
     def get_url(self, host, media_id):
-        return 'http://www.dailymotion.com/video/%s' % media_id
+        return 'http://www.dailymotion.com/sequence/%s' % media_id
         
         
     def get_host_and_id(self, url):
@@ -69,10 +90,14 @@ class DailymotionResolver(Plugin, UrlResolver, PluginSettings):
             if r:
                 return r.groups()
             else:
-                return False
+                r = re.search('//(.+?)/sequence/([0-9A-Za-z]+)', url)
+                if r:
+                    return r.groups()
+                else:
+                    return False
 
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www.)?dailymotion.com/video/[0-9A-Za-z]+', url) or \
+        return re.match('http://(www.)?dailymotion.com/sequence/[0-9A-Za-z]+', url) or re.match('http://(www.)?dailymotion.com/video/[0-9A-Za-z]+', url) or \
                re.match('http://(www.)?dailymotion.com/swf/[0-9A-Za-z]+', url) or self.name in host
