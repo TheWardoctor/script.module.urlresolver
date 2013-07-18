@@ -45,9 +45,6 @@ class DailymotionResolver(Plugin, UrlResolver, PluginSettings):
         #sequence = re.compile('"sequence":"(.+?)"').findall(link)
         #newseqeunce = urllib.unquote(sequence[0]).decode('utf8').replace('\\/', '/')
         imgSrc = re.compile('"imageURL":"(.+?)"').findall(link)[0]
-        
-        
-        print link
         print 'img:' + imgSrc
         
         dm_live = re.compile('"customURL":"(.+?)"', re.DOTALL).findall(link)
