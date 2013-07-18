@@ -70,19 +70,22 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return 'Premiumize.me', url
 
     def get_all_hosters(self):
-        if self.patterns is None:
-            username = self.get_setting('username')
-            password = self.get_setting('password')
-            url = 'https://api.premiumize.me/pm-api/v1.php?method=hosterlist'
-            url += '&params%%5Blogin%%5D=%s&params%%5Bpass%%5D=%s'
-            url = url % (username, password)
-            response = self.net.http_GET(url).content
-            response = json.loads(response)
-            result = response['result']
-            log_msg = 'Premiumize.me patterns: %s' % result['regexlist']
-            common.addon.log_debug(log_msg)
-            self.patterns = [re.compile(regex) for regex in result['regexlist']]
-        return self.patterns 
+        try :
+            if self.patterns is None:
+                username = self.get_setting('username')
+                password = self.get_setting('password')
+                url = 'https://api.premiumize.me/pm-api/v1.php?method=hosterlist'
+                url += '&params%%5Blogin%%5D=%s&params%%5Bpass%%5D=%s'
+                url = url % (username, password)
+                response = self.net.http_GET(url).content
+                response = json.loads(response)
+                result = response['result']
+                log_msg = 'Premiumize.me patterns: %s' % result['regexlist']
+                common.addon.log_debug(log_msg)
+                self.patterns = [re.compile(regex) for regex in result['regexlist']]
+            return self.patterns
+        except :
+            return [] 
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false':

@@ -55,27 +55,37 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         try:
             url = 'https://real-debrid.com/ajax/unrestrict.php?link=%s' % media_id.replace('|User-Agent=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0','')
             source = self.net.http_GET(url).content
-            if re.search('Upgrade your account now to generate a link', source):
-                raise Exception ('Upgrade your account now to generate a link')
-            if source == '<span id="generation-error">Your file is unavailable on the hoster.</span>':
-                raise Exception ('Your file is unavailable on the hoster')
-            if re.search('This hoster is not included in our free offer', source):
-                raise Exception ('This hoster is not included in our free offer')
-            if re.search('No server is available for this hoster.', source):
-                raise Exception ('No server is available for this hoster')
             jsonresult = json.loads(source)
-            if 'main_link' in jsonresult :
+            print str(jsonresult)
+            if 'generated_links' in jsonresult :
+                generated_links = jsonresult['generated_links']
+                line            = []
+                for link in generated_links :
+                    extension = link[0].split('.')[-1]
+                    line.append(extension.encode('utf-8'))
+                result = dialog.select('Choose the link', line)
+                if result != -1 :
+                    link = generated_links[result][2]
+                    return link.encode('utf-8')
+                else :
+                    return self.unresolvable(0,'No generated_link') 
+            elif 'main_link' in jsonresult :
                 return jsonresult['main_link'].encode('utf-8')
             else :
-                return False
+                if 'message' in jsonresult :
+                    common.addon.log('**** Real Debrid Error occured: %s' % jsonresult['message'].encode('utf-8'))
+                    common.addon.show_small_popup(title='[B][COLOR white]REAL-DEBRID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % jsonresult['message'].encode('utf-8'), delay=15000, image=error_logo)
+                    return self.unresolvable(0,jsonresult['message'].encode('utf-8'))
+                else :
+                    return self.unresolvable(0,'No generated_link and no main_link')
         except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %  (e.code, web_url))
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %  (str(e), web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return False
+            return self.unresolvable(3,str(e))
         except Exception, e:
             common.addon.log('**** Real Debrid Error occured: %s' % e)
             common.addon.show_small_popup(title='[B][COLOR white]REAL-DEBRID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return False
+            return self.unresolvable(0,str(e))
         
     def get_url(self, host, media_id):
         return media_id
