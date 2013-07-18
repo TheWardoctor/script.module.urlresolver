@@ -58,7 +58,10 @@ class DailymotionResolver(Plugin, UrlResolver, PluginSettings):
         
         if dm_live:
             videoUrl = urllib.unquote_plus(dm_live[0]).replace("\\/", "/")
-            videoUrl = getUrl(videoUrl)
+            videoUrl = self.net.http_GET(videoUrl).content
+            videoUrl = urllib.unquote_plus(videoUrl)
+            videoUrl = videoUrl.replace("\\/", "/")
+            videoUrl = videoUrl.replace("live//video", "live/video")
         elif dm_1080p:
             videoUrl = urllib.unquote_plus(dm_1080p[0]).replace("\\/", "/")
         elif dm_720p:
