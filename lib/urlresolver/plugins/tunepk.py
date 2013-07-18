@@ -34,7 +34,7 @@ class TunePkResolver(Plugin, UrlResolver, PluginSettings):
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
-        self.net = Net()
+        self.net = Net(user_agent='Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_2_1 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8G4 Safari/6533.18.5')
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
