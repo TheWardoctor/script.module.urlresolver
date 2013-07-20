@@ -16,16 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import re
-import urllib2
-import urllib
-
+import os
+import xbmc
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
+import re
+import urllib2, urllib
 from urlresolver import common
 
+logo=os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class TunePkResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -37,14 +38,42 @@ class TunePkResolver(Plugin, UrlResolver, PluginSettings):
         self.net = Net(user_agent='Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_2_1 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8G4 Safari/6533.18.5')
 
     def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
         try:
+            web_url = self.get_url(host, media_id)
             link = self.net.http_GET(web_url).content
+
+            if link.find('404') >= 0:
+                err_title = 'Content not available.'
+                err_message = 'The requested video was not found.'
+                common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
+                xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+logo+')')
+                return self.unresolvable()
+
+            videoUrl = re.compile("(?:hq_video_file|normal_video_file|mobile_video_file)\s+\=\s+(?:\'|\")([\w\.\/\:\-\?\=]+)(?:\'|\")").findall(link)
+
+            vUrl = ''
+            vUrlsCount = len(videoUrl)
+            if vUrlsCount > 0:
+                q = self.get_setting('quality')
+                if q == '0':
+                    # Highest Quality
+                    vUrl = videoUrl[0]
+                elif q == '1':
+                    # Medium Quality
+                    vUrl = videoUrl[(int)(vUrlsCount / 2)]
+                elif q == '2':
+                    # Lowest Quality
+                    vUrl = videoUrl[vUrlsCount - 1]
+
+                return vUrl
+
+            else:
+                return self.unresolvable(0, 'No playable video found.')
         except urllib2.URLError, e:
             return self.unresolvable(3, str(e))
+        except Exception, e:
+            return self.unresolvable(0, str(e))
 
-        vfiles = re.compile("(?:hq_video_file|normal_video_file)\s+\=\s+\'([\w\.\/\:\?\=]+)\'").findall(link)
-        return vfiles[0]
 
     def get_url(self, host, media_id):
         return 'http://embed.tune.pk/play/%s' % media_id
@@ -57,3 +86,10 @@ class TunePkResolver(Plugin, UrlResolver, PluginSettings):
         if self.get_setting('enabled') == 'false': return False
         return re.match('http://(www\.)?tune.pk/player/embed_player\.php\?vid\=(\w+)', url) or \
                self.name in host
+
+    #PluginSettings methods
+    def get_settings_xml(self):
+        xml = PluginSettings.get_settings_xml(self)
+        xml += '<setting label="Video Quality" id="%s_quality" ' % self.__class__.__name__
+        xml += 'type="enum" values="High|Medium|Low" default="0" />\n'
+        return xml
