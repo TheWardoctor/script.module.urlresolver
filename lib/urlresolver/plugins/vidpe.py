@@ -90,8 +90,8 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
                     return r.groups()
                 else:
                     return False
-    
-        
+
+
     def get_domain(self, url):
         tmp = re.compile('//(.+?)/').findall(url)
         if len(tmp) == 0:
@@ -102,7 +102,7 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.search('http://(.+)?(vidpe|hostingcup|hostingbulk).com/.+?.html',url) or 'vidpe' in host or 'hostingbulk' in host or 'hostingcup' in host
+        return re.search('http://(.+)?(vidpe|hostingcup).com/.+?.html',url) or 'vidpe' in host or 'hostingcup' in host
 
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
