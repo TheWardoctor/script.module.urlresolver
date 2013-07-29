@@ -52,7 +52,7 @@ class DailymotionResolver(Plugin, UrlResolver, PluginSettings):
                 
                 common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
                 xbmc.executebuiltin('XBMC.Notification([B][COLOR white]DAILYMOTION[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+logo+')')
-                return self.unresolvable()
+                return self.unresolvable(code=1, msg=err_message)
             
             imgSrc = re.compile('"thumbnail_url":"(.+?)"').findall(link)[0]
             common.addon.log('img:' + imgSrc)
@@ -103,7 +103,7 @@ class DailymotionResolver(Plugin, UrlResolver, PluginSettings):
             
         except BaseException, e:        
             common.addon.log_error(self.name + ' - Exception: %s' % e)
-            return False
+            return self.unresolvable(code=0, msg='Exception: %s' % e)
         
 
     def get_url(self, host, media_id):
