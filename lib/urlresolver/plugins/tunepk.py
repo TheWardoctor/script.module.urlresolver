@@ -35,7 +35,7 @@ class TunePkResolver(Plugin, UrlResolver, PluginSettings):
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
-        self.net = Net(user_agent='Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_2_1 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8G4 Safari/6533.18.5')
+        self.net = Net()
 
     def get_media_url(self, host, media_id):
         try:
@@ -49,8 +49,15 @@ class TunePkResolver(Plugin, UrlResolver, PluginSettings):
                 xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+logo+')')
                 return self.unresolvable()
 
-            videoUrl = re.compile("(?:hq_video_file|normal_video_file|mobile_video_file)\s+\=\s+(?:\'|\")([\w\.\/\:\-\?\=]+)(?:\'|\")").findall(link)
+            videoUrl = []
+            # borrowed from AJ's turtle-x
+            html = link.replace('\n\r', '').replace('\r', '').replace('\n', '')
+            sources = re.compile("{(.+?)}").findall(re.compile("sources:(.+?)]").findall(html)[0])
+            for source in sources:
+                video_link = str(re.compile('file[: ]*"(.+?)"').findall(source)[0])
+                videoUrl.append(video_link)
 
+            
             vUrl = ''
             vUrlsCount = len(videoUrl)
             if vUrlsCount > 0:
