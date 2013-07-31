@@ -54,7 +54,7 @@ class PlaywireResolver(Plugin, UrlResolver, PluginSettings):
                     err_message = 'You do not have permission to view this content'
                     common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
                     xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+logo+')')
-                    return self.unresolvable()
+                    return self.unresolvable(1, err_message)
 
                 return self.unresolvable(0, 'No playable video found.')
         except urllib2.URLError, e:
