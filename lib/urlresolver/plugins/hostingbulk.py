@@ -62,12 +62,19 @@ class hostingbulkResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def get_url(self, host, media_id):
-        return 'http://hostingbulk.com/%s' % media_id
+        #return 'http://hostingbulk.com/%s' % media_id
+        return host + media_id
 
 
     def get_host_and_id(self, url):
         r = None
         video_id = None
+
+        r = re.search('(http://(?:www.|)(?:.+?)/)([0-9A-Za-z]+)', url)
+        if r:
+            return r.groups()
+        else:
+            r = None
 
         if re.search('embed-', url):
             r = re.compile('embed-(.+?).html').findall(url)
@@ -86,7 +93,7 @@ class hostingbulkResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(.+)?hostingbulk.com/[0-9]+', url) or 'hostingbulk' in host
+        return re.match('http://(.+)?hostingbulk.com/[0-9A_Za-z]+', url) or 'hostingbulk' in host
 
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
