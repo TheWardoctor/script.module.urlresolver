@@ -28,7 +28,7 @@ import re
 import time
 
 
-class StreamcloudResolver(Plugin, UrlResolver, PluginSettings):
+class MovzapZuzVideoResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "movzap|zuzvideo"
 
