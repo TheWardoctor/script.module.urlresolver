@@ -34,6 +34,9 @@ import cookielib
 from t0mm0.common.net import Net
 import json
 
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+
 class purevid(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements   = [UrlResolver, SiteAuth, PluginSettings]
     name         = "purevid"
@@ -51,28 +54,33 @@ class purevid(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
     #UrlResolver methods
     def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
-        try:
-            html = self.net.http_GET(web_url).content
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + '- got http error %d fetching %s' %
-                                   (e.code, web_url))
-            return False
-        data = json.loads(html)                
-        if self.get_setting('quality') == '0' :
-            url = data['clip']['bitrates'][-1]['url']
-        else :
-            url = data['clip']['bitrates'][0]['url']
-        params = ''
-        for val in data['plugins']['lighttpd']['params'] :
-            params += val['name'] + '=' + val['value'] + '&'
-        url =  url + '?' + params[:-1]
-        cookies = {}
-        for cookie in self.net._cj:
-            cookies[cookie.name] = cookie.value
-        url = url + '|' + urllib.urlencode({'Cookie' :urllib.urlencode(cookies)}) 
-        print url
-        return url
+        try :
+            web_url = self.get_url(host, media_id)
+            try:
+                html = self.net.http_GET(web_url).content
+            except urllib2.URLError, e:
+                common.addon.log_error(self.name + '- got http error %d fetching %s' %
+                                       (e.code, web_url))
+                self.unresolvable()
+            data = json.loads(html)                
+            if self.get_setting('quality') == '0' :
+                url = data['clip']['bitrates'][-1]['url']
+            else :
+                url = data['clip']['bitrates'][0]['url']
+            params = ''
+            for val in data['plugins']['lighttpd']['params'] :
+                params += val['name'] + '=' + val['value'] + '&'
+            url =  url + '?' + params[:-1]
+            cookies = {}
+            for cookie in self.net._cj:
+                cookies[cookie.name] = cookie.value
+            url = url + '|' + urllib.urlencode({'Cookie' :urllib.urlencode(cookies)}) 
+            common.addon.log(url)
+            return url
+        except Exception, e:
+            common.addon.log('**** Purevid Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]PUREVID[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+            return self.unresolvable(0,str(e))
                                                                                             
     def get_url(self, host, media_id):
         return 'http://www.purevid.com/?m=video_info_embed_flv&id=%s' % media_id
@@ -87,12 +95,12 @@ class purevid(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def valid_url(self, url, host):                 
         if self.get_setting('login') == 'false':        
             return False
-        print url
+        common.addon.log(url)
         return 'purevid' in url
 
     #SiteAuth methods
     def login(self):
-        print 'login to purevid'
+        common.addon.log('login to purevid')
         url = 'http://www.purevid.com/?m=login'
         data = {'username' : self.get_setting('username'), 'password' : self.get_setting('password')}        
         source = self.net.http_POST(url,data).content        
