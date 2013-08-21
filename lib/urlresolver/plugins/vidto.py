@@ -15,7 +15,7 @@
     mash2k3, Mikey1234,voinage and of course Eldorado. Cheers guys :)
 """
 
-import re, os, xbmc, xbmcgui, time
+import re
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
@@ -27,24 +27,17 @@ net = Net()
 class vidto(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "vidto"
-    profile_path = common.profile_path
-    cookie_file = os.path.join(profile_path, '%s.cookies' % name)
-
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-        try:
-            os.makedirs(os.path.dirname(self.cookie_file))
-        except OSError:
-            pass
 
     def get_media_url(self, host, media_id):
         try:
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
-            common.addon.show_countdown(10, title='Vidto', text='Loading Video...')
+            common.addon.show_countdown(6, title='Vidto', text='Loading Video...')
 
             data = {}
             r = re.findall(r'type="(?:hidden|submit)?" name="(.+?)"\s* value="?(.+?)">', html)
@@ -57,8 +50,8 @@ class vidto(Plugin, UrlResolver, PluginSettings):
                 r=re.sub(' ','%20',r.group(1))
                 return r
             else:
-                return False
-        else:
+                return unresolvable()
+        except:
             common.addon.show_countdown(20, title='Vidhog', text='Loading Video...')
         
 
@@ -67,9 +60,7 @@ class vidto(Plugin, UrlResolver, PluginSettings):
         return 'http://vidto.me/%s' % media_id
 
     def get_host_and_id(self, url):
-        print 'get_host_and_id: '+url
         r = re.search('//(.+?)/([0-9A-Za-z]+)',url)
-        print r
         if r:
             return r.groups()
         else:
