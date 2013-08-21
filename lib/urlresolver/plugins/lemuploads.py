@@ -78,9 +78,9 @@ class LemuploadsResolver(Plugin, UrlResolver, PluginSettings):
                         solution = kb.getText()
                     elif userInput == '':
                         Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
-                        return False
+                        return unresolvable()
                 else:
-                    return False
+                    return unresolvable()
                 wdlg.close()
                 dialog.close() 
                 dialog.create('Resolving', 'Resolving Lemuploads Link...') 
@@ -121,11 +121,11 @@ class LemuploadsResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return False
+            return unresolvable()
         except Exception, e:
             common.addon.log('**** Lemuploads Error occured: %s' % e)
             common.addon.show_small_popup(title='[COLOR white]LEMUPLOADS[/COLOR]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return False
+            return unresolvable()
 
         
     def get_url(self, host, media_id):
