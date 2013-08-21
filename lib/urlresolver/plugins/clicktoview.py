@@ -79,9 +79,9 @@ class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
                         solution = kb.getText()
                     elif userInput == '':
                         Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
-                        return False
+                        return unresolvable()
                 else:
-                    return False
+                    return unresolvable()
                 wdlg.close()
                 dialog.close() 
                 dialog.create('Resolving', 'Resolving Clicktoview Link...') 
@@ -101,7 +101,7 @@ class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
             sPattern += '\s+?</script>'
             r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
             if r:
-      	sJavascript = r.group(1)
+    		sJavascript = r.group(1)
 		sUnpacked = jsunpack.unpack(sJavascript)
 		sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
 		sPattern += '"custommode='
@@ -112,8 +112,10 @@ class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
 		    return r.group(1)
 
             else:
-                    pre = 'http://shmatka.wmff.org:182/d/'
-                    preb = re.compile('\|(.+?)\|video\|(.+?)\|').findall(html)
+                    prea = re.compile('wmff\|(.+?)\|flvplayer').findall(html)
+                    for slave in prea:
+                        pre = 'http://'+slave+'.wmff.org:182/d/'
+                    preb = re.compile('image\|(.+?)(?:\|)\|video\|(.+?)\|').findall(html)
                     for ext, link in preb:
                         r = pre+link+'/video.'+ext
                         dialog.update(100)
@@ -123,7 +125,7 @@ class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
         except Exception, e:
             common.addon.log('**** Clicktoview Error occured: %s' % e)
             common.addon.show_small_popup('Error', str(e), 5000, '')
-            return False
+            return unresolvable()
             
         
     def get_url(self, host, media_id):
