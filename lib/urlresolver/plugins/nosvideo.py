@@ -71,11 +71,11 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return False
+            return unresolvable()
         except Exception, e:
             common.addon.log('**** Nosvideo Error occured: %s' % e)
             common.addon.show_small_popup(title='[COLOR white]NOSVIDEO[/COLOR]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return False
+            return unresolvable()
         
     def get_url(self, host, media_id):
         return 'http://nosvideo.com/%s' % media_id 
