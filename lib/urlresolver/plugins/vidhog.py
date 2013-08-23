@@ -69,7 +69,7 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
                         if userInput != '':
                                 capcode = kb.getText()
                         elif userInput == '':
-                                Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
+                                raise Exception ('You must enter text in the image to access video')
                     wdlg.close()
                     common.addon.show_countdown(10, title='Vidhog', text='Loading Video...')
                     
@@ -79,6 +79,8 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
                     common.addon.show_countdown(20, title='Vidhog', text='Loading Video...')
                     
             html = net.http_POST(url, data).content
+            if re.findall('err', html):
+                raise Exception('Wrong Captcha')
     
             match = re.search("product_download_url=(.+?)'", html)
     
@@ -89,7 +91,7 @@ class VidhogResolver(Plugin, UrlResolver, PluginSettings):
         except Exception, e:
             common.addon.log('**** Muchshare Error occured: %s' % e)
             common.addon.show_small_popup('Error', str(e), 5000, '')
-            return unresolvable()
+            return self.unresolvable(code=0, msg='Exception: %s' % e)
         
     def get_url(self, host, media_id):
         return 'http://www.vidhog.com/%s' % media_id 
