@@ -50,9 +50,11 @@ class vidto(Plugin, UrlResolver, PluginSettings):
                 r=re.sub(' ','%20',r.group(1))
                 return r
             else:
-                return unresolvable()
+                raise Exception('could not find video')
         except:
-            common.addon.show_countdown(20, title='Vidhog', text='Loading Video...')
+            common.addon.log('**** Vidto Error occured: %s' % e)
+            common.addon.show_small_popup('Error', str(e), 5000, '')
+            return self.unresolvable(code=0, msg='Exception: %s' % e)
         
 
         
