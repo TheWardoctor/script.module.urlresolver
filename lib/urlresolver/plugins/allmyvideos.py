@@ -20,7 +20,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, os, urllib2
+import re, os
 import xbmcgui
 from urlresolver import common
 
@@ -63,18 +63,12 @@ class AllmyvideosResolver(Plugin, UrlResolver, PluginSettings):
                 return r.group(1)
             else:
                 dialog.close()
-                raise Exception('could not find video')            
-                                
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return unresolvable()
+                raise Exception('could not find video')          
         
         except Exception, e:
             common.addon.log('**** Allmyvideos Error occured: %s' % e)
-            common.addon.show_small_popup(title='[COLOR white]ALLMYVIDEOS[/COLOR]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return unresolvable()
+            common.addon.show_small_popup('Error', str(e), 5000, '')
+            return self.unresolvable(code=0, msg='Exception: %s' % e)
         
     def get_url(self, host, media_id):
         return 'http://allmyvideos.net/%s' % media_id 
