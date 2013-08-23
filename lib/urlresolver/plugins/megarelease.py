@@ -20,7 +20,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, os, urllib2, time, xbmcgui, xbmc
+import re, os, time, xbmcgui, xbmc
 import xbmcgui
 from urlresolver import common
 from lib import jsunpack
@@ -77,10 +77,9 @@ class MegareleaseResolver(Plugin, UrlResolver, PluginSettings):
                     if userInput != '':
                         solution = kb.getText()
                     elif userInput == '':
-                        Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
-                        return unresolvable()
+                        raise Exception ('You must enter text in the image to access video')
                 else:
-                    return unresolvable()
+                    raise Exception ('Captcha Error')
                 wdlg.close()
                 dialog.close() 
                 dialog.create('Resolving', 'Resolving Megarelease Link...') 
@@ -88,7 +87,9 @@ class MegareleaseResolver(Plugin, UrlResolver, PluginSettings):
                 data.update({'recaptcha_challenge_field':part.group(1),'recaptcha_response_field':solution})
                 
             html = net.http_POST(url, data).content
-            dialog.update(50)
+            if re.findall('err', html):
+                raise Exception('Wrong Captcha')
+                
 
             sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
             sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
@@ -117,15 +118,10 @@ class MegareleaseResolver(Plugin, UrlResolver, PluginSettings):
                     dialog.close()
                     return r            
                                 
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return unresolvable()
         except Exception, e:
             common.addon.log('**** Megarelease Error occured: %s' % e)
-            common.addon.show_small_popup(title='[COLOR white]MEGARELEASE[/COLOR]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return unresolvable()
+            common.addon.show_small_popup('Error', str(e), 5000, '')
+            return self.unresolvable(code=0, msg='Exception: %s' % e)
 
         
     def get_url(self, host, media_id):
