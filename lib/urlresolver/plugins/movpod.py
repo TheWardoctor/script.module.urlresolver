@@ -54,9 +54,11 @@ class MovpodResolver(Plugin, UrlResolver, PluginSettings):
                 form_values[i.group(1)] = i.group(2)
                 
             html = self.net.http_POST(post_url, form_data=form_values).content
-            r = re.search('file:"(.+?)"', html)
+            r = re.search('file: "http(.+?)"', html)
             if r:
-                return r.group(1)+'.flv'
+                return "http" + r.group(1)
+            else:
+                raise Exception ('Unable to resolve Movpod Link')
 
             return False
         

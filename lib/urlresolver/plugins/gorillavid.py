@@ -57,7 +57,7 @@ class GorillavidResolver(Plugin, UrlResolver, PluginSettings):
             if r:
                 return r.group(1)
 
-            raise Exception ('File Not Found or removed')
+            raise Exception ('Unable to resolve Gorillavid link')
         except urllib2.URLError, e:
             common.addon.log_error('gorillavid: got http error %d fetching %s' %
                                   (e.code, web_url))
