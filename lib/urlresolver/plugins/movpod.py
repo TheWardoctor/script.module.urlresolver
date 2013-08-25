@@ -59,18 +59,16 @@ class MovpodResolver(Plugin, UrlResolver, PluginSettings):
                 return "http" + r.group(1)
             else:
                 raise Exception ('Unable to resolve Movpod Link')
-
-            return False
         
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
-            return False
+            return self.unresolvable(code=3, msg=e)
         except Exception, e:
             common.addon.log_error('**** Movpod Error occured: %s' % e)
             common.addon.show_small_popup(title='[B][COLOR white]MOVPOD[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return False
+            return self.unresolvable(code=0, msg=e)
         
 
     def get_url(self, host, media_id):
