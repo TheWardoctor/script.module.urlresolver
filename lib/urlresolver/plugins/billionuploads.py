@@ -132,7 +132,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
                     if userInput != '':
                         capcode = kb.getText()
                     elif userInput == '':
-                        common.addon.show_error_dialog("You must enter the text from the image to access video")
+                        common.addon.show_error_dialog(["You must enter the text from the image to access video"])
                         return self.unresolvable(code=0, msg='Captcha text not entered')
                 else:
                     return self.unresolvable(code=0, msg='Captcha text not entered')
