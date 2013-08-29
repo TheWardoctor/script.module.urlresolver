@@ -88,8 +88,14 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
                 #Check page for any error msgs
                 if re.search('This server is in maintenance mode', html):
                     common.addon.log_error(self.name + ' - Site reported maintenance mode')
-                    xbmc.executebuiltin('XBMC.Notification([B][COLOR white]BILLIONUPLOADS[/COLOR][/B]','[COLOR red]Site reported maintenance mode[/COLOR],8000,'+logo+')')
+                    xbmc.executebuiltin('XBMC.Notification([B][COLOR white]BILLIONUPLOADS[/COLOR][/B],[COLOR red]Site reported maintenance mode[/COLOR],8000,'+logo+')')
                     return self.unresolvable(code=2, msg='Site reported maintenance mode')
+                    
+                # Check for file not found
+                if re.search('File Not Found', html):
+                    common.addon.log_error(self.name + ' - File Not Found')
+                    xbmc.executebuiltin('XBMC.Notification([B][COLOR white]BILLIONUPLOADS[/COLOR][/B],[COLOR red]File Not Found[/COLOR],8000,'+logo+')')
+                    return self.unresolvable(code=1, msg='File Not Found')                
 
                 postid = re.search('<input type="hidden" name="id" value="(.+?)">', html).group(1)
                 
