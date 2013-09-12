@@ -48,6 +48,9 @@ class MightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search("<div id=\"player_code\">.*?<script type='text/javascript'>(.*?)</script>",html,re.DOTALL)
             if not r:
                 raise Exception ('Unable to resolve Mightyupload link. Player config not found.')
+            r = re.search("file: '([^']+)'",r.group(1))
+            if r:
+                return r.group(1)
             js = jsunpack.unpack(r.group(1))
             r = re.search("'file','([^']+)'", js.replace('\\',''))
             if not r:
