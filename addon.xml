@@ -4,7 +4,7 @@
      version="2.0.10" 
      provider-name="XBMCHub.com">
   <requires>
-    <import addon="xbmc.python" version="2.0" />
+    <import addon="xbmc.python" version="2.1.0" />
     <import addon="script.module.t0mm0.common" version="1.0.0"/>
     <import addon="plugin.video.youtube" version="3.3.0"/>
   </requires>
