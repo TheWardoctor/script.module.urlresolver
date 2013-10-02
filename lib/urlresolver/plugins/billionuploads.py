@@ -194,7 +194,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
                     dialog.update(50)
                 
                 data.update({'submit_btn':''})
-                data.update({'parden':'yeahman'})
+                data.update({'damn':'yeahman'})
                 
                 html = normal.open(url, urllib.urlencode(data)).read()
                 
