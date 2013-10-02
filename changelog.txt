@@ -14,11 +14,17 @@
 - Added MegaRelease
 - Added NosVideo
 - Added Vidto
+- Added MightyUpload
+- Added PrimeShare
+- Added Vidplay
 - Updated AllDebrid
 - Fixed RealDebrid
 - Fixed BillionUploads
 - Fixed 180Upload
 - Fixed HostingBulk
+- Fixed Ecostream
+- Fixed FlashX
+- Fixed DaClips
 
 [B]Version 1.0.9[/B]
 - Fixed VeeHD
