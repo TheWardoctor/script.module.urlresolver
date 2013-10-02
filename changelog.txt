@@ -1,4 +1,4 @@
-[B]Version 2.0.10[/B]
+[B]Version 2.1.0[/B]
 - New unresolvable() class for resolvers to return in case of an error, specify why it failed for addon to handle
 - New redx.png graphic file for reporting issues in resolvers
 - Updated all resolvers to display small box on exceptions
