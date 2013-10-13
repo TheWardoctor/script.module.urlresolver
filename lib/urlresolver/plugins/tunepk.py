@@ -42,7 +42,7 @@ class TunePkResolver(Plugin, UrlResolver, PluginSettings):
             web_url = self.get_url(host, media_id)
             link = self.net.http_GET(web_url).content
 
-            if link.find('404') >= 0:
+            if link.find('404 Not Found') >= 0:
                 err_title = 'Content not available.'
                 err_message = 'The requested video was not found.'
                 common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
@@ -57,7 +57,7 @@ class TunePkResolver(Plugin, UrlResolver, PluginSettings):
                 video_link = str(re.compile('file[: ]*"(.+?)"').findall(source)[0])
                 videoUrl.append(video_link)
 
-            
+
             vUrl = ''
             vUrlsCount = len(videoUrl)
             if vUrlsCount > 0:
