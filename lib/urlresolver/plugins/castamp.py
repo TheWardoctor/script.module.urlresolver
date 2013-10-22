@@ -101,11 +101,5 @@ class CastampResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        result = False
-
-        compile_obj = re.compile(self.pattern)
-        match_obj = compile_obj.match(url)
-
-        if match_obj.groups() != "":
-            result = True
-        return result
+        if self.get_setting('enabled') == 'false': return False
+        return re.match(self.pattern, url)
