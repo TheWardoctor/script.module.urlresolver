@@ -45,7 +45,7 @@ class EcostreamResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         try:
-            html = self.net.http_GET(web_url).content()
+            html = self.net.http_GET(web_url).content
             if re.search('>File not found!<',html):
                 msg = 'File Not Found or removed'
                 common.addon.show_small_popup(title='[B][COLOR white]ECOSTREAM[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]'
