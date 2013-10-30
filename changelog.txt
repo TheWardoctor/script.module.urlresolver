@@ -13,6 +13,8 @@
 - Updated Tunepk
 - Updated Videoweed
 - Updated BillionUploads
+- Updated premiumize.me - check on if login exists
+- Updated rpnet - check if login exists
 
 [B]Version 1.1.0[/B]
 - New unresolvable() class for resolvers to return in case of an error, specify why it failed for addon to handle
