@@ -69,11 +69,11 @@ class vidxResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
-            return False
+            return self.unresolvable()
         except Exception, e:
             common.addon.log('**** vidx Error occured: %s' % e)
             common.addon.show_small_popup(title='[B][COLOR white]vidx[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return False
+            return self.unresolvable()
 
     def get_url(self, host, media_id):
             return 'http://vidx.to/%s.html' % (media_id)
