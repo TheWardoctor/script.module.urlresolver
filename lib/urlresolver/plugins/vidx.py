@@ -1,6 +1,6 @@
-'''
-Vidbull urlresolver plugin
-Copyright (C) 2013 Vinnydude
+"""
+vidx urlresolver plugin
+Copyright (C) 2013 kriskra
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,82 +14,79 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, urllib2, os
+import urllib2, os
 from urlresolver import common
 from lib import jsunpack
+import xbmcgui
+import re
+import time
 
 #SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
-net = Net()
 
-class VidbullResolver(Plugin, UrlResolver, PluginSettings):
+class vidxResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "vidbull"
-
+    name = "vidx"
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
 
-
     def get_media_url(self, host, media_id):
+        web_url = self.get_url(host, media_id)
+
         try:
-            url = self.get_url(host, media_id)
-            html = self.net.http_GET(url).content
-
-            data = {}
-            html = re.search('<Form(.+?)/Form', html, re.DOTALL).group(1)
-            r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.+?)"', html)
-            for name, value in r:
-                data[name] = value
-
-            common.addon.show_countdown(4, title='Vidbull', text='Loading Video...')
-            html = net.http_POST(url, data).content
-
-            sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>eval\(function\(p,a,c,k,e,[dr]\)(?!.+player_ads.+).+?</script>'
-            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
+            resp = self.net.http_GET(web_url)
+            html = resp.content
+            post_url = resp.get_url()
+            dialog = xbmcgui.Dialog()
+                
+            if re.search('>(File Not Found)<',html):
+                raise Exception ('File Not Found or removed')
+                
+            form_values = {}
+            for i in re.finditer('<input.*?name="(.*?)".*?value="(.*?)">', html):
+                form_values[i.group(1)] = i.group(2)
+            #wait required
+            common.addon.show_countdown(11)
+            print post_url
+            html = self.net.http_POST(post_url, form_data=form_values).content
+            
+            r = re.search('file: "(.+?)",', html)
             if r:
-                sJavascript = r.group()
-                sUnpacked = jsunpack.unpack(sJavascript)
-                stream_url = re.search('[^\w\.]file[\"\']?\s*[:,]\s*[\"\']([^\"\']+)', sUnpacked)
-                if stream_url:
-                    return stream_url.group(1)
-            raise Exception ('File Not Found or removed')
-
+                return r.group(1)
+            else:
+                raise Exception ('File Not Found or removed')
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
             return self.unresolvable(code=3, msg=e)
         except Exception, e:
-            common.addon.log('**** Vidbull Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]VIDBULL[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+            common.addon.log('**** vidx Error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]vidx[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
 
-
     def get_url(self, host, media_id):
-        return 'http://www.vidbull.com/%s' % media_id 
-
+            return 'http://vidx.to/%s.html' % (media_id)
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/(?:embed-)?([0-9a-zA-Z]+)',url)
+        r = re.search('http://(?:www.)?(.+?)/([0-9A-Za-z]+)', url)
         if r:
             return r.groups()
         else:
             return False
-        return('host', 'media_id')
 
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?vidbull.com/(?:embed-)?' +
-                         '[0-9A-Za-z]+', url) or
-                         'vidbull' in host)
+        return re.match('http://(www.)?vidx.to/[0-9A-Za-z]+\.html', url) or 'vidx' in host
+
