@@ -104,7 +104,7 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             html = net.http_POST(web_url, data).content
             dialog.update(100)
         
-            link = re.search('<a href="(.+?)" onclick="thanks\(\)">Download now!</a>', html)
+            link = re.search('id="lnk_download" href="([^"]+)', html)
             if link:
                 print '180Upload Link Found: %s' % link.group(1)
                 return link.group(1)
