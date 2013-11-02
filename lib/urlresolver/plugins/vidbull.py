@@ -80,7 +80,7 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
+        r = re.search('//(.+?)/(?:embed-)?([0-9a-zA-Z]+)',url)
         if r:
             return r.groups()
         else:
@@ -90,6 +90,6 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?vidbull.com/' +
+        return (re.match('http://(www.)?vidbull.com/(?:embed-)?' +
                          '[0-9A-Za-z]+', url) or
                          'vidbull' in host)
