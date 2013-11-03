@@ -57,7 +57,7 @@ class vidxResolver(Plugin, UrlResolver, PluginSettings):
                 form_values[i.group(1)] = i.group(2)
             #wait required
             common.addon.show_countdown(11)
-            print post_url
+            common.addon.log(post_url)
             html = self.net.http_POST(post_url, form_data=form_values).content
             
             r = re.search('file: "(.+?)",', html)
