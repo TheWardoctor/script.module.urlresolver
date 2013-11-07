@@ -75,8 +75,7 @@ class DesitvforumsResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
-        #return re.match('http://www.desitvforums.net/(media/video|video|media/dtfdownload).php\?id=' +
-        #                '(?:[0-9a-z]+|width)', url) or 'desitvforums' in host
+        if self.get_setting('enabled') == 'false': return False
         return re.match('http://www.(?:desitvforums.net)/(?:media/video|video|media/dtfdownload).php\?id=' +
                         '(?:[0-9a-z]+|width)', url) or 'desitvforums' in host
 
