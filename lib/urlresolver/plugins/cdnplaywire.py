@@ -81,5 +81,6 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
+        if self.get_setting('enabled') == 'false': return False
         return re.match('http://cdn.playwire.com/(.+?)/embed/(.+?).js',url)
 
