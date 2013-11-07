@@ -29,7 +29,8 @@ import urlresolver
 import xbmc
 import os
 
-logo=os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -50,7 +51,7 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
                 err_title = 'Content not available.'
                 err_message = 'The requested video was not found.'
                 common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
-                xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+logo+')')
+                xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+error_logo+')')
                 return self.unresolvable(1, err_message)
         
             r = re.search("<iframe id='(?:ytplayer|dplayer)' type='text/html'.+?src='(.+?)'></iframe>",html)
