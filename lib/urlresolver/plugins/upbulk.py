@@ -54,13 +54,13 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
                 xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+error_logo+')')
                 return self.unresolvable(1, err_message)
         
-            r = re.search("<iframe id='(?:ytplayer|dplayer)' type='text/html'.+?src='(.+?)'></iframe>",html)
+            r = re.search("<iframe id='(?:ytplayer|dplayer)' type='text/html'.+?src='(.+?)'></iframe>",html,re.DOTALL)
             if r:
                 return urlresolver.HostedMediaFile(r.group(1)).resolve()
             else:
-                r = re.search('<iframe width="640" height="360" frameborder="0" src="(.+?)" scrolling="no"></iframe>',html)
+                r = re.search('<iframe width="640" height="360" frameborder="0".*src="(.+?)" scrolling="no"></iframe>',html,re.DOTALL)
                 if r:
-                    return urlresolver.HostedMediaFile(r.group(1)).resolve()
+                    return urlresolver.HostedMediaFile(re.sub('\s+','',r.group(1))).resolve()
 
 
         except BaseException, e:        
