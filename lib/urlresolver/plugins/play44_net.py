@@ -42,10 +42,10 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
         if r: return r.groups()
-        else: return self.unresolvable() #return False
+        else: return False
     
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return self.unresolvable() #return False
+        if self.get_setting('enabled') == 'false': return False
         return re.match(self.pattern, url) or self.name in host
     
     def get_media_url(self, host, media_id):
@@ -66,6 +66,5 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
             print stream_url
         else:
             common.addon.log_error(hostname+': stream url not found')
-            return self.unresolvable() #return False
+            return self.unresolvable(code=0, msg='no file located') #return False
         return stream_url
-	

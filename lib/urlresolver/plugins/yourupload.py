@@ -79,7 +79,7 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
         else: 
         	common.addon.log_notice('failed to get host and id: %s' % url)
         	#return 'failed to get host and id: %s'
-        	return self.unresolvable() #return False
+        	return False
     
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
@@ -103,7 +103,7 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
             html = resp.content
         except urllib2.URLError, e:
             common.addon.log_error(hostname+': got http error %d fetching %s' % (e.code, web_url))
-            return self.unresolvable() #return False
+            return self.unresolvable(code=3, msg='Exception: %s' % e) #return False
         try:
             if '<meta property="og:video" content="' in html:
             	r = re.search('<meta property="og:video" content="(.+?)"', html)
@@ -114,7 +114,7 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
             stream_url = r.group(1) #stream_url = urllib.unquote_plus(r.group(1))
         except:
             common.addon.log_error(hostname+': stream url not found')
-            return self.unresolvable() #return False
+            return self.unresolvable(code=0, msg='no file located') #return False
         common.addon.log_notice(stream_url)
         return stream_url
 	
