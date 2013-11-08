@@ -52,10 +52,15 @@ class EcostreamResolver(Plugin, UrlResolver, PluginSettings):
                 % msg, delay=5000, image=error_logo)
                 return self.unresolvable(code = 1, msg = msg)
             self.net.save_cookies(self.cookie_file)
-            r = re.search('data-tpm="([^"]+)"', html)
+            r = re.search("analytics='([^']+)'", html)
             if not r:
                 raise Exception ('Formvalue not found')
-            tpm = r.group(1)    
+            part1 = r.group(1)
+            r = re.search("adslotid='([^']+)';", html)
+            if not r:
+                raise Exception ('Formvalue not found')
+            part2 = r.group(1)
+            tpm = part1+part2
             # emulate click on button "Start Stream"
             postHeader = ({'Referer':web_url, 'X-Requested-With':'XMLHttpRequest'})
             web_url = 'http://www.ecostream.tv/xhr/video/get'
