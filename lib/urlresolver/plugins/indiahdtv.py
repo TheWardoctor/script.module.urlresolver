@@ -54,10 +54,10 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
                 xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+error_logo+')')
                 return self.unresolvable(1, err_message)
         
-            r = re.search('data-publisher-id="(.+?)" data-video-id="(.+?)"></script>',html)
+            r = re.search('data-publisher-id="(.+?)" data-video-id="(.+?)"></script',html)
             if r:
                 # get video url
-                cdnUrl = "http://cdn.playwire.com/%s/embed/%s.js" % (r.groups())
+                cdnUrl = "http://cdn.playwire.com/%s/embed/%s.html" % (r.groups())
                 return urlresolver.HostedMediaFile(cdnUrl).resolve()
 
         except BaseException, e:        
