@@ -138,7 +138,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         if self.checkLogin():
             try:
                 common.addon.log_debug('Need to login since session is invalid')
-                login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : self.get_setting('password')})
+                import hashlib
+                login_data = urllib.urlencode({'user' : self.get_setting('username'), 'pass' : hashlib.md5(self.get_setting('password')).hexdigest()})
                 url = 'https://real-debrid.com/ajax/login.php?' + login_data
                 source = self.net.http_GET(url).content
                 if re.search('OK', source):
