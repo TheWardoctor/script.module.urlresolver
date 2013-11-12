@@ -123,13 +123,10 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
 
         
     def get_url(self, host, media_id):
-        common.addon.log('180upload: in get_url %s %s' % (host, media_id))
         return 'http://www.180upload.com/%s' % media_id 
         
         
     def get_host_and_id(self, url):
-        common.addon.log('180upload: in get_host_and_id %s' % (url))
-
         r = re.search('http://(.+?)/embed-([\w]+)-', url)
         if r:
             return r.groups()
