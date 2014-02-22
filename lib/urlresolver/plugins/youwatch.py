@@ -17,15 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-import urllib2, os, re
+import urllib, urllib2, os, re
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
+from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 
 #SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+#SET OK_LOGO#
+ok_logo = os.path.join(common.addon_path, 'resources', 'images', 'greeninch.png')
 
 class Base36:
     
@@ -61,15 +64,21 @@ class Base36:
             return False
     
     
-class YouwatchResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class YouwatchResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
+    implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "youwatch"
-    
+    profile_path = common.profile_path    
+    cookie_file  = os.path.join(profile_path, '%s.cookies' % name)
+
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-
+        try:
+            os.makedirs(os.path.dirname(self.cookie_file))
+        except OSError:
+            pass
+            
     def get_media_url(self, host, media_id):
         base_url = 'http://'+host+'.org/embed-'+media_id+'.html'
         try:
@@ -82,6 +91,12 @@ class YouwatchResolver(Plugin, UrlResolver, PluginSettings):
                 r         = re.findall('file:"(.*)",provider',flashvars)
                 if r :
                     stream_url = r[0].encode('utf-8')
+                    if self.get_setting('login') == 'true' :  
+                        cookies = {}
+                        for cookie in self.net._cj:
+                            cookies[cookie.name] = cookie.value
+                        stream_url = stream_url + '|' + urllib.urlencode({'Cookie' :urllib.urlencode(cookies)}) 
+                        common.addon.log('stream_URL : '+stream_url)
                 else :
                     raise Exception ('File Not Found or removed')
             else :
@@ -119,3 +134,39 @@ class YouwatchResolver(Plugin, UrlResolver, PluginSettings):
         if self.get_setting('enabled') == 'false': 
             return False
         return re.match('http://(www.)?youwatch.org/(embed-(.+?).html|[0-9A-Za-z]+)',url) or 'youwatch' in host    
+
+    def login(self):
+        if self.get_setting('login') == 'true':
+            try :
+                common.addon.log('login to youwatch')
+                url = 'http://youwatch.org'
+                data = {'op':'login', 'login' : self.get_setting('username'), 'password' : self.get_setting('password')}        
+                source = self.net.http_POST(url,data).content      
+                if re.search('<b>Registred</b>', source):            
+                    common.addon.show_small_popup(title='[B][COLOR white]YOUWATCH LOGIN [/COLOR][/B]', msg='[COLOR green]Logged[/COLOR]', delay=5000, image=ok_logo)
+                    self.net.save_cookies(self.cookie_file)
+                    self.net.set_cookies(self.cookie_file)
+                    return True
+                elif re.search('Incorrect Login or Password', source) :
+                    common.addon.log('**** Youwatch Error occured on login: Incorrect Login or Password')
+                    common.addon.show_small_popup(title='[B][COLOR white]YOUWATCH LOGIN ERROR [/COLOR][/B]', msg='[COLOR red]Incorrect Login or Password[/COLOR]', delay=5000, image=error_logo)
+                    return False
+                else:
+                    common.addon.log('**** Youwatch Error occured on login: not logged')
+                    common.addon.show_small_popup(title='[B][COLOR white]YOUWATCH LOGIN ERROR [/COLOR][/B]', msg='[COLOR red]not logged[/COLOR]', delay=5000, image=error_logo)
+                    return False
+            except Exception, e :
+                common.addon.log('**** Youwatch Error occured on login: %s' % e)
+                common.addon.show_small_popup(title='[B][COLOR white]YOUWATCH LOGIN ERROR [/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+        else :
+            return True
+
+    def get_settings_xml(self):
+        xml = PluginSettings.get_settings_xml(self)
+        xml += '<setting id="YouwatchResolver_login" '        
+        xml += 'type="bool" label="Login" default="false"/>\n'
+        xml += '<setting id="YouwatchResolver_username" enable="eq(-1,true)" '
+        xml += 'type="text" label="     username" default=""/>\n'
+        xml += '<setting id="YouwatchResolver_password" enable="eq(-2,true)" '
+        xml += 'type="text" label="     password" option="hidden" default=""/>\n'    
+        return xml            

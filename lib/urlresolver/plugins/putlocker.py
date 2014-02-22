@@ -35,7 +35,7 @@ error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "putlocker/sockshare"
+    name = "putlocker/sockshare/filedrive/firedrive"
     profile_path = common.profile_path
     cookie_file = os.path.join(profile_path, 'putlocker.cookies')
 
@@ -50,26 +50,56 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
                 self.login()
         self.net.set_cookies(self.cookie_file)
         web_url = self.get_url(host, media_id)
+        if web_url[-1:1]=="#": web_url.replace("#",""); 
 
         #find session_hash
         try:
             html = self.net.http_GET(web_url).content
-        
+            if "404: This file might have been moved, replaced or deleted.<" in html: raise Exception (host+": 404: This file might have been moved, replaced or deleted.") #firedrive error
+            elif ">This file doesn't exist, or has been removed.<" in html: raise Exception (host+": This file doesn't exist, or has been removed.") #sockshare error
             #Shortcut for logged in users
             pattern = '<a href="(/.+?)" class="download_file_link" style="margin:0px 0px;">Download File</a>'
             link = re.search(pattern, html)
             if link:
                 common.addon.log('Direct link found: %s' % link.group(1))
-                return 'http://www.putlocker.com%s' % link.group(1)
+                if 'putlocker' in host:
+                    return 'http://www.filedrive.com%s' % link.group(1)
+                    #return 'http://www.putlocker.com%s' % link.group(1)
+                elif 'filedrive' in host:
+                    return 'http://www.filedrive.com%s' % link.group(1)
+                elif 'firedrive' in host:
+                    return 'http://www.firedrive.com%s' % link.group(1)
 
-            r = re.search('value="([0-9a-f]+?)" name="hash"', html)
-            if r:
-                session_hash = r.group(1)
+            if 'firedrive' in host or 'filedrive' in host or 'putlocker' in host or 'sockshare' in host:
+                try:
+                	data = {}; r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)"/>', html); #data['usr_login']=''
+                	for name, value in r: data[name] = value
+                	#data['imhuman']='Proceed to video'; data['btn_download']='Proceed to video'
+                	#xbmc.sleep(2000)
+                	html = self.net.http_POST(web_url, data).content
+                except urllib2.URLError, e:
+                    common.addon.log_error(host+': got http error %d fetching 2nd url %s' % (e.code, web_url))
+                    return self.unresolvable(code=3, msg='Exception: %s' % e) #return False
+                r = re.search('<a href="(.+?)" id=\'external_download\' title=\'Download This File\'>', html)
+                if r:
+                    return urllib.unquote_plus(r.group(1))
+                #else:
+                #    common.addon.log_error(host+': stream url not found')
+                #    return self.unresolvable(code=0, msg='no file located') #return False
+                r = re.search("$.post('(.+?)', function(data) {", html)
+                if r:
+                    return urllib.unquote_plus(r.group(1))
+                else:
+                    common.addon.log_error(host+': stream url not found')
+                    return self.unresolvable(code=0, msg='no file located') #return False
             else:
-                raise Exception ('putlocker: session hash not found')
-
-            #post session_hash
-            html = self.net.http_POST(web_url, form_data={'hash': session_hash, 
+                r = re.search('value="([0-9a-f]+?)" name="hash"', html)
+                if r:
+                    session_hash = r.group(1)
+                else:
+                    raise Exception ('putlocker: session hash not found')
+                #post session_hash
+                html = self.net.http_POST(web_url, form_data={'hash': session_hash, 
                                                            'confirm': 'Continue as Free User'}).content
         
             #find playlist code  
@@ -88,6 +118,16 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
                 #download & return link.
                 if 'putlocker' in host:
                     Avi = "http://putlocker.com/get_file.php?stream=%s&original=1"%playlist_code
+                    html = self.net.http_GET(Avi).content
+                    final=re.compile('url="(.+?)"').findall(html)[0].replace('&amp;','&')
+                    return "%s|User-Agent=%s"%(final,'Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0')
+                elif 'filedrive' in host:
+                    Avi = "http://filedrive.com/get_file.php?stream=%s&original=1"%playlist_code
+                    html = self.net.http_GET(Avi).content
+                    final=re.compile('url="(.+?)"').findall(html)[0].replace('&amp;','&')
+                    return "%s|User-Agent=%s"%(final,'Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0')
+                elif 'firedrive' in host:
+                    Avi = "http://firedrive.com/get_file.php?stream=%s&original=1"%playlist_code
                     html = self.net.http_GET(Avi).content
                     final=re.compile('url="(.+?)"').findall(html)[0].replace('&amp;','&')
                     return "%s|User-Agent=%s"%(final,'Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0')
@@ -126,8 +166,16 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
     def get_url(self, host, media_id):
             if 'putlocker' in host:
                 host = 'www.putlocker.com'
+                host = 'www.firedrive.com'
+                media_id=media_id.replace("#",""); 
+            elif 'filedrive' in host:
+                host = 'www.filedrive.com'
+            elif 'firedrive' in host:
+                host = 'www.firedrive.com'
             else:
                 host = 'www.sockshare.com'
+                host = 'www.firedrive.com'
+                media_id=media_id.replace("#",""); 
             return 'http://%s/file/%s' % (host, media_id)
             
             
@@ -140,7 +188,7 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
             
     def valid_url(self, url, host):
             if self.get_setting('enabled') == 'false': return False
-            return (re.match('http://(www.)?(putlocker|sockshare).com/' +  '(file|embed)/[0-9A-Z]+', url) or 'putlocker' in host or 'sockshare' in host)
+            return (re.match('http://(www.)?(putlocker|filedrive|firedrive|sockshare).com/' +  '(file|embed)/[0-9A-Z]+', url) or 'putlocker' in host or 'sockshare' in host or 'filedrive' in host or 'firedrive' in host)
 
     def login_stale(self):
             url = 'http://www.putlocker.com/cp.php'
