@@ -52,7 +52,7 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
             data.update({'referer': web_url})
             data.update({'imhuman': 'Proceed to video'})
             #print data
-            #sleep(2) # POST seems to fail is submitted too soon after GET. Page Timeout?
+            sleep(2) # POST seems to fail is submitted too soon after GET. Page Timeout?
 
             html = self.net.http_POST(web_url, data, headers=headers).content
             #print html.encode('ascii','ignore')
