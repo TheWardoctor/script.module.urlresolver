@@ -43,19 +43,17 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             url = self.get_url(host, media_id)
             puzzle_img = os.path.join(common.profile_path, "hugefiles_puzzle.png")
 
-            html = self.net.http_GET(url).content
-            r = re.findall('File Not Found',html)
-            if r:
-                raise Exception ('File Not Found or removed')
-                            
             #Show dialog box so user knows something is happening
             dialog = xbmcgui.DialogProgress()
             dialog.create('Resolving', 'Resolving HugeFiles Link...')       
             dialog.update(0)
             
             common.addon.log('HugeFiles - Requesting GET URL: %s' % url)
-            html = net.http_GET(url).content
-            
+            html = self.net.http_GET(url).content
+            r = re.findall('File Not Found',html)
+            if r:
+                raise Exception ('File Not Found or removed')
+                            
             dialog.update(50)
             
             #Check page for any error msgs
@@ -79,10 +77,11 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
     
             #Check for SolveMedia Captcha image
             solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
+            recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
     
             if solvemedia:
                dialog.close()
-               html = net.http_GET(solvemedia.group(1)).content
+               html = self.net.http_GET(solvemedia.group(1)).content
                hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
                open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
                img = xbmcgui.ControlImage(450,15,400,130, puzzle_img)
@@ -111,7 +110,43 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                dialog.update(50)
                if solution:
                    data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
-    
+
+            elif recaptcha:
+                dialog.close()
+                html = self.net.http_GET(recaptcha.group(1)).content
+                part = re.search("challenge \: \\'(.+?)\\'", html)
+                captchaimg = 'http://www.google.com/recaptcha/api/image?c='+part.group(1)
+                img = xbmcgui.ControlImage(450,15,400,130,captchaimg)
+                wdlg = xbmcgui.WindowDialog()
+                wdlg.addControl(img)
+                wdlg.show()
+        
+                time.sleep(3)
+        
+                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
+                kb.doModal()
+                capcode = kb.getText()
+        
+                if (kb.isConfirmed()):
+                    userInput = kb.getText()
+                    if userInput != '':
+                        solution = kb.getText()
+                    elif userInput == '':
+                        raise Exception ('You must enter text in the image to access video')
+                else:
+                    raise Exception ('Captcha Error')
+                wdlg.close()
+                dialog.close() 
+                dialog.create('Resolving', 'Resolving HugeFiles Link...') 
+                dialog.update(50)
+                data.update({'recaptcha_challenge_field':part.group(1),'recaptcha_response_field':solution})
+
+            else:
+                captcha = re.compile("left:(\d+)px;padding-top:\d+px;'>&#(.+?);<").findall(html)
+                result = sorted(captcha, key=lambda ltr: int(ltr[0]))
+                solution = ''.join(str(int(num[1])-48) for num in result)
+                data.update({'code':solution})
+
             common.addon.log('HugeFiles - Requesting POST URL: %s DATA: %s' % (url, data))
             html = net.http_POST(url, data).content
             
