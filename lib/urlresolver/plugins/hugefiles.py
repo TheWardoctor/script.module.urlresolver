@@ -41,11 +41,13 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         try:
             url = self.get_url(host, media_id)
+            puzzle_img = os.path.join(common.profile_path, "hugefiles_puzzle.png")
+
             html = self.net.http_GET(url).content
             r = re.findall('File Not Found',html)
             if r:
                 raise Exception ('File Not Found or removed')
-                
+                            
             #Show dialog box so user knows something is happening
             dialog = xbmcgui.DialogProgress()
             dialog.create('Resolving', 'Resolving HugeFiles Link...')       
@@ -75,22 +77,43 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             data['method_free'] = 'Free Download'
             file_name = data['fname']
     
+            #Check for SolveMedia Captcha image
+            solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
+    
+            if solvemedia:
+               dialog.close()
+               html = net.http_GET(solvemedia.group(1)).content
+               hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
+               open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
+               img = xbmcgui.ControlImage(450,15,400,130, puzzle_img)
+               wdlg = xbmcgui.WindowDialog()
+               wdlg.addControl(img)
+               wdlg.show()
+            
+               xbmc.sleep(3000)
+    
+               kb = xbmc.Keyboard('', 'Type the letters in the image', False)
+               kb.doModal()
+               capcode = kb.getText()
+       
+               if (kb.isConfirmed()):
+                   userInput = kb.getText()
+                   if userInput != '':
+                       solution = kb.getText()
+                   elif userInput == '':
+                       Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
+                       return False
+               else:
+                   return False
+                   
+               wdlg.close()
+               dialog.create('Resolving', 'Resolving HugeFiles Link...') 
+               dialog.update(50)
+               if solution:
+                   data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
+    
             common.addon.log('HugeFiles - Requesting POST URL: %s DATA: %s' % (url, data))
             html = net.http_POST(url, data).content
-            
-            #Set POST data values
-            data = {}
-            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
-            
-            if r:
-                for name, value in r:
-                    data[name] = value
-            else:
-                common.addon.log('***** HugeFiles - Cannot find data values')
-                raise Exception('Unable to resolve HugeFiles Link')
-    
-            embed = re.search('<h2>Embed code</h2>.+?<IFRAME SRC="(.+?)"', html, re.DOTALL + re.IGNORECASE)
-            html = net.http_GET(embed.group(1)).content
             
             #Get download link
             dialog.update(100)
