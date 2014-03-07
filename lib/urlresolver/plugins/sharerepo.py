@@ -63,7 +63,7 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
             # get the video page
             html = self.net.http_POST(web_url, data, headers=headers).content
             
-            r = re.search(r'type="submit"\s*id="btn_download1"',html)
+            r = re.search(r'type="submit"\s*id="btn_download"',html)
             if not r:
                 raise Exception("Video Not Found")
             
