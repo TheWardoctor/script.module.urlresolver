@@ -20,9 +20,10 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, xbmcgui, os, urllib2
+import re, os, urllib2
 from urlresolver import common
 from lib import jsunpack
+import xbmc, xbmcgui
 
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 net = Net()
@@ -121,7 +122,7 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                 wdlg.addControl(img)
                 wdlg.show()
         
-                time.sleep(3)
+                xbmc.sleep(3000)
         
                 kb = xbmc.Keyboard('', 'Type the letters in the image', False)
                 kb.doModal()
@@ -161,13 +162,15 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                 r = re.findall('file,(.+?)\)\;s1',sUnpacked)
                 if not r:
                    r = re.findall('name="src"[0-9]*="(.+?)"/><embed',sUnpacked)
+                if not r:
+                    r = re.findall('<param name="src"value="(.+?)"/>', sUnpacked)
                 return r[0]
             else:
                 common.addon.log('***** HugeFiles - Cannot find final link')
                 raise Exception('Unable to resolve HugeFiles Link')
         
 
-        except urllib2.URLError, e:
+        except urllib2.HTTPError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
