@@ -57,9 +57,9 @@ class MovshareResolver(Plugin, UrlResolver, PluginSettings):
             """
             r = re.search('<param name="src" value="(.+?)"', html)
             if not r:
-                html = unwise.unwise_process(html)
-                html = re.compile(r'eval\(function\(p,a,c,k,e,(?:d|r)\).+?\.split\(\'\|\'\).*?\)\)').search(html).group()
-                html = jsunpack.unpack(html)
+                #html = unwise.unwise_process(html)
+                #html = re.compile(r'eval\(function\(p,a,c,k,e,(?:d|r)\).+?\.split\(\'\|\'\).*?\)\)').search(html).group()
+                #html = jsunpack.unpack(html)
                 filekey = unwise.resolve_var(html, "flashvars.filekey")
                 
                 #get stream url from api
