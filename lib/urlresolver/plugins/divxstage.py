@@ -67,7 +67,6 @@ class DivxstageResolver(Plugin, UrlResolver, PluginSettings):
             return self.unresolvable(code=0, msg=e)
 
     def get_url(self, host, media_id):
-        common.addon.log('http://www.divxstage.eu/video/%s' % media_id)
         return 'http://www.divxstage.eu/video/%s' % media_id
 
     def get_host_and_id(self, url):
