@@ -194,7 +194,7 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
             
     def valid_url(self, url, host):
             if self.get_setting('enabled') == 'false': return False
-            return (re.match('http://(www.)?(putlocker|filedrive|firedrive).com/' +  '(file|embed)/(/+)[0-9A-Z]+', url) or 'putlocker' in host or 'sockshare' in host or 'filedrive' in host or 'firedrive' in host)
+            return (re.match('http://(www.)?(putlocker|filedrive|firedrive).com/' +  '(file|embed)/(/*?)[0-9A-Z]+', url) or 'putlocker' in host or 'sockshare' in host or 'filedrive' in host or 'firedrive' in host)
 
     def login_stale(self):
             url = 'http://www.putlocker.com/cp.php'
