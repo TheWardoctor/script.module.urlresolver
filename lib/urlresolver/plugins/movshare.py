@@ -57,15 +57,8 @@ class MovshareResolver(Plugin, UrlResolver, PluginSettings):
             """
             r = re.search('<param name="src" value="(.+?)"', html)
             if not r:
-<<<<<<< HEAD
                 filekey = re.search('flashvars.filekey="(.+?)";', html).group(0)
-=======
-                #html = unwise.unwise_process(html)
-                #html = re.compile(r'eval\(function\(p,a,c,k,e,(?:d|r)\).+?\.split\(\'\|\'\).*?\)\)').search(html).group()
-                #html = jsunpack.unpack(html)
-                filekey = unwise.resolve_var(html, "flashvars.filekey")
->>>>>>> d341ceb4ee047b4444fbbf8cf1c94138de4ad28c
-                
+
                 #get stream url from api
                 api = 'http://www.movshare.net/api/player.api.php?key=%s&file=%s' % (filekey, media_id)
                 html = self.net.http_GET(api).content
