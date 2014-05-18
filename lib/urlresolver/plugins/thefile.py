@@ -23,6 +23,7 @@ from urlresolver.plugnplay import Plugin
 import urllib2, os
 from urlresolver import common
 import re
+from lib import jsunpack
 
 #SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
@@ -44,6 +45,14 @@ class TheFileResolver(Plugin, UrlResolver, PluginSettings):
             }
             html = self.net.http_GET(web_url).content
             #print html.encode('ascii','ignore')
+            
+            # check if we have a p,ac,k,e,d source
+            r = re.search('<script\stype=(?:"|\')text/javascript(?:"|\')>(eval\(function\(p,a,c,k,e,[dr]\)(?!.+player_ads.+).+?)</script>',html,re.DOTALL)
+            if r:
+                js = jsunpack.unpack(r.group(1))
+                r = re.search("file:\'(.+?)\'",js.replace('\\',''))
+                if r:
+                    return r.group(1)
             
             data = {}
             r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
@@ -87,7 +96,7 @@ class TheFileResolver(Plugin, UrlResolver, PluginSettings):
             return 'http://thefile.me/%s' % (media_id)
 
     def get_host_and_id(self, url):
-        r = re.search(r'//(.+?)/([0-9a-zA-Z]+)', url)
+        r = re.search(r'//(.+?)/(.+)', url)
         if r:
             return r.groups()
         else:
@@ -96,6 +105,6 @@ class TheFileResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match(r'http://(www.)?thefile.me/[0-9a-zA-Z]+', url) or 'thefile' in host
+        return re.match(r'http://(www.)?thefile.me/.+', url) or 'thefile' in host
 
 
