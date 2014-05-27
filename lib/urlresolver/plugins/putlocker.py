@@ -56,7 +56,7 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
         try:
             html = self.net.http_GET(web_url).content
             if ">This file doesn't exist, or has been removed.<" in html: raise Exception (host+": This file doesn't exist, or has been removed.")
-            elif "404: This file might have been moved, replaced or deleted.<" in html: raise Exception (host+": 404: This file might have been moved, replaced or deleted.")
+            elif "This file might have been moved, replaced or deleted.<" in html: raise Exception (host+": 404: This file might have been moved, replaced or deleted.")
             #Shortcut for logged in users
             pattern = '<a href="(/.+?)" class="download_file_link" style="margin:0px 0px;">Download File</a>'
             link = re.search(pattern, html)
