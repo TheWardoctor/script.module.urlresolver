@@ -95,7 +95,7 @@ class VKResolver(Plugin, UrlResolver, PluginSettings):
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': 
             return False
-        return re.match('http[s]*://(?:www.)?vk.com/video_ext.php\?.+',url) or 'vk.com' in host    
+        return re.match('http[s]*://(?:www.)?vk.com/video_ext.php\?.+',url) or 'vk' in host    
 
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)   
