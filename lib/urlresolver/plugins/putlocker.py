@@ -56,10 +56,11 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
         try:
             html = self.net.http_GET(web_url).content
             if ">This file doesn't exist, or has been removed.<" in html: raise Exception (host+": This file doesn't exist, or has been removed.")
-            elif "This file might have been moved, replaced or deleted.<" in html: raise Exception (host+": 404: This file might have been moved, replaced or deleted.")
+            elif "404: This file might have been moved, replaced or deleted.<" in html: raise Exception (host+": 404: This file might have been moved, replaced or deleted.")
             #Shortcut for logged in users
             pattern = '<a href="(/.+?)" class="download_file_link" style="margin:0px 0px;">Download File</a>'
             link = re.search(pattern, html)
+            print 'host'; print host; print 'link'; print link
             if link:
                 common.addon.log('Direct link found: %s' % link.group(1))
                 if 'putlocker' in host:
@@ -70,7 +71,7 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
                 elif 'firedrive' in host:
                     return 'http://www.firedrive.com%s' % link.group(1)
 
-            if 'firedrive' in host or 'filedrive' in host or 'putlocker' in host:
+            if ('firedrive' in host) or ('filedrive' in host) or ('putlocker' in host):
                 try:
                 	data = {}; r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)"/>', html); #data['usr_login']=''
                 	for name, value in r: data[name] = value
@@ -186,7 +187,7 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
             
             
     def get_host_and_id(self, url):
-            r = re.search('//(.+?)/(?:file|embed)/(?:/+)([0-9A-Z]+)', url)
+            r = re.search('//(.+?)/(?:file|embed)/([0-9A-Z]+)', url)
             if r:
                 return r.groups()
             else:
