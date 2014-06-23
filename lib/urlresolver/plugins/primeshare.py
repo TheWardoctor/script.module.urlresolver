@@ -57,6 +57,8 @@ class PrimeshareResolver(Plugin, UrlResolver, PluginSettings):
             html = self.net.http_POST(web_url, form_data={'hash':media_id}, headers = headers).content
             r = re.compile("clip:.*?url: '([^']+)'",re.DOTALL).findall(html)
             if not r:
+                r = re.compile("download\('([^']+)'",re.DOTALL).findall(html)
+            if not r:
                 raise Exception ('Unable to resolve Primeshare link. Filelink not found.')
             return r[0]
         
