@@ -39,9 +39,14 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
         self.net = Net()
 
     def get_media_url(self, host, media_id):
+        code=0
         try:
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
+            if 'File Not Found' in html:
+                code=1
+                raise Exception('File Not Found')
+            
             headers = {
                 'Referer': url
             }
@@ -72,8 +77,8 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
                                                     
         except Exception, e:
             common.addon.log('**** Nosvideo Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
-            return self.unresolvable(code=0, msg='Exception: %s' % e)
+            common.addon.show_small_popup('*** Nosvideo Error occured ***', str(e), 5000, '')
+            return self.unresolvable(code=code, msg='Exception: %s' % e)
         
     def get_url(self, host, media_id):
         return 'http://nosvideo.com/?v=%s' % media_id
