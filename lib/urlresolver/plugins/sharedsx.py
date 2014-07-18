@@ -41,10 +41,9 @@ class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         try:
             web_url = self.get_url(host, media_id)
-            headers = {'Referer':web_url}
             
             # get landing page
-            html = self.net.http_GET(web_url).content
+            html = self.net.http_GET(web_url,headers = {'Referer':web_url}).content
             
             # read POST variables into data
             data = {}
@@ -62,10 +61,10 @@ class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
             if not cnt: raise Exception('countdown was canceld by user') 
             
             # get video page using POST variables
-            html = self.net.http_POST(web_url, data, headers=headers).content
+            html = self.net.http_POST(web_url, data, headers = ({'Referer':web_url, 'X-Requested-With':'XMLHttpRequest'})).content
             
             # search for content tag
-            r = re.search(r'class="stream-content" data-url',html)
+            r = re.search(r'class="stream-content" data-url', html)
             if not r: raise Exception('page structure changed')
             
             # read the data-url
