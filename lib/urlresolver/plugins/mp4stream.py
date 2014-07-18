@@ -46,11 +46,15 @@ class Mp4streamResolver(Plugin, UrlResolver, PluginSettings):
 		link = ''.join(link.splitlines()).replace('\t','')
 		videoUrl ='nope'
 		
-		match = re.compile('\'file\': \'(.+?)\'').findall(link)[0]
+		sPlayer = re.compile('show_player\((.+?)\)').findall(link)
+		for sPlayer_param in sPlayer:
+			param = re.compile('\'(.+?)\'').findall(sPlayer_param)
+			if len(param)>2 and 'hd_button' in param[2]:
+				break
+		
+		match = re.compile('file\':(.+?),').findall(link)[0]
 		if len(match)>5:
-			videoUrl = match
-		else:
-			videoUrl = re.compile('\'file\': \'(.+?)\'').findall(link)[0]
+			videoUrl = match.replace("'http:",'http:').replace("'+cc+'",param[0]).replace("'+videourl+'",param[1]).replace("'+token",param[3]).strip()
 		
 		return videoUrl
 		
