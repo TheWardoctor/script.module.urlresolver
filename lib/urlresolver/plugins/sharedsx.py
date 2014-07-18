@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin,
+from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from time import sleep
 import re
@@ -32,12 +32,12 @@ net = Net()
 class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "sharedsx"
-
+    
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-
+    
     def get_media_url(self, host, media_id):
         try:
             web_url = self.get_url(host, media_id)
@@ -78,10 +78,10 @@ class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log('sharedsx: general error occured: %s' % e)
             common.addon.show_small_popup(title='shared.sx', msg='%s' % e, delay = 5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
-            
+    
     def get_url(self, host, media_id):
         return 'http://shared.sx/%s' % media_id 
-
+    
     def get_host_and_id(self, url):
         r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
         if r:
@@ -89,7 +89,7 @@ class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
         else:
             return False
         return('host', 'media_id')
-
+    
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?shared.sx/' +
