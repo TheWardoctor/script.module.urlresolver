@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+from urlresolver.plugnplay import Plugin,
 from urlresolver import common
 from time import sleep
 import re
@@ -43,7 +43,7 @@ class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
             web_url = self.get_url(host, media_id)
             
             # get landing page
-            html = self.net.http_GET(web_url,headers = {'Referer':web_url}).content
+            html = self.net.http_GET(web_url, headers = {'Referer':web_url}).content
             
             # read POST variables into data
             data = {}
