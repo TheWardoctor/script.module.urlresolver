@@ -78,4 +78,4 @@ class NovamovResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www.|embed.)?no.+?/(video/|embed.php\?)', url) or 'novamov' in host
+        return re.match('http://(www.|embed.)?novamov.com/(video/|embed.php\?)', url) or 'novamov' in host
