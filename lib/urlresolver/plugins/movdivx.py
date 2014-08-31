@@ -75,11 +75,9 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
                 sJavascript=matches[-1]
                 sUnpacked = jsunpack.unpack(sJavascript)
                 sUnpacked = sUnpacked.replace('\\','')
-                print sUnpacked
                 sPattern = "\('file','([^']+)"
                 r = re.search(sPattern, sUnpacked)
                 if r:
-                    print r.groups()
                     return r.group(1)
 
             raise Exception ('failed to parse link')
