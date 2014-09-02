@@ -158,7 +158,7 @@ class sockshareResolver(Plugin, UrlResolver, PluginSettings):
             source = self.net.http_GET(url).content
             self.net.save_cookies(self.cookie_file)
             self.net.set_cookies(self.cookie_file)
-            captcha_img = re.search('<td>CAPTCHA</td>.+?<td><img src="(.+?)" /><br>', source, re.DOTALL).group(1)
+            captcha_img = re.search('<td>CAPTCHA</td>.+?<td><img src="(.+?)"\s*/><br>', source, re.DOTALL).group(1)
             captcha_img = 'http://www.sockshare.com%s' %re.sub('&amp;','&',captcha_img)
             local_captcha = os.path.join(common.profile_path, "captcha.img" )
             localFile = open(local_captcha, "wb")
