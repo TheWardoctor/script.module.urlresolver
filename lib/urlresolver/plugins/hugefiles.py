@@ -43,20 +43,12 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
         try:
             url = self.get_url(host, media_id)
             puzzle_img = os.path.join(common.profile_path, "hugefiles_puzzle.png")
-
-            #Show dialog box so user knows something is happening
-            dialog = xbmcgui.DialogProgress()
-            dialog.create('Resolving', 'Resolving HugeFiles Link...')       
-            dialog.update(0)
-            
             common.addon.log('HugeFiles - Requesting GET URL: %s' % url)
             html = self.net.http_GET(url).content
             r = re.findall('File Not Found',html)
             if r:
                 raise Exception ('File Not Found or removed')
                             
-            dialog.update(50)
-            
             #Check page for any error msgs
             if re.search('<b>File Not Found</b>', html):
                 common.addon.log('***** HugeFiles - File Not Found')
@@ -81,7 +73,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
     
             if solvemedia:
-               dialog.close()
                html = self.net.http_GET(solvemedia.group(1)).content
                hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
                open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
@@ -107,13 +98,17 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                    return False
                    
                wdlg.close()
-               dialog.create('Resolving', 'Resolving HugeFiles Link...') 
-               dialog.update(50)
+               r = re.findall(r'type="?hidden"? name="([^"]+)".*?value="([^"]+)">', html)
+               if r:
+                   for name, value in r:
+                       data[name] = value
+               else:
+                   raise Exception('Cannot find data values')
+
                if solution:
                    data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
 
             elif recaptcha:
-                dialog.close()
                 html = self.net.http_GET(recaptcha.group(1)).content
                 part = re.search("challenge \: \\'(.+?)\\'", html)
                 captchaimg = 'http://www.google.com/recaptcha/api/image?c='+part.group(1)
@@ -137,9 +132,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                 else:
                     raise Exception ('Captcha Error')
                 wdlg.close()
-                dialog.close() 
-                dialog.create('Resolving', 'Resolving HugeFiles Link...') 
-                dialog.update(50)
                 data.update({'recaptcha_challenge_field':part.group(1),'recaptcha_response_field':solution})
 
             else:
@@ -151,9 +143,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log('HugeFiles - Requesting POST URL: %s DATA: %s' % (url, data))
             html = net.http_POST(url, data).content
             
-            #Get download link
-            dialog.update(100)
-    
             sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
             r = re.findall(sPattern, html, re.DOTALL|re.I)
             if r:
@@ -179,8 +168,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error('**** Hugefiles Error occured: %s' % e)
             common.addon.show_small_popup(title='[B][COLOR white]HUGEFILES[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
-        finally:
-            dialog.close()
         
     def get_url(self, host, media_id):
         return 'http://hugefiles.net/%s' % media_id 
