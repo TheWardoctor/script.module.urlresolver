@@ -80,9 +80,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                wdlg = xbmcgui.WindowDialog()
                wdlg.addControl(img)
                wdlg.show()
-            
-               xbmc.sleep(3000)
-    
                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
                kb.doModal()
                capcode = kb.getText()
@@ -116,9 +113,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
                 wdlg = xbmcgui.WindowDialog()
                 wdlg.addControl(img)
                 wdlg.show()
-        
-                xbmc.sleep(3000)
-        
                 kb = xbmc.Keyboard('', 'Type the letters in the image', False)
                 kb.doModal()
                 capcode = kb.getText()
