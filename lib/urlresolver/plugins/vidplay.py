@@ -21,6 +21,7 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
+from lib import jsunpack
 import re, urllib2, os, xbmcgui, xbmc
 
 net = Net()
@@ -42,15 +43,8 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         try:
-            dialog = xbmcgui.DialogProgress()
-            dialog.create('Resolving', 'Resolving vidplay Link...')
-            dialog.update(0)
-        
             puzzle_img = os.path.join(datapath, "vidplay_puzzle.png")
-
             html = net.http_GET(web_url).content
-
-            dialog.update(50)
             
             if re.search('>File Not Found<',html):
                 msg = 'File Not Found or removed'
@@ -68,9 +62,9 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
         
             #Check for SolveMedia Captcha image
             solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
+            recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
 
             if solvemedia:
-                dialog.close()
                 html = net.http_GET(solvemedia.group(1)).content
                 hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
                 open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
@@ -96,18 +90,56 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
                     return False
                
                 wdlg.close()
-                dialog.create('Resolving', 'Resolving vidplay Link...') 
-                dialog.update(50)
+                r = re.findall(r'type="?hidden"? name="([^"]+)".*?value="([^"]+)">', html)
+                if r:
+                    for name, value in r:
+                        data[name] = value
+                else:
+                    raise Exception('Cannot find data values')
+
                 if solution:
                     data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
+            elif recaptcha:
+                common.addon.log_debug('Google ReCaptcha')
+                html = net.http_GET(recaptcha.group(1)).content
+                part = re.search("challenge \: \\'(.+?)\\'", html)
+                captchaimg = 'http://www.google.com/recaptcha/api/image?c='+part.group(1)
+                img = xbmcgui.ControlImage(450,15,400,130,captchaimg)
+                wdlg = xbmcgui.WindowDialog()
+                wdlg.addControl(img)
+                wdlg.show()
+                xbmc.sleep(3000)
+                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
+                kb.doModal()
+                capcode = kb.getText()
+                if (kb.isConfirmed()):
+                    userInput = kb.getText()
+                    if userInput != '':
+                        solution = kb.getText()
+                    elif userInput == '':
+                        raise Exception ('You must enter text in the image to access video')
+                else:
+                    raise Exception ('Captcha Error')
+                wdlg.close()
+                data.update({'recaptcha_challenge_field':part.group(1),'recaptcha_response_field':solution})
+                
 
+            common.addon.log('VIDPLAY - Requesting POST URL: %s with data: %s' % (web_url, data))
             html = net.http_POST(web_url, data).content
-            dialog.update(100)
-            link = re.search("file: '([^']+)'", html)
-            if link:
-                return link.group(1)
+            sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
+            r = re.findall(sPattern, html, re.DOTALL|re.I)
+            if r:
+                sUnpacked = jsunpack.unpack(r[0])
+                sUnpacked = sUnpacked.replace("\\'","")
+                r = re.findall('file,(.+?)\)\;s1',sUnpacked)
+                if not r:
+                   r = re.findall('name="src"[0-9]*="(.+?)"/><embed',sUnpacked)
+                if not r:
+                    r = re.findall('<param name="src"value="(.+?)"/>', sUnpacked)
+                return r[0]
             else:
-                raise Exception('Unable to resolve vidplay Link')
+                common.addon.log('***** VidPlay - Cannot find final link')
+                raise Exception('Unable to resolve VidPlay Link')
 
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
