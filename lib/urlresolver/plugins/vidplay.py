@@ -46,7 +46,7 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
             puzzle_img = os.path.join(datapath, "vidplay_puzzle.png")
             html = net.http_GET(web_url).content
             
-            if re.search('>File Not Found<',html):
+            if re.search('File Not Found ',html):
                 msg = 'File Not Found or removed'
                 common.addon.show_small_popup(title='[B][COLOR white]VIDPLAY[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' 
                 % msg, delay=5000, image=error_logo)
