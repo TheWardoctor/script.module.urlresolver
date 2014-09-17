@@ -20,7 +20,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, os, urllib2
+import re, os, urllib2, urllib
 from urlresolver import common
 from lib import jsunpack
 import xbmc, xbmcgui
@@ -142,23 +142,23 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
 
             common.addon.log('HugeFiles - Requesting POST URL: %s DATA: %s' % (url, data))
             html = net.http_POST(url, data).content
+            # issue one more time for download link
+            #Set POST data values
+            data = {}
+            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
             
-            sPattern = '''<div id="player_code">.*?<script type='text/javascript'>(eval.+?)</script>'''
-            r = re.findall(sPattern, html, re.DOTALL|re.I)
             if r:
-                sUnpacked = jsunpack.unpack(r[0])
-                sUnpacked = sUnpacked.replace("\\'","")
-                r = re.findall('file,(.+?)\)\;s1',sUnpacked)
-                if not r:
-                   r = re.findall('name="src"[0-9]*="(.+?)"/><embed',sUnpacked)
-                if not r:
-                    r = re.findall('<param name="src"value="(.+?)"/>', sUnpacked)
-                return r[0]
+                for name, value in r:
+                    data[name] = value
             else:
-                common.addon.log('***** HugeFiles - Cannot find final link')
+                common.addon.log('***** HugeFiles - Cannot find data values')
                 raise Exception('Unable to resolve HugeFiles Link')
-        
+            data['method_free'] = 'Free Download'
 
+            # can't use t0mm0 net because the post doesn't return until the file is downloaded
+            request = urllib2.Request(url, urllib.urlencode(data))
+            response = urllib2.urlopen(request)
+            return response.geturl()
         except urllib2.HTTPError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
