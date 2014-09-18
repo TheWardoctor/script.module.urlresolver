@@ -22,6 +22,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from lib import jsunpack
+from lib import captcha_lib
 import re, urllib2, os, xbmcgui, xbmc
 
 net = Net()
@@ -63,66 +64,16 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
             #Check for SolveMedia Captcha image
             solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
-
+    
             if solvemedia:
-                html = net.http_GET(solvemedia.group(1)).content
-                hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
-                open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
-                img = xbmcgui.ControlImage(450,15,400,130, puzzle_img)
-                wdlg = xbmcgui.WindowDialog()
-                wdlg.addControl(img)
-                wdlg.show()
-        
-                xbmc.sleep(3000)
-
-                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
-                kb.doModal()
-                capcode = kb.getText()
-   
-                if (kb.isConfirmed()):
-                    userInput = kb.getText()
-                    if userInput != '':
-                        solution = kb.getText()
-                    elif userInput == '':
-                        Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
-                        return False
-                else:
-                    return False
-               
-                wdlg.close()
-                r = re.findall(r'type="?hidden"? name="([^"]+)".*?value="([^"]+)">', html)
-                if r:
-                    for name, value in r:
-                        data[name] = value
-                else:
-                    raise Exception('Cannot find data values')
-
-                if solution:
-                    data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
+                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1), puzzle_img))
             elif recaptcha:
-                common.addon.log_debug('Google ReCaptcha')
-                html = net.http_GET(recaptcha.group(1)).content
-                part = re.search("challenge \: \\'(.+?)\\'", html)
-                captchaimg = 'http://www.google.com/recaptcha/api/image?c='+part.group(1)
-                img = xbmcgui.ControlImage(450,15,400,130,captchaimg)
-                wdlg = xbmcgui.WindowDialog()
-                wdlg.addControl(img)
-                wdlg.show()
-                xbmc.sleep(3000)
-                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
-                kb.doModal()
-                capcode = kb.getText()
-                if (kb.isConfirmed()):
-                    userInput = kb.getText()
-                    if userInput != '':
-                        solution = kb.getText()
-                    elif userInput == '':
-                        raise Exception ('You must enter text in the image to access video')
-                else:
-                    raise Exception ('Captcha Error')
-                wdlg.close()
-                data.update({'recaptcha_challenge_field':part.group(1),'recaptcha_response_field':solution})
-                
+                data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
+            else:
+                captcha = re.compile("left:(\d+)px;padding-top:\d+px;'>&#(.+?);<").findall(html)
+                result = sorted(captcha, key=lambda ltr: int(ltr[0]))
+                solution = ''.join(str(int(num[1])-48) for num in result)
+                data.update({'code':solution})
 
             common.addon.log('VIDPLAY - Requesting POST URL: %s with data: %s' % (web_url, data))
             html = net.http_POST(web_url, data).content

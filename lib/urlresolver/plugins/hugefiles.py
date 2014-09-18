@@ -23,6 +23,7 @@ from urlresolver.plugnplay import Plugin
 import re, os, urllib2, urllib
 from urlresolver import common
 from lib import jsunpack
+from lib import captcha_lib
 import xbmc, xbmcgui
 
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
@@ -73,67 +74,9 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
     
             if solvemedia:
-               html = self.net.http_GET(solvemedia.group(1)).content
-               hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
-               open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
-               img = xbmcgui.ControlImage(450,15,400,130, puzzle_img)
-               wdlg = xbmcgui.WindowDialog()
-               wdlg.addControl(img)
-               wdlg.show()
-            
-               xbmc.sleep(3000)
-    
-               kb = xbmc.Keyboard('', 'Type the letters in the image', False)
-               kb.doModal()
-               capcode = kb.getText()
-       
-               if (kb.isConfirmed()):
-                   userInput = kb.getText()
-                   if userInput != '':
-                       solution = kb.getText()
-                   elif userInput == '':
-                       Notify('big', 'No text entered', 'You must enter text in the image to access video', '')
-                       return False
-               else:
-                   return False
-                   
-               wdlg.close()
-               r = re.findall(r'type="?hidden"? name="([^"]+)".*?value="([^"]+)">', html)
-               if r:
-                   for name, value in r:
-                       data[name] = value
-               else:
-                   raise Exception('Cannot find data values')
-
-               if solution:
-                   data.update({'adcopy_challenge': hugekey,'adcopy_response': solution})
-
+                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1), puzzle_img))
             elif recaptcha:
-                html = self.net.http_GET(recaptcha.group(1)).content
-                part = re.search("challenge \: \\'(.+?)\\'", html)
-                captchaimg = 'http://www.google.com/recaptcha/api/image?c='+part.group(1)
-                img = xbmcgui.ControlImage(450,15,400,130,captchaimg)
-                wdlg = xbmcgui.WindowDialog()
-                wdlg.addControl(img)
-                wdlg.show()
-        
-                xbmc.sleep(3000)
-        
-                kb = xbmc.Keyboard('', 'Type the letters in the image', False)
-                kb.doModal()
-                capcode = kb.getText()
-        
-                if (kb.isConfirmed()):
-                    userInput = kb.getText()
-                    if userInput != '':
-                        solution = kb.getText()
-                    elif userInput == '':
-                        raise Exception ('You must enter text in the image to access video')
-                else:
-                    raise Exception ('Captcha Error')
-                wdlg.close()
-                data.update({'recaptcha_challenge_field':part.group(1),'recaptcha_response_field':solution})
-
+                data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
             else:
                 captcha = re.compile("left:(\d+)px;padding-top:\d+px;'>&#(.+?);<").findall(html)
                 result = sorted(captcha, key=lambda ltr: int(ltr[0]))
@@ -160,8 +103,7 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             response = urllib2.urlopen(request)
             return response.geturl()
         except urllib2.HTTPError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
+            common.addon.log_error(self.name + ': got http error %d fetching %s' %(e.code, url))
             common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
         except Exception, e:
