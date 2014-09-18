@@ -44,10 +44,10 @@ class NowvideoResolver(Plugin, UrlResolver, PluginSettings):
             ip_key = key[0]
             pattern = 'var %s="(.+?)".+?flashvars.file="(.+?)"'% str(ip_key)
             r = re.search(pattern,html, re.DOTALL)
-            print 'find key: '+str(r)
+            #print 'find key: '+str(r)
             if r:
                 filekey, filename= r.groups()
-                print "FILEBLOBS=%s  %s"%(filename,filekey)
+                #print "FILEBLOBS=%s  %s"%(filename,filekey)
             else:
                 r = re.search('file no longer exists',html)
                 if r:
@@ -79,7 +79,7 @@ class NowvideoResolver(Plugin, UrlResolver, PluginSettings):
         return 'http://embed.nowvideo.sx/embed.php?v=%s' % media_id
 
     def get_host_and_id(self, url):
-        print url
+        #print url
         r = re.search('((?:http://|www.|embed.)nowvideo.(?:eu|sx|ch))/(?:video/|embed.php\?v=)([0-9a-z]+)', url)
         if r:
             return r.groups()

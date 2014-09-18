@@ -75,7 +75,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             
             common.addon.log('180Upload - Requesting POST URL: %s with data: %s' % (web_url, data))
             html = net.http_POST(web_url, data).content
-            print html
         
             link = re.search('id="lnk_download" href="([^"]+)', html)
             if link:
