@@ -60,7 +60,7 @@ class NowvideoResolver(Plugin, UrlResolver, PluginSettings):
             if r:
                 stream_url = urllib.unquote(r.group(1))
             else:
-                r = re.search('file no longer exists',html)
+                r = re.search('no longer exists',html)
                 if r:
                     raise Exception ('File Not Found or removed')
                 raise Exception ('Failed to parse url')
