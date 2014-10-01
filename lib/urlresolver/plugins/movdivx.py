@@ -63,7 +63,6 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
             data['method_free'] = 'Continue to Stream'
 
             html = self.net.http_POST(web_url, data).content
-            print html
 
             # get url from packed javascript
             sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>'

@@ -172,7 +172,7 @@ class sockshareResolver(Plugin, UrlResolver, PluginSettings):
                 response = self.net.http_POST(url, form_data=data)
                 self.net.save_cookies(self.cookie_file)
                 self.net.set_cookies(self.cookie_file)
-                print response.get_url()
+                #print response.get_url()
             else:
                 common.addon.log('Dialog was canceled')
                 return False
