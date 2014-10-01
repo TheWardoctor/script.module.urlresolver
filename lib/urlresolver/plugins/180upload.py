@@ -21,6 +21,7 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
+from lib import jsunpack
 import re, urllib2, os, xbmcgui, xbmc
 
 net = Net()
@@ -43,7 +44,7 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         common.addon.log('180upload: in get_media_url %s %s' % (host, media_id))
-        web_url = self.get_url(host, media_id)
+        web_url = 'http://180upload.com/embed-%s.html' % media_id
         try:
             puzzle_img = os.path.join(datapath, "180_puzzle.png")
             common.addon.log('180Upload - Requesting GET URL: %s' % web_url)
@@ -56,13 +57,27 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 return self.unresolvable(code=1, msg='File Not Found') 
                 
             data = {}
-            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
+            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)"', html)
             if r:
                 for name, value in r:
                     data[name] = value
+                data['referer'] = web_url 
+                print data
             else:
                 raise Exception('Cannot find data values')
-        
+            # 1st attempt, probably no captcha
+            common.addon.log('180Upload - Requesting POST URL: %s' % web_url)
+            html = net.http_POST(web_url, data).content
+ 
+            packed = re.search('id="player_code".*?(eval.*?\)\)\))', html,re.DOTALL)
+            if packed:
+                js = jsunpack.unpack(packed.group(1))
+                link = re.search("'file','([^']+)'", js.replace('\\',''))
+                if link:
+                    common.addon.log('180Upload Link Found: %s' % link.group(1))
+                    return link.group(1)
+                    
+            web_url = self.get_url(host, media_id)
             #Check for SolveMedia Captcha image
             solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
