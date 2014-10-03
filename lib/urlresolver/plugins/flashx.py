@@ -84,14 +84,14 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
                 raise Exception("File Link Not Found")
 
         except urllib2.URLError, e:
-            common.addon.log_error('bestreams: got http error %d fetching %s' %
+            common.addon.log_error('flashx.tv: got http error %d fetching %s' %
                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','beststreams: HTTP error: '+str(e), 5000, error_logo)
+            common.addon.show_small_popup('Error','flashx.tv: HTTP error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
         
         except Exception, e:
-            common.addon.log_error('bestreams: general error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]BESTREAMS[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+            common.addon.log_error('flashx.tv: general error occured: %s' % e)
+            common.addon.show_small_popup(title='[B][COLOR white]FLASHX.TV[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             raise
             return self.unresolvable(code=0, msg=e)
 
