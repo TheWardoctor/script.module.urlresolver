@@ -20,7 +20,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, urllib2, os, xbmcgui
+import re, urllib, urllib2, os, xbmcgui
 from urlresolver import common
 from lib import jsunpack
 
@@ -51,36 +51,38 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
 
             html = self.net.http_GET(web_url).content
 
-            if 'File Not Found' in html:
-                raise Exception ('File Not Found or removed')
+            r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
+            data={}
+            for name, value in r:
+                data[name] = value
+            data[u"imhuman"] = "Proceed to video"; 
+            r = re.findall(r"type:\s*'hidden',\s*id:\s*'([^']+).*?value:\s*'([^']+)", html)
+            for name, value in r:
+                data[name] = value
+                                                                              
+            cookies={}
+            for match in re.finditer("\$\.cookie\('([^']+)',\s*'([^']+)",html):
+                key,value = match.groups()
+                cookies[key]=value
+            cookies['ref_url']=web_url
+            headers['Cookie']=urllib.urlencode(cookies)
 
-            count = 0
-            while "Proceed to video" in html:
-                if count > 3:
-                    raise Exception ('Unable to resolve TheVideo link. Player config not found.')
-                data = {}
-                
-                r = re.findall(r'name: \'(.+?)\', value: \'(.+?)\'', html)
-                for name, value in r:
-                    data[name] = value
-                
-                r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
-                for name, value in r:
-                    data[name] = value
-                data[u"imhuman"] = "Proceed to video"; 
-                html = self.net.http_POST(web_url, data, headers=headers).content
-                count += 1
+            html = self.net.http_POST(web_url, data, headers=headers).content
 
-            r = re.search("<script type='text/javascript'>eval(.*?)</script>",html,re.DOTALL)
+            r = re.search("<script type='text/javascript'>(eval\(function\(p,a,c,k,e,d\).*?)</script>",html,re.DOTALL)
             if not r:
                 raise Exception ('Unable to resolve TheVideo link. Player config not found.')
             js = jsunpack.unpack(r.group(1))
-            r = re.search('file:"(.+?)"', js.replace("\\'", ""))
+            r = re.findall(r"label:\\'([^']+)p\\',file:\\'([^\\']+)", js)
             if not r:
                 raise Exception('Unable to locate link')
             else:
-                stream_url=r.group(1)+'?start=0'
-                return stream_url + '|Referer=http://www.thevideo.me/player_custom/player.swf'
+                max_quality=0
+                for quality, stream_url in r:
+                    if int(quality)>=max_quality:
+                        best_stream_url = stream_url
+                        max_quality = int(quality)
+                return best_stream_url
 
         except urllib2.HTTPError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
