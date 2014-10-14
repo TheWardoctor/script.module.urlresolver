@@ -28,6 +28,7 @@ from lib import jsunpack
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:30.0) Gecko/20100101 Firefox/30.0'
+MAX_TRIES=3
 
 class SharesixResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -51,28 +52,35 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
 
             html = self.net.http_GET(web_url).content
 
-            r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
-            data={}
-            for name, value in r:
-                data[name] = value
-            data[u"imhuman"] = "Proceed to video"; 
-            r = re.findall(r"type:\s*'hidden',\s*id:\s*'([^']+).*?value:\s*'([^']+)", html)
-            for name, value in r:
-                data[name] = value
-                                                                              
-            cookies={}
-            for match in re.finditer("\$\.cookie\('([^']+)',\s*'([^']+)",html):
-                key,value = match.groups()
-                cookies[key]=value
-            cookies['ref_url']=web_url
-            headers['Cookie']=urllib.urlencode(cookies)
-
-            html = self.net.http_POST(web_url, data, headers=headers).content
-
-            r = re.search("<script type='text/javascript'>(eval\(function\(p,a,c,k,e,d\).*?)</script>",html,re.DOTALL)
-            if not r:
+            js = ''
+            tries=1
+            while not js and tries<=MAX_TRIES:
+                r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
+                data={}
+                for name, value in r:
+                    data[name] = value
+                data[u"imhuman"] = "Proceed to video"; 
+                r = re.findall(r"type:\s*'hidden',\s*id:\s*'([^']+).*?value:\s*'([^']+)", html)
+                for name, value in r:
+                    data[name] = value
+                                                                                  
+                cookies={}
+                for match in re.finditer("\$\.cookie\('([^']+)',\s*'([^']+)",html):
+                    key,value = match.groups()
+                    cookies[key]=value
+                cookies['ref_url']=web_url
+                headers['Cookie']=urllib.urlencode(cookies)
+    
+                html = self.net.http_POST(web_url, data, headers=headers).content
+                print 'Try: %s/%s' % (tries, MAX_TRIES)
+                r = re.search("<script type='text/javascript'>(eval\(function\(p,a,c,k,e,d\).*?)</script>",html,re.DOTALL)
+                if r:
+                    js = jsunpack.unpack(r.group(1))
+                    break
+                tries += 1
+            else:
                 raise Exception ('Unable to resolve TheVideo link. Player config not found.')
-            js = jsunpack.unpack(r.group(1))
+                
             r = re.findall(r"label:\\'([^']+)p\\',file:\\'([^\\']+)", js)
             if not r:
                 raise Exception('Unable to locate link')
