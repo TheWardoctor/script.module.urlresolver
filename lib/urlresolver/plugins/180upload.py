@@ -73,7 +73,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             packed = re.search('id="player_code".*?(eval.*?\)\)\))', html,re.DOTALL)
             if packed:
                 js = jsunpack.unpack(packed.group(1))
-                print js
                 link = re.search('name="src"\s*value="([^"]+)', js.replace('\\',''))
                 if link:
                     common.addon.log('180Upload Link Found: %s' % link.group(1))
