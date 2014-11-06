@@ -6,6 +6,7 @@
   <requires>
     <import addon="xbmc.python" version="2.1.0" />
     <import addon="script.module.t0mm0.common" version="2.0.0"/>
+    <import addon="script.module.simplejson" version="0.9.1"/>
     <import addon="plugin.video.youtube" version="4.4.7"/>
   </requires>
   <extension point="xbmc.python.module" library="lib" />
