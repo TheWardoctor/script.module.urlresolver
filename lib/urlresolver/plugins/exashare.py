@@ -58,7 +58,7 @@ class ExashareResolver(Plugin,UrlResolver,PluginSettings):
                 if len(cookies)>0 : 
                     stream_url=stream_url+'|'+urllib.urlencode({'Cookie':urllib.urlencode(cookies)})
             common.addon.log('stream_url : '+stream_url)
-            xbmc.sleep(4000)
+            xbmc.sleep(7000)
             return stream_url
         except urllib2.HTTPError,e:
             e=e.code
