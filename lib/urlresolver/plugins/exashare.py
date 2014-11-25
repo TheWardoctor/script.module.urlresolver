@@ -49,7 +49,8 @@ class ExashareResolver(Plugin,UrlResolver,PluginSettings):
         #base_url='http://www.'+host+'.com/embed-'+media_id+'-640x400.html'
         headers={'User-Agent':self.USER_AGENT,'Referer':'http://www.'+host+'.com/'}
         try:
-            html=self.net.http_GET(base_url,headers=headers).content
+            try: html=self.net.http_GET(base_url).content
+            except: html=self.net.http_GET(base_url,headers=headers).content
             stream_url=re.findall('file:\s*"([^"]+)"',html)[0]
             if self.get_setting('login')=='true' :  
                 cookies={}
