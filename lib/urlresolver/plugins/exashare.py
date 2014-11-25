@@ -127,7 +127,8 @@ class ExashareResolver(Plugin,UrlResolver,PluginSettings):
                 url='http://www.exashare.com/'
                 data={'login':self.get_setting('username'),'password':self.get_setting('password'),'op':'login','redirect':'/login.html'}
                 headers={'User-Agent':self.USER_AGENT,'Referer':url}
-                source=self.net.http_POST(url,data,headers=headers).content
+                try: source=self.net.http_POST(url,data).content
+                except: source=self.net.http_POST(url,data,headers=headers).content
                 if re.search('Your username is for logging in and cannot be changed',source):
                     common.addon.log('logged in exashare')
                     common.addon.show_small_popup(title='[B][COLOR white]EXASHARE LOGIN [/COLOR][/B]',msg='[COLOR green]Logged[/COLOR]',delay=2000,image=ok_logo)
