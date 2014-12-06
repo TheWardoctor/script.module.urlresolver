@@ -15,6 +15,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import urlresolver
+import urllib2
+import urlparse
 from urlresolver import common
 from plugnplay.interfaces import UrlResolver
 from plugnplay.interfaces import SiteAuth
@@ -85,7 +87,6 @@ class HostedMediaFile:
                         self._resolvers = []
             else:    
                 self._url = self._resolvers[0].get_url(host, media_id)
-        
         if title:
             self.title = title
         else:
@@ -140,9 +141,12 @@ class HostedMediaFile:
             if SiteAuth in resolver.implements:
                 common.addon.log_debug('logging in')
                 resolver.login()
-            return resolver.get_media_url(self._host, self._media_id)
-        else:
-            return False
+
+            stream_url = resolver.get_media_url(self._host, self._media_id)
+            if stream_url and self.__test_stream(stream_url):
+                return stream_url
+
+        return False
         
     def valid_url(self):
         '''
@@ -163,6 +167,30 @@ class HostedMediaFile:
             return True
         return False
         
+    def __test_stream(self, stream_url):
+        '''
+        Returns True if the stream_url gets a non-failure http status (i.e. <400) back from the server
+        otherwise return False
+        
+        Intended to catch stream urls returned by resolvers that would fail to playback 
+        '''
+        # parse_qsl doesn't work because it splits elements by ';' which can be in a non-quoted UA
+        try: headers = dict([item.split('=') for item in (stream_url.split('|')[1]).split('&')])
+        except: headers = {}
+        common.addon.log_debug('Setting Headers on UrlOpen: %s' % (headers))
+    
+        request = urllib2.Request(stream_url.split('|')[0], headers=headers)
+
+        #  set urlopen timeout to 2 seconds
+        try: http_code = urllib2.urlopen(request, timeout=2).getcode()
+        except: http_code = 404 # not sure how I feel about considering all urlopen exceptions a http 404
+    
+        # added this log line for now so that we can catch any logs on streams that are rejected due to test_stream failures
+        # we can remove it once we are sure this works reliably
+        if int(http_code)>=400: common.addon.log('Stream UrlOpen Failed: Url: %s HTTP Code: %s' % (stream_url, http_code))
+        
+        return int(http_code) < 400
+    
     def _find_resolvers(self):
         imps = []
         for imp in UrlResolver.implementors():
