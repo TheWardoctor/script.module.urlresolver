@@ -56,8 +56,6 @@ class VodlockerResolver(Plugin, UrlResolver, PluginSettings):
             link = self.net.http_GET(web_url).content
 
             if link.find('404 Not Found') >= 0:
-                print "shouldn't get here"
-
                 err_title = 'Content not available.'
                 err_message = 'The requested video was not found.'
                 common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))

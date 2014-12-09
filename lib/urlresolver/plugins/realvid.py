@@ -1,11 +1,5 @@
 """
 realvid urlresolver plugin
-Copyright (C) 2014 Lynx187
-Modded by Bit - October 2014
-Exactly the same as Streamcloud resolver by Lynx187 but names changed to allow
-for Realvid.net so no real coding changes except to change the
-download1 to download2 in streamcloud to
-"Proceed to video" to "Proceed+to+video" in realvid
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,16 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
+import xbmc
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import urllib2, os
-from urlresolver import common
-from lib import jsunpack
-import xbmcgui
 import re
-import time
+import urllib2
+from urlresolver import common
+
+logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class RealvidResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -40,49 +35,39 @@ class RealvidResolver(Plugin, UrlResolver, PluginSettings):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
+        self.pattern = 'http://((?:www.)?realvid.net)/(?:embed-)?([0-9a-zA-Z]+)(?:-\d+x\d+.html)?'
+    
+    def get_url(self,host,media_id): 
+        return 'http://realvid.net/embed-%s-640x400.html' % (media_id)
 
-    def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
+    def get_host_and_id(self,url):
+        r=re.search(self.pattern,url)
+        if r: return r.groups()
+        else: return False
 
+    def valid_url(self,url,host):
+        if self.get_setting('enabled')=='false': return False
+        return re.match(self.pattern,url) or self.name in host
+
+    def get_media_url(self,host,media_id):
         try:
-            resp = self.net.http_GET(web_url)
-            html = resp.content
-            post_url = resp.get_url()
-            dialog = xbmcgui.Dialog()
-                
-            if re.search('>(File Not Found)<',html):
-                raise Exception ('File Not Found or removed')
-                
-            form_values = {}
-            for i in re.finditer('<input.*?name="(.*?)".*?value="(.*?)">', html):
-                form_values[i.group(1)] = i.group(2).replace("Proceed to video","Proceed+to+video")
+            web_url = self.get_url(host, media_id)
+            link = self.net.http_GET(web_url).content
 
-            html = self.net.http_POST(post_url, form_data=form_values).content
+            if link.find('404 Not Found') >= 0:
+                err_title = 'Content not available.'
+                err_message = 'The requested video was not found.'
+                common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
+                xbmc.executebuiltin('XBMC.Notification([B][COLOR white]'+__name__+'[/COLOR][/B] - '+err_title+',[COLOR red]'+err_message+'[/COLOR],8000,'+logo+')')
+                return self.unresolvable(1, err_message)
 
-            r = re.search('file: "(.+?)",', html)
-            if r:
-                return r.group(1)
+            video_link = str(re.compile('file[: ]*"(.+?)"').findall(link)[0])
+
+            if len(video_link) > 0:
+                return video_link
             else:
-                raise Exception ('File Not Found or removed')
+                return self.unresolvable(0, 'No playable video found.')
         except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            return self.unresolvable(code=3, msg=e)
+            return self.unresolvable(3, str(e))
         except Exception, e:
-            common.addon.log('**** Realvid Error occured: %s' % e)
-            return self.unresolvable(code=0, msg=e)
-
-    def get_url(self, host, media_id):
-            return 'http://realvid.net/%s' % (media_id)
-
-    def get_host_and_id(self, url):
-        r = re.search('http://(?:www.)?(.+?)/([0-9A-Za-z]+)', url)
-        if r:
-            return r.groups()
-        else:
-            return False
-
-
-    def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www.)?realvid.net/[0-9A-Za-z]+', url) or 'realvid' in host
+            return self.unresolvable(0, str(e))
