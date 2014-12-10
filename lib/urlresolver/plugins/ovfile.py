@@ -23,9 +23,7 @@ from urlresolver.plugnplay import Plugin
 import re
 import urllib2
 from urlresolver import common
-import os, xbmcgui
-from vidxden import unpack_js
-
+from lib import jsunpack
 
 class OvfileResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -59,7 +57,7 @@ class OvfileResolver(Plugin, UrlResolver, PluginSettings):
                 k = r[1][1]
             else:
                 raise Exception ('packed javascript embed code not found')
-            decrypted_data = unpack_js(p, k)
+            decrypted_data = jsunpack.unpack(p, k)
             r = re.search('file.\',.\'(.+?).\'', decrypted_data)
             if not r:
                 r = re.search('src="(.+?)"', decrypted_data)
@@ -73,18 +71,14 @@ class OvfileResolver(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error('Ovfile: got http error %d fetching %s' %
                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
         
         except Exception, e:
             common.addon.log_error('**** Ovfile Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]OVFILE[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
-
 
     def get_url(self, host, media_id):
         return 'http://www.ovfile.com/%s' % media_id 
-        
         
     def get_host_and_id(self, url):
         r = re.search('http://(.+?)/embed-([\w]+)-', url)

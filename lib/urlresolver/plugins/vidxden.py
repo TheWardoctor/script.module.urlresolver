@@ -23,7 +23,7 @@ vidxden hosts both avi and flv videos
 In testing there seems to be a timing issue with files coming up as not playable.
 This happens on both the addon and in a browser.
 """
-import urllib2,xbmcaddon,socket,re,os
+import urllib2,xbmcaddon,socket,re
 from t0mm0.common.net import Net
 from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
@@ -31,10 +31,6 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from lib import captcha_lib
 from lib import jsunpack
-
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-datapath = common.profile_path
 
 #SET DEFAULT TIMEOUT FOR SLOW SERVERS:
 socket.setdefaulttimeout(30)
@@ -54,7 +50,6 @@ class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        puzzle_img = os.path.join(datapath, "vidxden_puzzle.png")
 
         try:
             resp = self.net.http_GET(web_url)
@@ -68,7 +63,7 @@ class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
             #Check for SolveMedia Captcha image
             solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
             if solvemedia:
-                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1), puzzle_img))
+                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
 
             html = self.net.http_POST(resp.get_url(),data).content
 
@@ -97,12 +92,10 @@ class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
         except urllib2.HTTPError, e:
             common.addon.log_error('Vidxden: got http error %d fetching %s' %
                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
 
         except Exception, e:
             common.addon.log_error('**** Vidxden Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]VIDXDEN[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
 
         
@@ -127,49 +120,3 @@ class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
                          '(embed-)?[0-9a-z]+', url) or
                 'vidxden' in host or 'divxden' in host or
                 'vidbux' in host)
-
-    #PluginSettings methods
-    def get_settings_xml(self):
-        xml = PluginSettings.get_settings_xml(self)
-        xml += '<setting id="vidxden_captchax" '
-        xml += 'type="slider" label="Captcha Image X Position" range="0,500" default="335" option="int" />\n'
-        xml += '<setting id="vidxden_captchay" '
-        xml += 'type="slider" label="Captcha Image Y Position" range="0,500" default="0" option="int" />\n'
-        xml += '<setting id="vidxden_captchah" '
-        xml += 'type="slider" label="Captcha Image Height" range="0,500" default="180" option="int" />\n'
-        xml += '<setting id="vidxden_captchaw" '
-        xml += 'type="slider" label="Captcha Image Width" range="0,1000" default="624" option="int" />\n'
-        return xml
-
-def unpack_js(p, k):
-    '''emulate js unpacking code'''
-    k = k.split('|')
-    for x in range(len(k) - 1, -1, -1):
-        if k[x]:
-            p = re.sub('\\b%s\\b' % base36encode(x), k[x], p)
-    return p
-
-
-def base36encode(number, alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
-    """Convert positive integer to a base36 string. (from wikipedia)"""
-    if not isinstance(number, (int, long)):
-        raise TypeError('number must be an integer')
- 
-    # Special case for zero
-    if number == 0:
-        return alphabet[0]
-
-    base36 = ''
-
-    sign = ''
-    if number < 0:
-        sign = '-'
-        number = - number
-
-    while number != 0:
-        number, i = divmod(number, len(alphabet))
-        base36 = alphabet[i] + base36
-
-    return sign + base36
-        
-

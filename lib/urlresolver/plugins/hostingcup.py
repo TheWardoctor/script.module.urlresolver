@@ -22,8 +22,12 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 import re
 import urllib2
+import os
 from urlresolver import common
-from vidxden import unpack_js
+from lib import jsunpack
+
+#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
+error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 class HostingcupResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -47,7 +51,7 @@ class HostingcupResolver(Plugin, UrlResolver, PluginSettings):
             else:
                 raise Exception ('packed javascript embed code not found')
     
-            decrypted_data = unpack_js(p, k)
+            decrypted_data = jsunpack.unpack(p)
             r = re.search('file.\',.\'(.+?).\'', decrypted_data)
             if not r:
                 r = re.search('src="(.+?)"', decrypted_data)

@@ -20,14 +20,12 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, xbmcgui, time, xbmc
+import re
 from urlresolver import common
 from lib import jsunpack
 from lib import captcha_lib
-import os
 
 net = Net()
-datapath = common.profile_path
 
 class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -42,7 +40,6 @@ class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         try:
-            puzzle_img = os.path.join(datapath, "ctv_puzzle.png")
             url = self.get_url(host, media_id)
             html = self.net.http_GET(url).content
             data = {}
@@ -61,7 +58,7 @@ class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
 
             if solvemedia:
-                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1), puzzle_img))
+                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
             elif recaptcha:
                 data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
             else:
@@ -103,7 +100,6 @@ class ClicktoviewResolver(Plugin, UrlResolver, PluginSettings):
         
     def get_url(self, host, media_id):
         return 'http://www.clicktoview.org/%s' % media_id 
-        
 
     def get_host_and_id(self, url):
         r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)

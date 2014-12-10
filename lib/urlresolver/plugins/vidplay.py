@@ -23,13 +23,9 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from lib import jsunpack
 from lib import captcha_lib
-import re, urllib2, os, xbmcgui, xbmc
+import re, urllib2
 
 net = Net()
-
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-datapath = common.profile_path
 
 class VidplayResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -40,17 +36,13 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
         self.net = Net()
 
-
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         try:
-            puzzle_img = os.path.join(datapath, "vidplay_puzzle.png")
             html = net.http_GET(web_url).content
             
             if re.search('File Not Found ',html):
                 msg = 'File Not Found or removed'
-                common.addon.show_small_popup(title='[B][COLOR white]VIDPLAY[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' 
-                % msg, delay=5000, image=error_logo)
                 return self.unresolvable(code = 1, msg = msg)
             data = {}
             r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
@@ -66,7 +58,7 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
     
             if solvemedia:
-                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1), puzzle_img))
+                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
             elif recaptcha:
                 data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
             else:
@@ -84,7 +76,7 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
                 sUnpacked = sUnpacked.replace("\\'","")
                 r = re.findall('file,(.+?)\)\;s1',sUnpacked)
                 if not r:
-                   r = re.findall('name="src"[0-9]*="(.+?)"/><embed',sUnpacked)
+                    r = re.findall('name="src"[0-9]*="(.+?)"/><embed',sUnpacked)
                 if not r:
                     r = re.findall('<param name="src"value="(.+?)"/>', sUnpacked)
                 return r[0]
@@ -95,11 +87,9 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
         except Exception, e:
             common.addon.log_error('**** Vidplay Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]VIDPLAY[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
 
         

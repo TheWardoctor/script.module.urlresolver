@@ -22,12 +22,14 @@ from t0mm0.common.net import Net
 import re
 import xbmcgui
 import xbmc
+import os
 
 net = Net()
+IMG_FILE = 'captcha_img.gif'
 
 def get_response(img):
     try:
-        img = xbmcgui.ControlImage(450,15,400,130,img)
+        img = xbmcgui.ControlImage(450,0,400,130,img)
         wdlg = xbmcgui.WindowDialog()
         wdlg.addControl(img)
         wdlg.show()
@@ -45,20 +47,23 @@ def get_response(img):
     finally:
         wdlg.close()
 
-def do_solvemedia_captcha(captcha_url, puzzle_img):
+def do_solvemedia_captcha(captcha_url):
     common.addon.log_debug('SolveMedia Captcha')
     html = net.http_GET(captcha_url).content
     hugekey=re.search('id="adcopy_challenge" value="(.+?)">', html).group(1)
-    open(puzzle_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
-    solution = get_response(puzzle_img)
+    captcha_img = os.path.join(common.profile_path, IMG_FILE)
+    try: os.remove(captcha_img)
+    except: pass
+    open(captcha_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
+    solution = get_response(captcha_img)
     return {'adcopy_challenge': hugekey,'adcopy_response': solution}
 
 def do_recaptcha(captcha_url):
     common.addon.log_debug('Google ReCaptcha')
     html = net.http_GET(captcha_url).content
     part = re.search("challenge \: \\'(.+?)\\'", html)
-    captchaimg = 'http://www.google.com/recaptcha/api/image?c='+part.group(1)
-    solution = get_response(captchaimg)
+    captcha_img = 'http://www.google.com/recaptcha/api/image?c='+part.group(1)
+    solution = get_response(captcha_img)
     return {'recaptcha_challenge_field': part.group(1),'recaptcha_response_field': solution}
 
     
