@@ -38,66 +38,73 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
 
     def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
-        headers = {
-                   'Host': 'billionuploads.com'
-                }
-        
-        tries = 0
-        while tries < MAX_TRIES:
-            html = net.http_GET(web_url, headers=headers).content
-            #print 'html1: %s' % (html.encode('ascii','ignore'))
-        
-            match=re.search('var\s+b\s*=\s*"([^"]+)', html)
-            if match:
-                html = self.__incapsala_decode(match.group(1))
-                match = re.search(',\s*"(/_Incapsula[^"]+)', html)
-                incap_url = 'http://www.billionuploads.com' + match.group(1)
-                net.http_GET(incap_url, headers=headers) # Don't need content, just the cookies
-            else:
-                # Even though a captcha can be returned, it seems not to be required if you just re-request the page
-                match = re.search('iframe\s+src="(/_Incapsula[^"]+)', html)
-                if match:
-                    captcha_url = 'http://www.billionuploads.com' + urllib.quote(match.group(1))
-                    html = net.http_GET(captcha_url, headers=headers).content
-                    #print 'html2: %s' % (html)
-                else:
-                    # not a Incapsula or a Captcha, so probably the landing page
-                    break
+        try:
+            web_url = self.get_url(host, media_id)
+            headers = {
+                       'Host': 'billionuploads.com'
+                    }
             
-            tries = tries + 1
-        else:
-            raise Exception('Tries Ran Out')
-        
-        data = {}
-        r = re.findall(r'type="hidden"\s+name="(.+?)"\s+value="(.*?)"', html)
-        for name, value in r: data[name] = value
-        del data['rand']
-        del data['gloss']
-        data['airman']='toast'
-        r = re.search(r'hidden">([^<]+)', html)
-        if r:
-            data['blader']=r.group(1)
-        #print data
+            tries = 0
+            while tries < MAX_TRIES:
+                html = net.http_GET(web_url, headers=headers).content
+                #print 'html1: %s' % (html.encode('ascii','ignore'))
+            
+                match=re.search('var\s+b\s*=\s*"([^"]+)', html)
+                if match:
+                    html = self.__incapsala_decode(match.group(1))
+                    match = re.search(',\s*"(/_Incapsula[^"]+)', html)
+                    incap_url = 'http://www.billionuploads.com' + match.group(1)
+                    net.http_GET(incap_url, headers=headers) # Don't need content, just the cookies
+                else:
+                    # Even though a captcha can be returned, it seems not to be required if you just re-request the page
+                    match = re.search('iframe\s+src="(/_Incapsula[^"]+)', html)
+                    if match:
+                        captcha_url = 'http://www.billionuploads.com' + urllib.quote(match.group(1))
+                        html = net.http_GET(captcha_url, headers=headers).content
+                        #print 'html2: %s' % (html)
+                    else:
+                        # not a Incapsula or a Captcha, so probably the landing page
+                        break
+                
+                tries = tries + 1
+            else:
+                raise Exception('Tries Ran Out')
+            
+            if re.search('>\s*File Not Found\s*<', html, re.I):
+                raise Exception('File Not Found/Removed')
 
-        html = net.http_POST(web_url, form_data = data, headers = headers).content
-        #print 'html3: %s' % (html.encode('ascii','ignore'))
-        
-        file_str = None
-        r = re.search(r'metro">([^<]+)', html)
-        if r:
-            file_str = r.group(1)
-            sep = 'XXX'
-        else:
-            r = re.search(r'id="dl"\s+value="([^"]+)', html)
+            data = {}
+            r = re.findall(r'type="hidden"\s+name="(.+?)"\s+value="(.*?)"', html)
+            for name, value in r: data[name] = value
+            if 'rand' in data: del data['rand']
+            if 'gloss' in data: del data['gloss']
+            data['airman']='toast'
+            r = re.search(r'hidden">([^<]+)', html)
+            if r:
+                data['blader']=r.group(1)
+            #print data
+    
+            html = net.http_POST(web_url, form_data = data, headers = headers).content
+            #print 'html3: %s' % (html.encode('ascii','ignore'))
+            
+            file_str = None
+            r = re.search(r'metro">([^<]+)', html)
             if r:
                 file_str = r.group(1)
-                sep = 'GvaZu'
-        
-        if file_str:
-            return  self.__bu_decode(self.__bu_decode(file_str.split(sep)[1]))
-        else:
-            raise Exception('Unable to locate file link')
+                sep = 'XXX'
+            else:
+                r = re.search(r'id="dl"\s+value="([^"]+)', html)
+                if r:
+                    file_str = r.group(1)
+                    sep = 'GvaZu'
+            
+            if file_str:
+                return  self.__bu_decode(self.__bu_decode(file_str.split(sep)[1]))
+            else:
+                raise Exception('Unable to locate file link')
+        except Exception as e:
+            common.addon.log_error('****billionuploads Error occured: %s' % e)
+            return self.unresolvable(code=0, msg=e)
             
     def __incapsala_decode(self, s):
         return s.decode('hex')
