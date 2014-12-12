@@ -20,30 +20,24 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, os, urllib2, urllib
+import re, urllib2, urllib
 from urlresolver import common
-from lib import jsunpack
 from lib import captcha_lib
-import xbmc, xbmcgui
 
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 net = Net()
 
 class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "hugefiles"
 
-
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
 
-
     def get_media_url(self, host, media_id):
         try:
             url = self.get_url(host, media_id)
-            puzzle_img = os.path.join(common.profile_path, "hugefiles_puzzle.png")
             common.addon.log('HugeFiles - Requesting GET URL: %s' % url)
             html = self.net.http_GET(url).content
             r = re.findall('File Not Found',html)
@@ -74,7 +68,7 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
     
             if solvemedia:
-                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1), puzzle_img))
+                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
             elif recaptcha:
                 data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
             else:
@@ -109,16 +103,13 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             return stream_url
         except urllib2.HTTPError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %(e.code, url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
         except Exception, e:
             common.addon.log_error('**** Hugefiles Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]HUGEFILES[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
         
     def get_url(self, host, media_id):
         return 'http://hugefiles.net/%s' % media_id 
-        
 
     def get_host_and_id(self, url):
         r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
@@ -127,7 +118,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
         else:
             return False
         return('host', 'media_id')
-
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False

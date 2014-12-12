@@ -20,14 +20,10 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, os, time, xbmcgui, xbmc
-import xbmcgui
+import re
 from urlresolver import common
 from lib import jsunpack
 from lib import captcha_lib
-
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 net = Net()
 
@@ -35,12 +31,10 @@ class MegareleaseResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "megarelease"
 
-
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-
 
     def get_media_url(self, host, media_id):
         try:
@@ -65,7 +59,6 @@ class MegareleaseResolver(Plugin, UrlResolver, PluginSettings):
             html = net.http_POST(url, data).content
             if re.findall('err', html):
                 raise Exception('Wrong Captcha')
-                
 
             sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
             sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
@@ -92,13 +85,10 @@ class MegareleaseResolver(Plugin, UrlResolver, PluginSettings):
                                 
         except Exception, e:
             common.addon.log('**** Megarelease Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
             return self.unresolvable(code=0, msg='Exception: %s' % e)
-
         
     def get_url(self, host, media_id):
         return 'http://megarelease.org/%s' % media_id 
-        
 
     def get_host_and_id(self, url):
         r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)

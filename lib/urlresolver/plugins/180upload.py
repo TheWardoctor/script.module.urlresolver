@@ -29,13 +29,10 @@ net = Net()
 
 #SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
 error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-datapath = common.profile_path
 
 class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "180upload"
-    
-
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -47,7 +44,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
         common.addon.log('180upload: in get_media_url %s %s' % (host, media_id))
         web_url = 'http://180upload.com/embed-%s.html' % media_id
         try:
-            puzzle_img = os.path.join(datapath, "180_puzzle.png")
             common.addon.log('180Upload - Requesting GET URL: %s' % web_url)
             html = net.http_GET(web_url).content
 
@@ -101,7 +97,7 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
 
             if solvemedia:
-                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1), puzzle_img))
+                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
             elif recaptcha:
                 data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
             

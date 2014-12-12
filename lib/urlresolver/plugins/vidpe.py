@@ -16,16 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import re, urllib2, os
+import re, urllib2
 from t0mm0.common.net import Net
 from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-from vidxden import unpack_js
-
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+from lib import jsunpack
 
 class vidpeResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -47,7 +44,7 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
             else:
                 raise Exception ('packed javascript embed code not found')
 
-            decrypted_data = unpack_js(p, k)
+            decrypted_data = jsunpack.unpack(p)
             r = re.search('file.\',.\'(.+?).\'', decrypted_data)
             if not r:
                 r = re.search('src="(.+?)"', decrypted_data)
@@ -61,13 +58,10 @@ class vidpeResolver(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
             return self.unresolvable(code=3, msg=e)
         except Exception, e:
             common.addon.log('**** Vidpe Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]VIDPE[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
-
 
     def get_url(self, host, media_id):
         if 'vidpe' in host or 'hostingcup' in host:
