@@ -16,74 +16,49 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import re
+import urllib2
+import urllib
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, urllib2, os
 from urlresolver import common
-from lib import jsunpack
-from lib import rijndael
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-net = Net()
+USER_AGENT = 'Mozilla/5.0 (Linux; Android 4.4; Nexus 5 Build/BuildID) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36'
 
 class VidbullResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "vidbull"
-
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
 
-
     def get_media_url(self, host, media_id):
         try:
-            url = self.get_url(host, media_id)
-            html = self.net.http_GET(url).content
+            headers = {
+                       'User-Agent': USER_AGENT
+                    }
+            
+            web_url = self.get_url(host, media_id)
+            html = self.net.http_GET(web_url, headers=headers).content
+            match = re.search('<source\s+src="([^"]+)', html)
+            if match:
+                return match.group(1)
+            else:
+                raise Exception('File Link Not Found')
 
-            data = {}
-            html = re.search('<Form(.+?)/Form', html, re.DOTALL).group(1)
-            r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.+?)"', html)
-            for name, value in r:
-                data[name] = value
-
-            common.addon.show_countdown(4, title='Vidbull', text='Loading Video...')
-            html = net.http_POST(url, data).content
-
-            sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>eval\(function\(p,a,c,k,e,[dr]\)(?!.+player_ads.+).+?</script>'
-            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-            if r:
-                sJavascript = r.group()
-                sUnpacked = jsunpack.unpack(sJavascript)
-                stream_url = re.search('[^\w\.]file[\"\']?\s*[:,]\s*[\"\']([^\"\']+)', sUnpacked)
-                if stream_url:
-                    if( re.match('http://.*',stream_url.group(1))):
-                        return stream_url.group(1)
-                    elif (re.match('[0-9a-f]+',stream_url.group(1))):
-                        return decryptHex(stream_url.group(1))
-                    else: 
-                        return stream_url.group(1)
-            raise Exception ('File Not Found or removed')
-
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 8000, error_logo)
+        except urllib2.HTTPError as e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' % (e.code, web_url))
             return self.unresolvable(code=3, msg=e)
-        except Exception, e:
+        except Exception as e:
             common.addon.log('**** Vidbull Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]VIDBULL[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
-
 
     def get_url(self, host, media_id):
         return 'http://www.vidbull.com/%s' % media_id 
-
 
     def get_host_and_id(self, url):
         r = re.search('//(.+?)/(?:embed-)?([0-9a-zA-Z]+)',url)
@@ -93,19 +68,8 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
             return False
         return('host', 'media_id')
 
-
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?vidbull.com/(?:embed-)?' +
                          '[0-9A-Za-z]+', url) or
                          'vidbull' in host)
-
-def decryptHex(blockString):
-    print("rijndael decryptHex " + blockString)
-    key = bytearray.fromhex('a949376e37b369f17bc7d3c7a04c5721')
-    ciphertext = bytearray.fromhex(blockString)
-    rd=rijndael.rijndael(key, len(key))
-    result = []
-    for x in range(0, int(len(ciphertext)/16)):
-        result.append(rd.decrypt(ciphertext[(x*16):((x+1)*16)]))
-    return ''.join(result)
