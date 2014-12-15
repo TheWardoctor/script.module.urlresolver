@@ -43,8 +43,11 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
     #UrlResolver methods
     def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
         try:
+            if not self.get_setting('login')=='true' or not (self.get_setting('username') and self.get_setting('password')):
+                raise Exception('VeeHD requires a username & password')
+
+            web_url = self.get_url(host, media_id)
             html = self.net.http_GET(web_url).content
             #print html.encode('ascii', 'ignore')
 
@@ -63,7 +66,7 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     html = self.net.http_GET(player_url).content
 
                 #print html.encode('ascii', 'ignore')
-                patterns = ['"video/divx" src="([^"]+)', '"url"\s*:\s*"([^"]+)', 'href="([^"]+(?:mp4|avi))']
+                patterns = ['"video/divx"\s+src="([^"]+)', '"url"\s*:\s*"([^"]+)', 'href="([^"]+(?:mp4|avi))']
                 for pattern in patterns:
                     r = re.search(pattern, html)
                     if r:
@@ -71,7 +74,7 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                         #print 'pattern: %s matched in url: %s result: %s' % (pattern, player_url, stream_url)
                         return stream_url
 
-            raise Exception ('File Not Found or removed')
+            raise Exception ('File Not Found or Removed')
         except Exception, e:
             common.addon.log('**** VeeHD Error occured: %s' % e)
             return self.unresolvable(code=0, msg='Exception: %s' % e)    
