@@ -143,8 +143,14 @@ class HostedMediaFile:
                 resolver.login()
 
             stream_url = resolver.get_media_url(self._host, self._media_id)
-            if stream_url and self.__test_stream(stream_url):
-                return stream_url
+            
+            
+            if stream_url :
+                if stream_url.startswith('rtmp://'):
+                    print 'return rtmp stream'
+                    return stream_url
+                elif self.__test_stream(stream_url):
+                    return stream_url
 
         return False
         
