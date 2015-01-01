@@ -16,9 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, sys
-import re
-
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
@@ -26,6 +23,7 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from t0mm0.common.net import Net
 
+import re
 try:
     import simplejson as json
 except ImportError:
@@ -40,7 +38,8 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-        self.patterns = None
+        self.hosts = []
+        self.patterns = []
 
     #UrlResolver methods
     def get_media_url(self, host, media_id):
@@ -56,7 +55,6 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             link = response['result']['location']
         except Exception, e:
             common.addon.log_error('**** Premiumize Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]PREMIUMIZE[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
         
         common.addon.log('Premiumize.me: Resolved to %s' %link)
@@ -66,11 +64,11 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return media_id
 
     def get_host_and_id(self, url):
-        return 'Premiumize.me', url
+        return 'premiumize.me', url
 
     def get_all_hosters(self):
         try :
-            if self.patterns is None:
+            if self.patterns is None or self.hosts is None:
                 username = self.get_setting('username')
                 password = self.get_setting('password')
                 url = 'https://api.premiumize.me/pm-api/v1.php?method=hosterlist'
@@ -79,20 +77,26 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 response = self.net.http_GET(url).content
                 response = json.loads(response)
                 result = response['result']
-                log_msg = 'Premiumize.me patterns: %s' % result['regexlist']
+                log_msg = 'Premiumize.me patterns: %s hosts: %s' % (result['regexlist'], result['tldlist'])
                 common.addon.log_debug(log_msg)
+                self.hosts = result['tldlist']
                 self.patterns = [re.compile(regex) for regex in result['regexlist']]
-            return self.patterns
         except :
-            return [] 
+            pass
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false':
-            return False
+        if self.get_setting('enabled') == 'false': return False
         if self.get_setting('login') == 'false': return False 
-        for pattern in self.get_all_hosters():
-            if pattern.findall(url):
+        
+        self.get_all_hosters()
+        if url:
+            for pattern in self.patterns:
+                if pattern.findall(url):
+                    return True
+        elif host:
+            if host in self.hosts or any(item in host for item in self.hosts):
                 return True
+        
         return False
 
     #PluginSettings methods
@@ -101,9 +105,9 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         xml += '<setting id="PremiumizeMeResolver_login" '
         xml += 'type="bool" label="login" default="false"/>\n'        
         xml += '<setting id="PremiumizeMeResolver_username" enable="eq(-1,true)" '
-        xml += 'type="text" label="username" default=""/>\n'
+        xml += 'type="text" label="Customer ID" default=""/>\n'
         xml += '<setting id="PremiumizeMeResolver_password" enable="eq(-2,true)" '
-        xml += 'type="text" label="password" option="hidden" default=""/>\n'
+        xml += 'type="text" label="PIN" option="hidden" default=""/>\n'
         return xml
         
     #to indicate if this is a universal resolver
