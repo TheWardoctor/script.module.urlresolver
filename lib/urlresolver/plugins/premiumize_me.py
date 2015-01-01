@@ -24,6 +24,7 @@ from urlresolver import common
 from t0mm0.common.net import Net
 
 import re
+import urllib
 try:
     import simplejson as json
 except ImportError:
@@ -36,10 +37,10 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
     def __init__(self):
         p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
         self.hosts = []
         self.patterns = []
+        self.priority = int(p)
+        self.net = Net()
 
     #UrlResolver methods
     def get_media_url(self, host, media_id):
@@ -47,9 +48,8 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             username = self.get_setting('username')
             password = self.get_setting('password')
             url   = 'https://api.premiumize.me/pm-api/v1.php?'
-            url += 'method=directdownloadlink&params%%5Blogin%%5D=%s'
-            url += '&params%%5Bpass%%5D=%s&params%%5Blink%%5D=%s'
-            url   = url % (username, password, media_id)
+            query = urllib.urlencode({'method': 'directdownloadlink', 'params[login]': username, 'params[pass]': password, 'params[link]': media_id})
+            url = url + query
             response = self.net.http_GET(url).content
             response = json.loads(response)
             link = response['result']['location']
@@ -57,7 +57,7 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             common.addon.log_error('**** Premiumize Error occured: %s' % e)
             return self.unresolvable(code=0, msg=e)
         
-        common.addon.log('Premiumize.me: Resolved to %s' %link)
+        common.addon.log_debug('Premiumize.me: Resolved to %s' %link)
         return link
 
     def get_url(self, host, media_id):
@@ -68,12 +68,12 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
     def get_all_hosters(self):
         try :
-            if self.patterns is None or self.hosts is None:
+            if not self.patterns or not self.hosts:
                 username = self.get_setting('username')
                 password = self.get_setting('password')
-                url = 'https://api.premiumize.me/pm-api/v1.php?method=hosterlist'
-                url += '&params%%5Blogin%%5D=%s&params%%5Bpass%%5D=%s'
-                url = url % (username, password)
+                url = 'https://api.premiumize.me/pm-api/v1.php?'
+                query = urllib.urlencode({'method': 'hosterlist', 'params[login]': username, 'params[pass]': password})
+                url = url + query
                 response = self.net.http_GET(url).content
                 response = json.loads(response)
                 result = response['result']
