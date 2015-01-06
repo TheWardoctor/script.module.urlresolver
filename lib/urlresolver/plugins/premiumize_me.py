@@ -52,7 +52,11 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             url = url + query
             response = self.net.http_GET(url).content
             response = json.loads(response)
-            link = response['result']['location']
+            if 'status' in response:
+                if response['status']==200:
+                    link = response['result']['location']
+                else:
+                    raise Exception('Link Not Found: Error Code: %s' % response['status'])
         except Exception, e:
             common.addon.log_error('**** Premiumize Error occured: %s' % e)
             return self.unresolvable(code=0, msg=e)
