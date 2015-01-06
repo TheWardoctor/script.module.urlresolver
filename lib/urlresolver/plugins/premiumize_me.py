@@ -57,6 +57,8 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     link = response['result']['location']
                 else:
                     raise Exception('Link Not Found: Error Code: %s' % response['status'])
+            else:
+                raise Exception('Unexpected Response Received')
         except Exception, e:
             common.addon.log_error('**** Premiumize Error occured: %s' % e)
             return self.unresolvable(code=0, msg=e)
