@@ -143,13 +143,7 @@ class HostedMediaFile:
                 resolver.login()
 
             stream_url = resolver.get_media_url(self._host, self._media_id)
-            
-            
-            if stream_url :
-                if stream_url.startswith('rtmp://'):
-                    print 'return rtmp stream'
-                    return stream_url
-                elif self.__test_stream(stream_url):
+            if stream_url and self.__test_stream(stream_url):
                     return stream_url
 
         return False
@@ -187,9 +181,15 @@ class HostedMediaFile:
     
         request = urllib2.Request(stream_url.split('|')[0], headers=headers)
 
-        #  set urlopen timeout to 2 seconds
-        try: http_code = urllib2.urlopen(request, timeout=2).getcode()
-        except: http_code = 404 # not sure how I feel about considering all urlopen exceptions a http 404
+        #  set urlopen timeout to 10 seconds
+        try: http_code = urllib2.urlopen(request, timeout=15).getcode()
+        except urllib2.URLError as e:
+            # treat an unhandled url type as success
+            if 'unknown url type' in e.reason.lower():
+                return True
+            else:
+                http_code = 404
+        except: http_code = 404
     
         # added this log line for now so that we can catch any logs on streams that are rejected due to test_stream failures
         # we can remove it once we are sure this works reliably
