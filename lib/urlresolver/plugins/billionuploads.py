@@ -76,30 +76,15 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             data = {}
             r = re.findall(r'type="hidden"\s+name="(.+?)"\s+value="(.*?)"', html)
             for name, value in r: data[name] = value
-            if 'rand' in data: del data['rand']
-            if 'gloss' in data: del data['gloss']
-            data['airman']='toast'
-            r = re.search(r'hidden">([^<]+)', html)
-            if r:
-                data['blader']=r.group(1)
+            data['method_free']='Download or watch'
             #print data
     
             html = net.http_POST(web_url, form_data = data, headers = headers).content
             #print 'html3: %s' % (html.encode('ascii','ignore'))
             
-            file_str = None
-            r = re.search(r'metro">([^<]+)', html)
+            r = re.search(r'class="[^"]+download"\s+href="([^"]+)', html)
             if r:
-                file_str = r.group(1)
-                sep = 'XXX'
-            else:
-                r = re.search(r'id="dl"\s+value="([^"]+)', html)
-                if r:
-                    file_str = r.group(1)
-                    sep = 'GvaZu'
-            
-            if file_str:
-                return  self.__bu_decode(self.__bu_decode(file_str.split(sep)[1]))
+                return r.group(1)
             else:
                 raise Exception('Unable to locate file link')
         except Exception as e:
