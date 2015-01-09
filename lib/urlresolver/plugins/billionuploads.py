@@ -82,7 +82,7 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             html = net.http_POST(web_url, form_data = data, headers = headers).content
             #print 'html3: %s' % (html.encode('ascii','ignore'))
             
-            r = re.search(r'class="[^"]+download"\s+href="([^"]+)', html)
+            r = re.search(r'class="[^"]*download"\s+href="([^"]+)', html)
             if r:
                 return r.group(1)
             else:
