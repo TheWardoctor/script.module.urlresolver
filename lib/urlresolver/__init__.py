@@ -27,7 +27,7 @@ For most cases you probably want to use :func:`urlresolver.resolve` or
 
 '''
 
-import os
+import os,xml.dom.minidom
 import common
 import plugnplay
 from types import HostedMediaFile
@@ -169,13 +169,14 @@ def display_settings():
     plugnplay.load_plugins()
     _update_settings_xml()
     common.addon.show_settings()
-        
-        
+
 def _update_settings_xml():
     '''
     This function writes a new ``resources/settings.xml`` file which contains
     all settings for this addon and its plugins.
     '''
+
+    pretty_print = lambda f: '\n'.join([line for line in f.split('\n') if line.strip()])
     
     lazy_plugin_scan()
     plugnplay.load_plugins()
@@ -187,20 +188,37 @@ def _update_settings_xml():
             pass
 
         f = open(common.settings_file, 'w')
+        xml_text = "<settings>"
+        for imp in PluginSettings.implementors():
+            xml_text += "<category label=\""+imp.name+"\">"
+            xml_text += imp.get_settings_xml()
+            xml_text += "</category>"
+        xml_text += "</settings>"
         try:
             f.write('<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n')
-            f.write('<settings>\n')    
-            for imp in PluginSettings.implementors():
-                f.write('<category label="%s">\n' % imp.name)
-                f.write(imp.get_settings_xml())
-                f.write('</category>\n')
+            f.write("<settings>\n")
+            f.write("<category label=\"URLResolver\">\n")
+            f.write("\t<setting default=\"true\" ")
+            f.write("id=\"allow_universal\" ")
+            f.write("label=\"Enable Universal Resolvers\" type=\"bool\"/>\n")
+            f.write("\t<setting default=\"0.0.0\" ")
+            f.write("id=\"addon_version\" visible=\"false\" ")
+            f.write("label=\"URLResolver version\" type=\"text\"/>\n")
+            f.write("</category>\n")
+            settings_xml = xml.dom.minidom.parseString(xml_text)
+            elements = settings_xml.getElementsByTagName('category')
+            elements.sort(key=lambda x: x.getAttribute('label'))
+            for i in elements:
+                xml_text = i.toprettyxml()
+                f.write(pretty_print(xml_text))
             f.write('</settings>')
         finally:
             f.close
     except IOError:
         common.addon.log_error('error writing ' + common.settings_file)
 
-
-print "Almost there"
-#make sure settings.xml is up to date
-_update_settings_xml()
+#Update settings.xml if newer plugin version
+if common.addon.get_setting('addon_version') != common.addon.get_version():
+    common.addon.log_notice("Update settings from %s to %s " % (common.addon.get_setting('addon_version'), common.addon.get_version()))
+    _update_settings_xml()
+    common.addon.addon.setSetting('addon_version', common.addon.get_version())
