@@ -198,6 +198,7 @@ class HostedMediaFile:
         return int(http_code) < 400
     
     def _find_resolvers(self):
+        urlresolver.lazy_plugin_scan()
         imps = []
         for imp in UrlResolver.implementors():
             if imp.valid_url(self.get_url(), self.get_host()):

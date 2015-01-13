@@ -31,7 +31,7 @@ import os
 import common
 import plugnplay
 from types import HostedMediaFile
-from plugnplay.interfaces import UrlResolver
+from plugnplay.interfaces import UrlResolver,UrlWrapper
 from plugnplay.interfaces import PluginSettings
 from plugnplay.interfaces import SiteAuth
 import xbmcgui
@@ -39,7 +39,10 @@ import xbmcgui
 #load all available plugins
 common.addon.log('Initializing URLResolver version: %s' % common.addon_version)
 plugnplay.set_plugin_dirs(common.plugins_path)
-plugnplay.load_plugins()
+
+def lazy_plugin_scan():
+    if not UrlResolver.implementors():
+        plugnplay.scan_plugins(UrlWrapper)
 
 def resolve(web_url):
     '''
@@ -71,6 +74,7 @@ def resolve(web_url):
         If the ``web_url`` could be resolved, a string containing the direct 
         URL to the media file, if not, returns ``False``.    
     '''
+    lazy_plugin_scan()
     source = HostedMediaFile(url=web_url)
     return source.resolve()
 
@@ -91,6 +95,7 @@ def filter_source_list(source_list):
         resolved by a resolver plugin removed.
     
     '''
+    lazy_plugin_scan()
     return [source for source in source_list if source]
 
 
@@ -121,6 +126,7 @@ def choose_source(sources):
         cancelled or none of the :class:`HostedMediaFile` are resolvable.    
         
     '''
+    lazy_plugin_scan()
     #get rid of sources with no resolver plugin
     sources = filter_source_list(sources)
     
@@ -159,6 +165,8 @@ def display_settings():
         All changes made to these setting by the user are global and will 
         affect any addon that uses :mod:`urlresolver` and its plugins.
     '''
+    lazy_plugin_scan()
+    plugnplay.load_plugins()
     _update_settings_xml()
     common.addon.show_settings()
         
@@ -168,6 +176,10 @@ def _update_settings_xml():
     This function writes a new ``resources/settings.xml`` file which contains
     all settings for this addon and its plugins.
     '''
+    
+    lazy_plugin_scan()
+    plugnplay.load_plugins()
+    
     try:
         try:
             os.makedirs(os.path.dirname(common.settings_file))
@@ -189,5 +201,6 @@ def _update_settings_xml():
         common.addon.log_error('error writing ' + common.settings_file)
 
 
+print "Almost there"
 #make sure settings.xml is up to date
 _update_settings_xml()
