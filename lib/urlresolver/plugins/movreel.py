@@ -19,26 +19,34 @@ Special thanks for help with this resolver go out to t0mm0, jas0npc,
 mash2k3, Mikey1234,voinage and of course Eldorado. Cheers guys :)
 """
 
-import re, xbmc
+import re, os, xbmc
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
+from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver import common
 
 net = Net()
 
-class movreelResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
+    implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "movreel"
+    profile_path = common.profile_path
+    cookie_file = os.path.join(profile_path, '%s.cookies' % name)
 
     def __init__(self):
         p = self.get_setting('priority') or 1
         self.priority = int(p)
         self.net = Net()
-        
+        try:
+            os.makedirs(os.path.dirname(self.cookie_file))
+        except OSError:
+            pass
+                
     def get_media_url(self, host, media_id):
         try:
+            net.set_cookies(self.cookie_file)
             web_url = self.get_url(host, media_id)
             html = self.net.http_GET(web_url).content
             if re.search('This server is in maintenance mode', html):
@@ -53,7 +61,14 @@ class movreelResolver(Plugin, UrlResolver, PluginSettings):
             else:
                 raise Exception('Cannot find data values')
             data['btn_download']='Continue to Video'
-            xbmc.sleep(2000)
+            
+            r = re.search('<span id="countdown_str">Wait <span id=".+?">(.+?)</span> seconds</span>', html)
+            if r:
+                wait_time = r.group(1)
+            else:
+                wait_time  = 2 # default to 2 seconds
+            xbmc.sleep(int(wait_time) * 1000)
+
             html = net.http_POST(web_url, data).content
             
             r = re.search('href="([^"]+)">Download Link', html)
@@ -82,3 +97,31 @@ class movreelResolver(Plugin, UrlResolver, PluginSettings):
         return (re.match('http://(www.)?movreel.com/' +
                          '[0-9A-Za-z]+', url) or
                          'movreel' in host)
+
+    def login(self):
+        if self.get_setting('login') == 'true':
+            loginurl = 'http://movreel.com'
+            login = self.get_setting('username')
+            password = self.get_setting('password')
+            data = {'op': 'login', 'login': login, 'password': password}
+            html = net.http_POST(loginurl, data).content
+            if re.search('op=logout', html):
+                self.net.save_cookies(self.cookie_file)
+                common.addon.log('LOGIN SUCCESSFUL')
+                return True
+            else:
+                common.addon.log('LOGIN FAILED')
+                return False
+        else:
+            common.addon.log('No account info entered')
+            return False
+
+    def get_settings_xml(self):
+        xml = PluginSettings.get_settings_xml(self)
+        xml += '<setting id="movreelResolver_login" '
+        xml += 'type="bool" label="login" default="false"/>\n'
+        xml += '<setting id="movreelResolver_username" enable="eq(-1,true)" '
+        xml += 'type="text" label="username" default=""/>\n'
+        xml += '<setting id="movreelResolver_password" enable="eq(-2,true)" '
+        xml += 'type="text" label="password" option="hidden" default=""/>\n'
+        return xml
