@@ -70,7 +70,7 @@ class NovamovResolver(Plugin, UrlResolver, PluginSettings):
         return 'http://www.novamov.com/video/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(?:www\.|embed\.)?(.+?)/(?:video/|embed\.php\?[\w=&]*v=)(\w+)',url)
+        r = re.search('//((?:www\.|embed\.)?novamov\.com)\/(?:(?:video/)|(?:embed\.php\?[\w\=\&]*v\=))(\w+)', url)
         if r:
             return r.groups()
         else:

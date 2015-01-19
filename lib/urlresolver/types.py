@@ -185,11 +185,11 @@ class HostedMediaFile:
         try: http_code = urllib2.urlopen(request, timeout=15).getcode()
         except urllib2.URLError as e:
             # treat an unhandled url type as success
-            if 'unknown url type' in e.reason.lower():
+            if 'unknown url type' in str(e.reason).lower():
                 return True
             else:
-                http_code = 404
-        except: http_code = 404
+                http_code = 600
+        except: http_code = 601
     
         # added this log line for now so that we can catch any logs on streams that are rejected due to test_stream failures
         # we can remove it once we are sure this works reliably
