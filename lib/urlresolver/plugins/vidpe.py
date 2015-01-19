@@ -26,6 +26,7 @@ from lib import jsunpack
 
 class vidpeResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
+    name = "vidpe"
 
     def __init__(self):
         p = self.get_setting('priority') or 100
