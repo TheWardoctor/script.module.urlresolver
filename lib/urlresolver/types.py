@@ -156,9 +156,15 @@ class HostedMediaFile:
                         resolver.login()
                     self._host, self._media_id = resolver.get_host_and_id(self._url)
                     stream_url = resolver.get_media_url(self._host, self._media_id)
-                    if stream_url and self.__test_stream(stream_url):
-                        self.__resolvers = [ resolver ] # Found a valid resolver, ignore the others
-                        self._valid_url = True
+                    # this logic is weird because get_media_url returns an object of class unresolvable that evals to False when resolve fails
+                    if stream_url:
+                        # if we got a valid url back, then test it and only return the valid stream_url if the test succeeds
+                        if self.__test_stream(stream_url):
+                            return stream_url
+                        else:
+                            return False
+                    # return the unresolvable if there's not a True stream_url
+                    else:
                         return stream_url
             except:
                 common.addon.log_notice("Resolver '%s' crashed. Ignore" % resolver.name)
