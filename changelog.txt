@@ -1,3 +1,25 @@
+[B]Version 2.7.0[/B]
+- Code Base Changes:
+    - Speed enhancements:
+        - Don't load into mem all resolvers on init, load only when used
+        - Only build settings.xml on first init after initial install or new version
+    - Verify final link doesn't give http error before returning
+- Resolvers Added:
+    - RoyalVids
+    - VShare
+    - CloudyVideos
+    - Streamin.to
+- Resolvers Fixed/Updated:
+    - MovReel
+    - BillionUploads
+    - Novamov
+    - Premiumize
+    - TheVideo.me
+    - VidSpot
+    - VeeHD
+    - Vidbull
+- Removed dead resolvers
+    
 [B]Version 2.6.0[/B]
 - Code Base Changes:
     - Allow host validation to work with universal resolvers
