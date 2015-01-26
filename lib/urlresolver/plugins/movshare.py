@@ -46,12 +46,10 @@ class MovshareResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        print web_url
         """ Human Verification """
         try:
             self.net.http_HEAD(web_url)
             html = self.net.http_GET(web_url).content
-            print html
             """movshare can do both flv and avi. There is no way I know before hand
             if the url going to be a flv or avi. So the first regex tries to find 
             the avi file, if nothing is present, it will check for the flv file.
@@ -94,6 +92,5 @@ class MovshareResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        print url
         return re.match('http://(?:www|embed)\.?movshare.net/(?:video|embed)',
                         url) or 'movshare' in host
