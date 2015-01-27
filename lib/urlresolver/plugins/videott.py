@@ -32,7 +32,6 @@ try:
 except ImportError:
     from simplejson import loads
 
-
 class VideoTTResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "videott"
@@ -54,6 +53,9 @@ class VideoTTResolver(Plugin, UrlResolver, PluginSettings):
             vids = data['settings']['res']
 
             if not vids:
+                err_title = 'Content not available.'
+                err_message = 'The requested video was not found.'
+                common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
                 return self.unresolvable(1, err_message)
 
             else:
