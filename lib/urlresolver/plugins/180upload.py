@@ -59,7 +59,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 for name, value in r:
                     data[name] = value
                 data['referer'] = web_url 
-                print data
             else:
                 raise Exception('Cannot find data values')
             # 1st attempt, probably no captcha
@@ -109,7 +108,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 common.addon.log('180Upload Link Found: %s' % link.group(1))
                 return link.group(1)
             else:
-                #print html
                 raise Exception('Unable to resolve 180Upload Link')
 
         except urllib2.URLError, e:

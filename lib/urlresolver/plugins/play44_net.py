@@ -63,7 +63,6 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
         r = re.search("playlist:\s*\n*\s*\[\s*\n*\s*\{\s*\n*\s*\s*\n*\s*url\s*:\s*'(.+?)'", html)
         if r:
             stream_url = urllib.unquote_plus(r.group(1))
-            #print stream_url
         else:
             common.addon.log_error(hostname+': stream url not found')
             return self.unresolvable(code=0, msg='no file located') #return False

@@ -67,7 +67,6 @@ class TheVideoResolver(Plugin, UrlResolver, PluginSettings):
                 headers['Cookie']=urllib.urlencode(cookies)
     
                 html = self.net.http_POST(web_url, data, headers=headers).content
-                #print 'Try: %s/%s' % (tries, MAX_TRIES)
                 r = re.search("<script type='text/javascript'>(eval\(function\(p,a,c,k,e,d\).*?)</script>",html,re.DOTALL)
                 if r:
                     js = jsunpack.unpack(r.group(1))

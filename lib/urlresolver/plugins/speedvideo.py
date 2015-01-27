@@ -58,24 +58,21 @@ class SpeedVideoResolver(Plugin,UrlResolver,PluginSettings):
     
     def get_media_url(self,host,media_id):
         base_url=self.get_url(host,media_id)
-        print {'base_url':base_url,'host':host,'media_id':media_id}
         headers={'User-Agent':self.USER_AGENT,'Referer':'http://%s/'%self.domain}
         try:
         #if len(base_url) > 0:
             html=self.net.http_GET(base_url,headers=headers).content
-            print {'Length of HTML':len(html)}
-            #print html
             linkfile=re.compile('var linkfile\s*=\s*"([A-Za-z0-9]+)"').findall(html)[0]
-            common.addon.log(linkfile); #print {'linkfile':linkfile}; 
+            common.addon.log(linkfile)
             linkfileb=re.compile('var linkfile\s*=\s*base64_decode\(linkfile,\s*([A-Za-z0-9]+)\);').findall(html)[0]
-            common.addon.log(linkfileb); #print {'linkfileb':linkfileb}; 
+            common.addon.log(linkfileb)
             linkfilec=re.compile('var '+linkfileb+'\s*=\s*(\d+);').findall(html)[0]
-            common.addon.log(linkfilec); #print {'linkfilec':linkfilec}; 
+            common.addon.log(linkfilec)
             linkfilec=int(linkfilec)
             linkfilez=linkfile[:linkfilec]+linkfile[(linkfilec+10):]
-            common.addon.log(linkfilez); #print {'linkfilez':linkfilez}; 
+            common.addon.log(linkfilez)
             stream_url=base64.b64decode(linkfilez)
-            common.addon.log(stream_url); #print {'stream_url':stream_url}; 
+            common.addon.log(stream_url)
             xbmc.sleep(4000)
             #if stream_url: 
             return stream_url

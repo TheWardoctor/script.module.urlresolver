@@ -211,7 +211,6 @@ class PutlockerResolver(Plugin, UrlResolver, PluginSettings):
     #SiteAuth methods
     def login(self):
         if self.login_stale():
-            #print 'Need to login since session is invalid'
             url = 'http://www.putlocker.com/authenticate.php?login'
             source = self.net.http_GET(url).content
             self.net.save_cookies(self.cookie_file)

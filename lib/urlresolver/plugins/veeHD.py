@@ -49,29 +49,24 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
 
             web_url = self.get_url(host, media_id)
             html = self.net.http_GET(web_url).content
-            #print html.encode('ascii', 'ignore')
 
             # two possible playeriframe's: stream and download
             for match in re.finditer('playeriframe.+?src\s*:\s*"([^"]+)', html):
                 player_url = 'http://%s%s'%(host,match.group(1))
                 html = self.net.http_GET(player_url).content
-                #print 'got player url: %s' % (player_url)
                 
                 # if the player html contains an iframe the iframe url has to be gotten and then the player_url tried again
                 r = re.search('<iframe.*?src="([^"]+)', html)
                 if r:
                     frame_url = 'http://%s%s'%(host,r.group(1))
-                    #print 'got frame url: %s' % (frame_url)
                     self.net.http_GET(frame_url)
                     html = self.net.http_GET(player_url).content
 
-                #print html.encode('ascii', 'ignore')
                 patterns = ['"video/divx"\s+src="([^"]+)', '"url"\s*:\s*"([^"]+)', 'href="([^"]+(?:mp4|avi))']
                 for pattern in patterns:
                     r = re.search(pattern, html)
                     if r:
                         stream_url = urllib.unquote(r.group(1))
-                        #print 'pattern: %s matched in url: %s result: %s' % (pattern, player_url, stream_url)
                         return stream_url
 
             raise Exception ('File Not Found or Removed')

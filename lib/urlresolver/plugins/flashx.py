@@ -46,7 +46,6 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
         try:
             web_url = self.get_url(host, media_id)
             html = self.net.http_GET(web_url).content
-            #print html.encode('ascii','ignore')
             headers = {
                 'Referer': web_url
             }
@@ -74,7 +73,6 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.show_countdown(10, title='FlashX.tv', text='Waiting for countdown...')
             
             html = self.net.http_POST(form_url, data, headers=headers).content
-            #print html.encode('ascii','ignore')
 
             #{file: "http://u01.flashx.tv/luq4qurpehixexzw6v63f6mjtazgxcbn6qnvcvz5yvr7ff5acb2zmvmswa6q/v.mp4"}]
             r = re.search('file\s*:\s*"(http://[^"]+mp4)', html)

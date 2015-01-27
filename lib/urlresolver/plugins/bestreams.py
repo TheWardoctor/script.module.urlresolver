@@ -41,7 +41,6 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
         try:
             web_url = self.get_url(host, media_id)
             html = self.net.http_GET(web_url).content
-            #print html.encode('ascii','ignore')
             headers = {
                 'Referer': web_url
             }
@@ -62,7 +61,6 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
             sleep(2) # POST seems to fail is submitted too soon after GET. Page Timeout?
 
             html = self.net.http_POST(web_url, data, headers=headers).content
-            #print html.encode('ascii','ignore')
 
             r = re.search('file\s*:\s*"(http://.+?)"', html)
             if r:

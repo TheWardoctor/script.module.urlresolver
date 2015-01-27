@@ -47,7 +47,6 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             tries = 0
             while tries < MAX_TRIES:
                 html = net.http_GET(web_url, headers=headers).content
-                #print 'html1: %s' % (html.encode('ascii','ignore'))
             
                 match=re.search('var\s+b\s*=\s*"([^"]+)', html)
                 if match:
@@ -61,7 +60,6 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
                     if match:
                         captcha_url = 'http://www.billionuploads.com' + urllib.quote(match.group(1))
                         html = net.http_GET(captcha_url, headers=headers).content
-                        #print 'html2: %s' % (html)
                     else:
                         # not a Incapsula or a Captcha, so probably the landing page
                         break
@@ -77,10 +75,8 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             r = re.findall(r'type="hidden"\s+name="(.+?)"\s+value="(.*?)"', html)
             for name, value in r: data[name] = value
             data['method_free']='Download or watch'
-            #print data
     
             html = net.http_POST(web_url, form_data = data, headers = headers).content
-            #print 'html3: %s' % (html.encode('ascii','ignore'))
             
             r = re.search(r'class="[^"]*download"\s+href="([^"]+)', html)
             if r:
@@ -103,14 +99,11 @@ class billionuploads(Plugin, UrlResolver, PluginSettings):
             for n in xrange(z[0],z[1]):
                 i.append(chr(n))
     
-        #print i
         for n in xrange(0,64):
             t[i[n]]=n
-        #print t
         for n in xrange(0,len(e),72):
             a=c=0
             h = e[n:n+72]
-            #print h
             for l in xrange(0,len(h)):
                 f = t.get(h[l])
                 if f is None: continue

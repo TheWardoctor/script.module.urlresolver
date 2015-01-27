@@ -153,7 +153,6 @@ class sockshareResolver(Plugin, UrlResolver, PluginSettings):
     #SiteAuth methods
     def login(self):
         if self.login_stale():
-            print 'Need to login since session is invalid'
             url = 'http://www.sockshare.com/authenticate.php?login'
             source = self.net.http_GET(url).content
             self.net.save_cookies(self.cookie_file)
@@ -172,7 +171,6 @@ class sockshareResolver(Plugin, UrlResolver, PluginSettings):
                 response = self.net.http_POST(url, form_data=data)
                 self.net.save_cookies(self.cookie_file)
                 self.net.set_cookies(self.cookie_file)
-                #print response.get_url()
             else:
                 common.addon.log('Dialog was canceled')
                 return False

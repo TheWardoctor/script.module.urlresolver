@@ -62,25 +62,18 @@ class MP4StarResolver(Plugin,UrlResolver,PluginSettings):
         r=re.findall(r'<input type="hidden"\s*value="(.*?)"\s*name="(.+?)"',html)
         if r:
             for value,name in r: data[name]=value
-            print data
             #data.update({'referer': web_url})
             #headers={'Referer':web_url}
             xbmc.sleep(4)
             try:
                 html=self.net.http_POST(post_url,data,headers=headers).content
             except urllib2.URLError,e:
-                #print '* failed to post url'
                 common.addon.log_error(hostname+': got http error %d posting %s'%(e.code,web_url))
                 return self.unresolvable(code=3,msg='Exception: %s'%e) #return False
-        #try: print html+': \n'+html
-        #except: print '* failed to print html.'
-        #common.addon.log(html)
         r=re.search('<source src="(\D+://.+?)" type="video',html)
         if r:
-            #sleep(2)
             xbmc.sleep(4)
             stream_url=urllib.unquote_plus(r.group(1))
-            print stream_url
         else:
             common.addon.log_error(hostname+': stream url not found')
             return self.unresolvable(code=0,msg='no file located') #return False

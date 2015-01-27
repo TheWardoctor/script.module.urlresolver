@@ -57,7 +57,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             url = 'https://real-debrid.com/ajax/unrestrict.php?link=%s' % media_id.replace('|User-Agent=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0','')
             source = self.net.http_GET(url).content
             jsonresult = json.loads(source)
-            #print str(jsonresult)
             if 'generated_links' in jsonresult :
                 generated_links = jsonresult['generated_links']
                 if len(generated_links) == 1:

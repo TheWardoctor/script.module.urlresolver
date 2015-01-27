@@ -51,14 +51,12 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
             
             # Get the landing page
             html = self.net.http_GET(web_url).content
-            #print html.encode('ascii','ignore')
             
             data = {}
             r = re.findall(r'type="hidden" name="(.+?)"\s* value="?(.+?)">', html)
             for name, value in r: data[name] = value
             data.update({'referer':web_url})
             data.update({'method_free':'Free Download'})
-            #print data
             
             # get the video page
             html = self.net.http_POST(web_url, data, headers=headers).content
@@ -73,7 +71,6 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
             data.update({'referer':web_url})
             data.update({'method_free':'Free Download'})
             data.update({'btn_download':'download'})
-            #print data
 
             # click download button
             # using standard urlopen because t0mm0's wrappers don't seem to return until content download is complete

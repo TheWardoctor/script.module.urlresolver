@@ -39,7 +39,6 @@ class CloudyvideosResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        print web_url
         try:
             html = self.net.http_GET(web_url).content           
             form_values = {}
