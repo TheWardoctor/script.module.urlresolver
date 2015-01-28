@@ -160,6 +160,8 @@ class HostedMediaFile:
                     if stream_url:
                         # if we got a valid url back, then test it and only return the valid stream_url if the test succeeds
                         if self.__test_stream(stream_url):
+                            self.__resolvers = [ resolver ] # Found a valid resolver, ignore the others
+                            self._valid_url = True
                             return stream_url
                         else:
                             return False
@@ -187,7 +189,7 @@ class HostedMediaFile:
                     print 'resolvable!'
             
         '''
-        if None != self._valid_url: return self._valid_url
+        if self._valid_url is not None: return self._valid_url
         for resolver in self.__resolvers:
             try:
                 if resolver.valid_url(self._url, self._domain):
@@ -242,7 +244,7 @@ class HostedMediaFile:
 
         
     def __nonzero__(self):
-        if None == self._valid_url: return self.valid_url()
+        if self._valid_url is None: return self.valid_url()
         return self._valid_url
         
     def __str__(self):
