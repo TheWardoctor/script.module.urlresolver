@@ -57,7 +57,7 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error(hostname+': got http error %d fetching %s' % (e.code, web_url))
             return self.unresolvable(code=3, msg='Exception: %s' % e) #return False
-        r = re.search("url\s*:\s*'(.+?)'\s*\n*\s*,\s*\n*\s*autoPlay", html)
+        r = re.search("video_link\s=\s'(.+?)';", html)
         if r:
             stream_url = urllib.unquote_plus(r.group(1))
         else:
