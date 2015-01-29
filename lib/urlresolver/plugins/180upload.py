@@ -53,7 +53,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             # Check for file not found
             if re.search('File Not Found', html):
                 common.addon.log_error(self.name + ' - File Not Found')
-                xbmc.executebuiltin('XBMC.Notification([B][COLOR white]180Upload[/COLOR][/B],[COLOR red]File has been deleted[/COLOR],8000,'+error_logo+')')
                 return self.unresolvable(code=1, msg='File Not Found') 
                 
             data = {}
@@ -116,11 +115,9 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' %
                                    (e.code, web_url))
-            common.addon.show_small_popup('Error','Http error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
         except Exception, e:
             common.addon.log_error('**** 180upload Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]180UPLOAD[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
 
         
