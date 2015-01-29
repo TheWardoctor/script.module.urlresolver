@@ -57,7 +57,6 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             return response['links'][0]['generated']
         except Exception, e:
             common.addon.log_error('**** Rpnet Error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]RPNET[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
 
     def get_url(self, host, media_id):
