@@ -27,7 +27,7 @@ from lib import unwise
 class DivxstageResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "divxstage"
-    domains = [ "divxstage.eu", "divxstage.net", "divxstage.to" ]
+    domains = ["divxstage.eu", "divxstage.net", "divxstage.to", "cloudtime.to"]
 
     def __init__(self):
         p = self.get_setting('priority') or 100

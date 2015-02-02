@@ -84,7 +84,7 @@ class HostedMediaFile:
         self.__resolvers = self.__find_resolvers(
             common.addon.get_setting('allow_universal') == "true")
 
-        if url == '':
+        if not url:
             for resolver in self.__resolvers:  # Find a valid URL
                 try:
                     if resolver.get_url(host, media_id):
@@ -229,24 +229,29 @@ class HostedMediaFile:
         # added this log line for now so that we can catch any logs on streams that are rejected due to test_stream failures
         # we can remove it once we are sure this works reliably
         if int(http_code)>=400: common.addon.log('Stream UrlOpen Failed: Url: %s HTTP Code: %s' % (stream_url, http_code))
-        
+
         return int(http_code) < 400
-    
+
     def __find_resolvers(self, universal=False):
         urlresolver.lazy_plugin_scan()
         resolvers = []
+        found = False
         for resolver in UrlResolver.implementors():
-            if (self._domain in resolver.domains):
+            if (self._domain in resolver.domains) or any(self._domain in domain for domain in resolver.domains):
+                found = True
                 resolvers.append(resolver)
             elif (universal and ('*' in resolver.domains)):
                 resolvers.append(resolver)
+
+        if not found: common.addon.log_debug('no resolver found for: %s' % (self._domain))
+        else: common.addon.log_debug('resolvers for %s are %s' % (self._domain, [r.name for r in resolvers]))
+
         return resolvers
 
-        
     def __nonzero__(self):
         if self._valid_url is None: return self.valid_url()
         return self._valid_url
-        
+
     def __str__(self):
         return '{\'url\': \'%s\', \'host\': \'%s\', \'media_id\': \'%s\'}' % (
                     self._url, self._host, self._media_id)
