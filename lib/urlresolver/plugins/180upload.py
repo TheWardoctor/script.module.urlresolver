@@ -30,54 +30,17 @@ net = Net()
 class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "180upload"
-    domains = [ "180upload.com" ]
-    
-
+    domains = ["180upload.com"]
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
 
-
     def get_media_url(self, host, media_id):
-        common.addon.log('180upload: in get_media_url %s %s' % (host, media_id))
-        web_url = 'http://180upload.com/embed-%s.html' % media_id
         try:
-            common.addon.log('180Upload - Requesting GET URL: %s' % web_url)
-            html = net.http_GET(web_url).content
-
-            # Check for file not found
-            if re.search('File Not Found', html):
-                common.addon.log_error(self.name + ' - File Not Found')
-                return self.unresolvable(code=1, msg='File Not Found') 
-                
-            data = {}
-            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)"', html)
-            if r:
-                for name, value in r:
-                    data[name] = value
-                data['referer'] = web_url 
-            else:
-                raise Exception('Cannot find data values')
-            # 1st attempt, probably no captcha
-            common.addon.log('180Upload - Requesting POST URL: %s' % web_url)
-            html = net.http_POST(web_url, data).content
- 
-            packed = re.search('id="player_code".*?(eval.*?\)\)\))', html,re.DOTALL)
-            if packed:
-                js = jsunpack.unpack(packed.group(1))
-                link = re.search('name="src"*0="([^"]+)"/>', js.replace('\\',''))
-                if link:
-                    common.addon.log('180Upload Link Found: %s' % link.group(1))
-                    return link.group(1)
-                else:
-                    link = re.search("'file','(.+?)'", js.replace('\\',''))
-                    if link:
-                        common.addon.log('180Upload Link Found: %s' % link.group(1))
-                        return link.group(1)
-                    
             web_url = self.get_url(host, media_id)
+            common.addon.log_debug('180upload: in get_media_url: %s' % (web_url))
             html = net.http_GET(web_url).content
 
             #Re-grab data values
@@ -88,8 +51,8 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 for name, value in r:
                     data[name] = value
             else:
-                raise Exception('Unable to resolve 180Upload Link')            
-            
+                raise Exception('Unable to resolve 180Upload Link')
+
             #Check for SolveMedia Captcha image
             solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
             recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
@@ -98,11 +61,12 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
             elif recaptcha:
                 data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
-            
+
             common.addon.log('180Upload - Requesting POST URL: %s with data: %s' % (web_url, data))
+            data['referer'] = web_url
             html = net.http_POST(web_url, data).content
-        
-            link = re.search('id="lnk_download" href="([^"]+)', html)
+
+            link = re.search('id="lnk_download[^"]*" href="([^"]+)', html)
             if link:
                 common.addon.log('180Upload Link Found: %s' % link.group(1))
                 return link.group(1)
@@ -117,11 +81,9 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             common.addon.log_error('**** 180upload Error occured: %s' % e)
             return self.unresolvable(code=0, msg=e)
 
-        
     def get_url(self, host, media_id):
-        return 'http://www.180upload.com/%s' % media_id 
-        
-        
+        return 'http://www.180upload.com/%s' % media_id
+
     def get_host_and_id(self, url):
         r = re.search('http://(.+?)/embed-([\w]+)-', url)
         if r:
@@ -132,7 +94,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 return r.groups()
             else:
                 return False
-
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
