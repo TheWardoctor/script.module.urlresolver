@@ -45,17 +45,17 @@ class VideoTTResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         json_url = 'http://www.video.tt/player_control/settings.php?v=%s' % media_id
-        
+
         try:
             json = self.net.http_GET(json_url).content
             data = loads(json)
-            
+
             vids = data['settings']['res']
 
             if not vids:
                 err_title = 'Content not available.'
                 err_message = 'The requested video was not found.'
-                common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (web_url,err_title,err_message))
+                common.addon.log_error(self.name + ' - fetching %s - %s - %s ' % (json_url, err_title, err_message))
                 return self.unresolvable(1, err_message)
 
             else:
@@ -65,11 +65,11 @@ class VideoTTResolver(Plugin, UrlResolver, PluginSettings):
                     q = self.get_setting('quality')
                     # Lowest Quality
                     li = 0
-                    
+
                     if q == '1':
                         # Medium Quality
                         li = (int)(vUrlsCount / 2)
-                    elif q == '2':                    
+                    elif q == '2':
                         # Highest Quality
                         li = vUrlsCount - 1
 
