@@ -26,14 +26,14 @@ class Justmp4Resolver(Plugin,UrlResolver,PluginSettings):
     implements=[UrlResolver,PluginSettings]
     name="justmp4.com"
     hostname2="justmp4"
-    USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:30.0) Gecko/20100101 Firefox/30.0'
+    domains = [ "justmp4.com" ]
+    
     def __init__(self):
         p=self.get_setting('priority') or 100
         self.priority=int(p)
         self.net=Net()
         self.pattern='http://((?:www.)?'+self.name+')/\D+-embed/([0-9a-zA-Z\-_]+)*'
     def get_url(self,host,media_id):
-        #return 'http://%s/%s%s'%(self.name,'embed/',media_id)
         return 'http://%s/%s%s'%(self.name,'kvp-embed/',media_id)
     def get_host_and_id(self,url):
         r=re.search(self.pattern,url)
@@ -48,26 +48,22 @@ class Justmp4Resolver(Plugin,UrlResolver,PluginSettings):
         hostname=self.name
         common.addon.log(web_url)
         headers={'Referer':web_url}
-        #headers={'User-Agent':self.USER_AGENT,'Referer':web_url}
         try:
             resp=self.net.http_GET(web_url)
             html=resp.content
         except urllib2.URLError, e:
             common.addon.log_error(hostname+': got http error %d fetching %s'%(e.code,web_url))
-            return self.unresolvable(code=3,msg='Exception: %s'%e) #return False
+            return self.unresolvable(code=3,msg='Exception: %s'%e)
         data={}
         r=re.findall(r'<input type="hidden"\s*value="(.*?)"\s*name="(.+?)"',html)
         if r:
-            for value,name in r: data[name]=value; #print ['hidden input',data]
+            for value,name in r: data[name]=value;
             xbmc.sleep(4)
             try:
                 html=self.net.http_POST(post_url,data,headers=headers).content
             except urllib2.URLError,e:
-                #print '* failed to post url'
                 common.addon.log_error(hostname+': *got http error %d posting %s'%(e.code,post_url))
-                return self.unresolvable(code=3,msg='Exception: %s'%e) #return False
-            #print html
-        #print html
+                return self.unresolvable(code=3,msg='Exception: %s'%e)
         try: r=re.compile('<source src="(.+?)" data-res="(\d+)" type="video/([0-9A-Za-z]+)">').findall(html)
         except: r=[]
         ResList=[]; UrlList=[]; 
@@ -75,8 +71,6 @@ class Justmp4Resolver(Plugin,UrlResolver,PluginSettings):
             for (aUrl,aRes,aFrmt) in r:
                 ResList.append(aRes+' '+aFrmt)
                 UrlList.append([aRes+' '+aFrmt,aUrl])
-        #print ['UrlList',UrlList]
-        #print ['ResList',ResList]
         dialogSelect=xbmcgui.Dialog()
         index=dialogSelect.select('Select Resolution',ResList)
         try: return UrlList[index][1]
