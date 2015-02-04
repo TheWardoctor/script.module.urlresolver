@@ -75,11 +75,10 @@ class HostedMediaFile:
         self._media_id = media_id
         self._valid_url = None
 
-        if (self._url):
+        if self._url:
             self._domain = self.__top_domain(self._url)
         else:
             self._domain = self.__top_domain(self._host)
-            self._url = self._media_id
 
         self.__resolvers = self.__find_resolvers(
             common.addon.get_setting('allow_universal') == "true")
@@ -87,7 +86,7 @@ class HostedMediaFile:
         if not url:
             for resolver in self.__resolvers:  # Find a valid URL
                 try:
-                    if resolver.get_url(host, media_id):
+                    if not resolver.isUniversal() and resolver.get_url(host, media_id):
                         self._url = resolver.get_url(host, media_id)
                         break
                 except:
