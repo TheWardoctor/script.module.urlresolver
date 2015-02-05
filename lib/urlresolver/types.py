@@ -222,7 +222,10 @@ class HostedMediaFile:
             if 'unknown url type' in str(e.reason).lower():
                 return True
             else:
-                http_code = 600
+                if isinstance(e, urllib2.HTTPError):
+                    http_code = e.code
+                else:
+                    http_code = 600
         except: http_code = 601
     
         # added this log line for now so that we can catch any logs on streams that are rejected due to test_stream failures
