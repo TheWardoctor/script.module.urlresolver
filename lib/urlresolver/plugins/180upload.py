@@ -46,7 +46,7 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
 
     def __get_link(self, url):
         try:
-            common.addon.log('180upload: get_link: %s' % (url))
+            common.addon.log_debug('180upload: get_link: %s' % (url))
             html = net.http_GET(url).content
 
             #Re-grab data values
@@ -70,14 +70,14 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 elif recaptcha:
                     data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
 
-            common.addon.log('180Upload - Requesting POST URL: %s with data: %s' % (url, data))
+            common.addon.log_debug('180Upload - Requesting POST URL: %s with data: %s' % (url, data))
             data['referer'] = url
             html = net.http_POST(url, data).content
 
             # try download link
             link = re.search('id="lnk_download[^"]*" href="([^"]+)', html)
             if link:
-                common.addon.log('180Upload Download Found: %s' % link.group(1))
+                common.addon.log_debug('180Upload Download Found: %s' % link.group(1))
                 return link.group(1)
             else:
                 # try flash player link
@@ -86,12 +86,12 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                     js = jsunpack.unpack(packed.group(1))
                     link = re.search('name="src"\s*value="([^"]+)', js.replace('\\', ''))
                     if link:
-                        common.addon.log('180Upload Src Found: %s' % link.group(1))
+                        common.addon.log_debug('180Upload Src Found: %s' % link.group(1))
                         return link.group(1)
                     else:
                         link = re.search("'file'\s*,\s*'([^']+)", js.replace('\\', ''))
                         if link:
-                            common.addon.log('180Upload Link Found: %s' % link.group(1))
+                            common.addon.log_debug('180Upload Link Found: %s' % link.group(1))
                             return link.group(1)
 
                 raise Exception('Unable to resolve 180Upload Link')
