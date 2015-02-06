@@ -38,10 +38,16 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
         self.net = Net()
 
     def get_media_url(self, host, media_id):
+        # try embedded link first to avoid captcha, try direct link if it doesn't work
+            stream_url = self.__get_link('http://180upload.com/embed-%s.html' % media_id)
+            if not stream_url:
+                stream_url = self.__get_link(self.get_url(host, media_id))
+            return stream_url
+
+    def __get_link(self, url):
         try:
-            web_url = self.get_url(host, media_id)
-            common.addon.log_debug('180upload: in get_media_url: %s' % (web_url))
-            html = net.http_GET(web_url).content
+            common.addon.log('180upload: get_link: %s' % (url))
+            html = net.http_GET(url).content
 
             #Re-grab data values
             data = {}
@@ -53,31 +59,46 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             else:
                 raise Exception('Unable to resolve 180Upload Link')
 
-            #Check for SolveMedia Captcha image
-            solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
-            recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
+            # ignore captchas in embedded pages
+            if 'embed' not in url:
+                #Check for SolveMedia Captcha image
+                solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
+                recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
 
-            if solvemedia:
-                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
-            elif recaptcha:
-                data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
+                if solvemedia:
+                    data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
+                elif recaptcha:
+                    data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
 
-            common.addon.log('180Upload - Requesting POST URL: %s with data: %s' % (web_url, data))
-            data['referer'] = web_url
-            html = net.http_POST(web_url, data).content
+            common.addon.log('180Upload - Requesting POST URL: %s with data: %s' % (url, data))
+            data['referer'] = url
+            html = net.http_POST(url, data).content
 
+            # try download link
             link = re.search('id="lnk_download[^"]*" href="([^"]+)', html)
             if link:
-                common.addon.log('180Upload Link Found: %s' % link.group(1))
+                common.addon.log('180Upload Download Found: %s' % link.group(1))
                 return link.group(1)
             else:
-                raise Exception('Unable to resolve 180Upload Link')
+                # try flash player link
+                packed = re.search('id="player_code".*?(eval.*?)</script>', html, re.DOTALL)
+                if packed:
+                    js = jsunpack.unpack(packed.group(1))
+                    link = re.search('name="src"\s*value="([^"]+)', js.replace('\\', ''))
+                    if link:
+                        common.addon.log('180Upload Src Found: %s' % link.group(1))
+                        return link.group(1)
+                    else:
+                        link = re.search("'file'\s*,\s*'([^']+)", js.replace('\\', ''))
+                        if link:
+                            common.addon.log('180Upload Link Found: %s' % link.group(1))
+                            return link.group(1)
 
-        except urllib2.URLError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
+                raise Exception('Unable to resolve 180Upload Link')
+        except urllib2.URLError as e:
+            common.addon.log_error(self.name + ': got http error %d fetching %s' % (e.code, url))
             return self.unresolvable(code=3, msg=e)
-        except Exception, e:
+        except Exception as e:
             common.addon.log_error('**** 180upload Error occured: %s' % e)
             return self.unresolvable(code=0, msg=e)
 
