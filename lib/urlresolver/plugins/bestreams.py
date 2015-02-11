@@ -23,15 +23,12 @@ from urlresolver import common
 import urllib2, urllib
 from time import sleep
 import re
-import os
-
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+import xbmc
 
 class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "bestreams"
-    domains = [ "bestreams.net" ]
+    domains = ["bestreams.net"]
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -53,13 +50,13 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
             data.update({'imhuman': 'Proceed to video'})
 
             # parse cookies from file as they are only useful for this interaction
-            cookies={}
-            for match in re.finditer("\$\.cookie\('([^']+)',\s*'([^']+)",html):
-                key,value = match.groups()
-                cookies[key]=value
-            headers['Cookie']=urllib.urlencode(cookies)
-            
-            sleep(2) # POST seems to fail is submitted too soon after GET. Page Timeout?
+            cookies = {}
+            for match in re.finditer("\$\.cookie\('([^']+)',\s*'([^']+)", html):
+                key, value = match.groups()
+                cookies[key] = value
+            headers['Cookie'] = urllib.urlencode(cookies)
+
+            xbmc.sleep(2000)  # POST seems to fail is submitted too soon after GET. Page Timeout?
 
             html = self.net.http_POST(web_url, data, headers=headers).content
 
@@ -72,12 +69,10 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
         except urllib2.URLError, e:
             common.addon.log_error('bestreams: got http error %d fetching %s' %
                                   (e.code, web_url))
-            common.addon.show_small_popup('Error','beststreams: HTTP error: '+str(e), 5000, error_logo)
             return self.unresolvable(code=3, msg=e)
-        
+
         except Exception, e:
             common.addon.log_error('bestreams: general error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]BESTREAMS[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
 
         return False
@@ -86,7 +81,7 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
         return 'http://bestreams.net/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([A-Za-z0-9]+)',url)
+        r = re.search('//(.+?)/(?:embed-)?([A-Za-z0-9]+)', url)
         if r:
             return r.groups()
         else:
@@ -94,5 +89,5 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www.)?bestreams.net/[A-Za-z0-9]+',url) or "bestreams.net" in host
+        return re.match('http://(www.)?bestreams.net/(embed-)?[A-Za-z0-9]+', url) or "bestreams.net" in host
 

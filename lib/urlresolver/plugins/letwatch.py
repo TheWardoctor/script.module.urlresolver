@@ -43,10 +43,13 @@ class LetwatchResolver(Plugin, UrlResolver, PluginSettings):
             packed = re.search('(eval\(function.*?)\s*</script>', html, re.DOTALL)
             if packed:
                 js = jsunpack.unpack(packed.group(1))
-                link = re.search('file\s*:\s*"([^"]+)', js)
-                if link:
-                    common.addon.log_debug('letwatch.us Link Found: %s' % link.group(1))
-                    return link.group(1)
+            else:
+                js = html
+
+            link = re.search('file\s*:\s*"([^"]+)', js)
+            if link:
+                common.addon.log_debug('letwatch.us Link Found: %s' % link.group(1))
+                return link.group(1)
 
             raise Exception('Unable to find letwatch.us video')
 
