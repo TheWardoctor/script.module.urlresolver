@@ -42,7 +42,7 @@ logo='http://googlechromesupportnow.com/wp-content/uploads/2012/06/Installation-
 class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "vidxden"
-    domains = ['vidxden.com', 'vidxden.to', 'divxden.com', 'vidbux.com']
+    domains = ['vidxden.com', 'vidxden.to', 'divxden.com', 'vidbux.com', 'vidbux.to']
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -78,9 +78,9 @@ class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
 
             try: decrypted_data = jsunpack.unpack(packed_data)
             except: pass
-
+            decrypted_data = decrypted_data.replace('\\','')
             #First checks for a flv url, then the if statement is for the avi url
-            r = re.search('"file"\s*,\s*"([^"]+)', decrypted_data)
+            r = re.search('[\'"]file[\'"]\s*,\s*[\'"]([^\'"]+)', decrypted_data)
             if not r:
                 r = re.search('src="(.+?)"', decrypted_data)
             if r:
