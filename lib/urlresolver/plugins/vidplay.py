@@ -39,6 +39,11 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
         self.net = Net()
 
     def get_media_url(self, host, media_id):
+        embed_url = 'http://vidplay.net/vidembed-%s' % (media_id)
+        response = urllib2.urlopen(embed_url)
+        if response.getcode() == 200 and response.geturl() != embed_url and response.geturl()[-3:].lower() in ['mp4', 'avi', 'mkv']:
+            return response.geturl()
+
         web_url = self.get_url(host, media_id)
         try:
             html = net.http_GET(web_url).content
