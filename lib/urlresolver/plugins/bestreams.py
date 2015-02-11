@@ -56,15 +56,27 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
                 cookies[key] = value
             headers['Cookie'] = urllib.urlencode(cookies)
 
-            xbmc.sleep(2000)  # POST seems to fail is submitted too soon after GET. Page Timeout?
+            #xbmc.sleep(2000)  # POST seems to fail is submitted too soon after GET. Page Timeout?
+            sleep(2)
 
             html = self.net.http_POST(web_url, data, headers=headers).content
+            ##print html #<< has character errors
+            #htmlA=html.splitlines() #<< to print as much as possible, skipping lines with unhandable characters.
+            #for htmlAa in htmlA:
+            #	try: print htmlAa
+            #	except: pass
 
-            r = re.search('file\s*:\s*"(http://.+?)"', html)
+            sleep(6)
+            r = re.search('file\s*:\s*"(http://.+?)"', html) #Incase they start using this again.
             if r:
                 return r.group(1)
-            else:
-                raise Exception("File Link Not Found")
+            #r = re.search('file\s*:\s*"(\D+://.+?)"', html) #for later use once we find out what to do with the new "file" url that's missing a prefix on the url.
+            #if r:
+            #    return r.group(1)
+            r = re.search('streamer\s*:\s*"(\D+://.+?)"', html) #To make it fall back to the rtmp link if no file link is found. #This still needs worked on more.
+            if r:
+                return r.group(1)
+            raise Exception("File Link Not Found")
 
         except urllib2.URLError, e:
             common.addon.log_error('bestreams: got http error %d fetching %s' %
