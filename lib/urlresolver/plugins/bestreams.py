@@ -57,14 +57,26 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
             headers['Cookie'] = urllib.urlencode(cookies)
 
             xbmc.sleep(2000)  # POST seems to fail is submitted too soon after GET. Page Timeout?
+            #sleep(2)
 
             html = self.net.http_POST(web_url, data, headers=headers).content
+            ##print html #<< has character errors
+            #htmlA=html.splitlines() #<< to print as much as possible, skipping lines with unhandable characters.
+            #for htmlAa in htmlA:
+            #	try: print htmlAa
+            #	except: pass
 
-            r = re.search('file\s*:\s*"(http://.+?)"', html)
+            #sleep(6)
+            r = re.search('file\s*:\s*"(http://.+?)"', html) #Incase they start using this again.
             if r:
                 return r.group(1)
-            else:
-                raise Exception("File Link Not Found")
+            r = re.search('streamer\s*:\s*"(\D+://.+?)"', html)
+            r2 = re.search('file\s*:\s*"([^"]+)', html)
+            if r and r2:
+                return r.group(1)+" Playpath="+r2.group(1)+" swfUrl=http://bestreams.net/player/player.swf pageUrl=http://bestreams.net swfVfy=1" # live=false timeout=30
+            if r:
+                return r.group(1)
+            raise Exception("File Link Not Found")
 
         except urllib2.URLError, e:
             common.addon.log_error('bestreams: got http error %d fetching %s' %
