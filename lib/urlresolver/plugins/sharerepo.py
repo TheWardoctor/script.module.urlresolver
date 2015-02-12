@@ -45,7 +45,17 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
                 'Referer': web_url
             }
 
-            html = self.net.http_GET(web_url, headers=headers).content
+            try:
+                html = self.net.http_GET(web_url, headers=headers).content
+            except urllib2.HTTPError as e:
+                if e.code == 404:
+                    # sharerepo supports two different styles of links/media_ids
+                    # if the first fails, try the second kind
+                    web_url = 'http://sharerepo.com/%s' % media_id
+                    html = self.net.http_GET(web_url, headers=headers).content
+                else:
+                    raise
+                
             link = re.search("file\s*:\s*'([^']+)", html)
             if link:
                 common.addon.log('ShareRepo Link Found: %s' % link.group(1))
@@ -61,10 +71,10 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
             return self.unresolvable(code=0, msg=e)
 
     def get_url(self, host, media_id):
-        return 'http://sharerepo.com/%s' % media_id
+        return 'http://sharerepo.com/f/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z]+)', url)
+        r = re.search('//(.+?)(?:/f)?/([0-9a-zA-Z]+)', url)
         if r:
             return r.groups()
         else:
@@ -73,6 +83,6 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?sharerepo.com/' +
+        return (re.match('http://(www.)?sharerepo.com/(f/)?' +
                          '[0-9A-Za-z]+', url) or
                          'sharerepo' in host)

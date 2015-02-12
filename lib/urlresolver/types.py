@@ -21,6 +21,7 @@ from urlresolver import common
 from plugnplay.interfaces import UrlResolver
 from plugnplay.interfaces import SiteAuth
 import re, sys
+import traceback
 
 class HostedMediaFile:
     '''
@@ -167,12 +168,13 @@ class HostedMediaFile:
                     # return the unresolvable if there's not a True stream_url
                     else:
                         return stream_url
-            except:
-                common.addon.log_notice("Resolver '%s' crashed. Ignore" % resolver.name)
+            except Exception as e:
+                common.addon.log_notice("Resolver '%s' crashed: %s. Ignoring" % (resolver.name, e))
+                common.addon.log_debug(traceback.format_exc())
                 continue
-        self.__resolvers = [] # No resolvers.
+        self.__resolvers = []  # No resolvers.
         return False
-        
+
     def valid_url(self):
         '''
         Returns True if the ``HostedMediaFile`` can be resolved.
