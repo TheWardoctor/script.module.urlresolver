@@ -73,7 +73,7 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search('streamer\s*:\s*"(\D+://.+?)"', html)
             r2 = re.search('file\s*:\s*"([^"]+)', html)
             if r and r2:
-                return r.group(1)+" Playpath="+r2.group(1)+" swfUrl=http://bestreams.net/player/player.swf pageUrl=http://bestreams.net live=false swfVfy=1 timeout=30"
+                return r.group(1)+" Playpath="+r2.group(1)+" swfUrl=http://bestreams.net/player/player.swf pageUrl=http://bestreams.net swfVfy=1" # live=false timeout=30
             if r:
                 return r.group(1)
             raise Exception("File Link Not Found")
