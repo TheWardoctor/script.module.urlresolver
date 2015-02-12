@@ -19,7 +19,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import re,urllib,urllib2,os
+import re,urllib,urllib2,os,xbmc
 from t0mm0.common.net import Net
 from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
@@ -57,7 +57,8 @@ class VideomegaResolver(Plugin,UrlResolver,PluginSettings):
                     stream_url=r.group(1)
                     stream_url=stream_url.replace(" ","%20")
             if stream_url:
-                sleep(6)
+                #sleep(6)
+                xbmc.sleep(6000)
                 return stream_url
             else: return self.unresolvable(0,'No playable video found.')
         except urllib2.URLError, e:
