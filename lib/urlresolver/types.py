@@ -169,7 +169,7 @@ class HostedMediaFile:
                     else:
                         return stream_url
             except Exception as e:
-                common.addon.log_warning("Resolver '%s' crashed: %s. Ignoring" % (resolver.name, e))
+                common.addon.log_notice("Resolver '%s' crashed: %s. Ignoring" % (resolver.name, e))
                 common.addon.log_debug(traceback.format_exc())
                 continue
         self.__resolvers = []  # No resolvers.
