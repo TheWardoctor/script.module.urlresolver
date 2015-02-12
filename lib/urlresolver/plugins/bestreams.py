@@ -56,8 +56,8 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
                 cookies[key] = value
             headers['Cookie'] = urllib.urlencode(cookies)
 
-            #xbmc.sleep(2000)  # POST seems to fail is submitted too soon after GET. Page Timeout?
-            sleep(2)
+            xbmc.sleep(2000)  # POST seems to fail is submitted too soon after GET. Page Timeout?
+            #sleep(2)
 
             html = self.net.http_POST(web_url, data, headers=headers).content
             ##print html #<< has character errors
