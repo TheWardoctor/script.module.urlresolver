@@ -66,14 +66,14 @@ class BestreamsResolver(Plugin, UrlResolver, PluginSettings):
             #	try: print htmlAa
             #	except: pass
 
-            sleep(6)
+            #sleep(6)
             r = re.search('file\s*:\s*"(http://.+?)"', html) #Incase they start using this again.
             if r:
                 return r.group(1)
-            #r = re.search('file\s*:\s*"(\D+://.+?)"', html) #for later use once we find out what to do with the new "file" url that's missing a prefix on the url.
-            #if r:
-            #    return r.group(1)
-            r = re.search('streamer\s*:\s*"(\D+://.+?)"', html) #To make it fall back to the rtmp link if no file link is found. #This still needs worked on more.
+            r = re.search('streamer\s*:\s*"(\D+://.+?)"', html)
+            r2 = re.search('file\s*:\s*"([^"]+)', html)
+            if r and r2:
+                return r.group(1)+" Playpath="+r2.group(1)+" swfUrl=http://bestreams.net/player/player.swf pageUrl=http://bestreams.net live=false swfVfy=1 timeout=15 Conn=S:OK --live"
             if r:
                 return r.group(1)
             raise Exception("File Link Not Found")
