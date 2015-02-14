@@ -1,6 +1,6 @@
 """
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    Kodi urlresolver plugin
+    Copyright (C) 2014  smokdpi
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,16 +17,13 @@
 """
 
 from t0mm0.common.net import Net
+from urlresolver import common
+from urlresolver.plugnplay import Plugin
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import urllib2
-from urlresolver import common
-import os
 import re
+import urllib2
 import xbmcgui
-
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 
 class GoogleResolver(Plugin, UrlResolver, PluginSettings):
@@ -54,6 +51,7 @@ class GoogleResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
+        headers = {'Referer': web_url}
         stream_url = ''
         vid_sel = web_url
         try:
@@ -62,7 +60,7 @@ class GoogleResolver(Plugin, UrlResolver, PluginSettings):
                 vid_id = re.search('.*?#(.+?)$', web_url)
                 if vid_id:
                     vid_id = vid_id.group(1)
-                    resp = self.net.http_GET(web_url)
+                    resp = self.net.http_GET(web_url, headers=headers)
                     html = re.search('\["shared_group_' + re.escape(vid_id) + '"\](.+?),"ccOverride":"false"}', resp.content, re.DOTALL)
                     if html:
                         videos = re.compile(',{"url":"(https://redirector\.googlevideo\.com/.+?)","height":([0-9]+?),"width":([0-9]+?),"type":"video/.+?"}').findall(html.group(1))
@@ -88,13 +86,16 @@ class GoogleResolver(Plugin, UrlResolver, PluginSettings):
                 if 'redirector.' in vid_sel: stream_url = urllib2.urlopen(vid_sel).geturl()
                 elif 'google' in vid_sel: stream_url = vid_sel
                 if stream_url: return stream_url
-            common.addon.log_error(self.name + ': stream url not found')
-            common.addon.show_small_popup(title='[B][COLOR white]GoogleVideo[/COLOR][/B]', msg='[COLOR red]File deleted or not found[/COLOR]', delay=5000, image=error_logo)
-            return self.unresolvable(code=0, msg='no file located')
+
+            raise Exception('File not found')
+
         except urllib2.URLError, e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' % (e.reason, web_url))
-            common.addon.show_small_popup(title='[B][COLOR white]GoogleVideo[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
-            return self.unresolvable(code=3, msg='Exception: %s' % e)
+            return self.unresolvable(code=3, msg=e)
+
+        except Exception, e:
+            common.addon.log_error(self.name + ': general error occured: %s' % e)
+            return self.unresolvable(code=0, msg=e)
 
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)

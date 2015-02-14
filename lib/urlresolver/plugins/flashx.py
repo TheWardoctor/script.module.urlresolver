@@ -1,6 +1,6 @@
 """
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    Kodi urlresolver plugin
+    Copyright (C) 2014  smokdpi
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,16 +17,13 @@
 """
 
 from t0mm0.common.net import Net
+from urlresolver import common
+from urlresolver.plugnplay import Plugin
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
-import urllib2
-from urlresolver import common
-import os
 import re
+import urllib2
 import xbmcgui
-
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
 
 
 class FlashxResolver(Plugin, UrlResolver, PluginSettings):
@@ -39,14 +36,13 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
         self.net = Net()
         self.pattern = 'http://((?:www.|play.)?flashx.tv)/(?:embed-)?([0-9a-zA-Z/-]+)(?:.html)?'
-        self.headers = {'Referer': 'http://www.flashx.tv/',
-                        'Host': 'www.flashx.tv'}
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
+        headers = {'Referer': web_url}
         smil = ''
         try:
-            html = self.net.http_GET(web_url, headers=self.headers).content
+            html = self.net.http_GET(web_url, headers=headers).content
             swfurl = 'http://static.flashx.tv/player6/jwplayer.flash.swf'
             r = re.search('"(http://.+?\.smil)"', html)
             if r: smil = r.group(1)
@@ -54,7 +50,7 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
                 r = re.search('\|smil\|(.+?)\|sources\|', html)
                 if r: smil = 'http://flashx.tv/' + r.group(1) + '.smil'
             if smil:
-                html = self.net.http_GET(smil, headers=self.headers).content
+                html = self.net.http_GET(smil, headers=headers).content
                 r = re.search('<meta base="(rtmp://.*?flashx\.tv:[0-9]+/)(.+/)".*/>', html, re.DOTALL)
                 if r:
                     rtmp = r.group(1)
@@ -77,19 +73,18 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
                         else:
                             result = xbmcgui.Dialog().select('Choose a link', vid_list)
                             if result != -1: vid_sel = url_list[result]
-                            else: return self.unresolvable(0, 'No link selected')
+                            else: return self.unresolvable(code=0, msg='No link selected')
+
                     if vid_sel: return '%s app=%s playpath=%s swfUrl=%s pageUrl=%s swfVfy=true' % (rtmp, app, vid_sel, swfurl, web_url)
 
-            raise Exception("File Link Not Found")
+            raise Exception('File not found')
 
         except urllib2.URLError, e:
-            common.addon.log_error('flashx.tv: got http error %d fetching %s' % (e.reason, web_url))
-            common.addon.show_small_popup('Error','flashx.tv: HTTP error: %s' % e, 5000, error_logo)
+            common.addon.log_error(self.name + ': got http error %d fetching %s' % (e.reason, web_url))
             return self.unresolvable(code=3, msg=e)
         
         except Exception, e:
-            common.addon.log_error('flashx.tv: general error occured: %s' % e)
-            common.addon.show_small_popup(title='[B][COLOR white]FLASHX.TV[/COLOR][/B]', msg='[COLOR red]%s[/COLOR]' % e, delay=5000, image=error_logo)
+            common.addon.log_error(self.name + ': general error occured: %s' % e)
             return self.unresolvable(code=0, msg=e)
 
     def get_url(self, host, media_id):
