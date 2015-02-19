@@ -60,7 +60,14 @@ def do_solvemedia_captcha(captcha_url):
     captcha_img = os.path.join(common.profile_path, IMG_FILE)
     try: os.remove(captcha_img)
     except: pass
-    open(captcha_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(.+?)"', html).group(1)).content)
+    
+    #Check for alternate puzzle type - stored in a div
+    alt_puzzle = re.search('<div><iframe src="(/papi/media.+?)"', html)
+    if alt_puzzle:
+        open(captcha_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % alt_puzzle.group(1)).content)
+    else:
+        open(captcha_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(/papi/media.+?)"', html).group(1)).content)
+            
     solution = get_response(captcha_img)
     data['adcopy_response'] = solution
     html = net.http_POST('http://api.solvemedia.com/papi/verify.noscript', data)
