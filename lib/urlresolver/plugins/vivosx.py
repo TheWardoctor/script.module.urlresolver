@@ -25,9 +25,6 @@ from time import sleep
 import re
 import os
 
-# set error logo, thanks to VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
 net = Net()
 class VivosxResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -57,10 +54,6 @@ class VivosxResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search(r'var RequestWaiting = (\d+);', html)
             if r: delay = r.groups(1)[0]
             
-            # run countdown and check whether it was canceld or not
-            cnt = common.addon.show_countdown(int(delay), title='vivo.sx', text='Please wait for hoster...')
-            if not cnt: raise Exception('countdown was canceld by user') 
-            
             # get video page using POST variables
             html = self.net.http_POST(web_url, data, headers = ({'Referer':web_url, 'X-Requested-With':'XMLHttpRequest'})).content
             
@@ -77,7 +70,6 @@ class VivosxResolver(Plugin, UrlResolver, PluginSettings):
         
         except Exception, e:
             common.addon.log('vivosx: general error occured: %s' % e)
-            common.addon.show_small_popup(title='vivo.sx', msg='%s' % e, delay = 5000, image=error_logo)
             return self.unresolvable(code=0, msg=e)
     
     def get_url(self, host, media_id):
