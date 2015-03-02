@@ -54,7 +54,7 @@ class EcostreamResolver(Plugin, UrlResolver, PluginSettings):
                 return self.unresolvable(code = 1, msg = msg)
             self.net.save_cookies(self.cookie_file)
             
-            web_url = 'http://www.ecostream.tv/js/ecos.js'
+            web_url = 'http://www.ecostream.tv/js/ecoss.js'
             js = self.net.http_GET(web_url).content
             r = re.search("\$\.post\('([^']+)'[^;]+'#auth'\).html\(''\)", js)
             if not r:
