@@ -46,6 +46,10 @@ class CloudyvideosResolver(Plugin, UrlResolver, PluginSettings):
             for i in re.finditer('<input type="hidden" name="(.*?)" value="(.*?)"', html):
                 form_values[i.group(1)] = i.group(2)
             html = self.net.http_POST(web_url, form_data=form_values).content
+            
+            r = re.search("file: '([^']+)'",html)
+            if r:
+                return r.group(1)
             for match in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
                 js_data = jsunpack.unpack(match.group(1))
                 match2 = re.search('<param\s+name="src"\s*value="([^"]+)', js_data)
