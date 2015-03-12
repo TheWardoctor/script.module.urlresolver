@@ -62,19 +62,7 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             
             data['method_free'] = 'Free Download'
     
-            #Check for SolveMedia Captcha image
-            solvemedia = re.search('<iframe src="((?:http:)?//api.solvemedia.com[^"]+)', html)
-            recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com[^"]+)', html)
-    
-            if solvemedia:
-                data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
-            elif recaptcha:
-                data.update(captcha_lib.do_recaptcha(recaptcha.group(1)))
-            else:
-                captcha = re.compile("left:(\d+)px;padding-top:\d+px;'>&#(.+?);<").findall(html)
-                result = sorted(captcha, key=lambda ltr: int(ltr[0]))
-                solution = ''.join(str(int(num[1]) - 48) for num in result)
-                data.update({'code': solution})
+            data.update(captcha_lib.do_captcha(html))
 
             common.addon.log('HugeFiles - Requesting POST URL: %s DATA: %s' % (url, data))
             html = net.http_POST(url, data).content
