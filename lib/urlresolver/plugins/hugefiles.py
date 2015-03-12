@@ -52,7 +52,6 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
     
             #Set POST data values
             data = {}
-            print html
             r = re.findall(r'type="hidden"\s+name="([^"]+)"\s+value="([^"]+)', html)
             if r:
                 for name, value in r:
