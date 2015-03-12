@@ -52,8 +52,8 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
     
             #Set POST data values
             data = {}
-            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
-            
+            print html
+            r = re.findall(r'type="hidden"\s+name="([^"]+)"\s+value="([^"]+)', html)
             if r:
                 for name, value in r:
                     data[name] = value
@@ -64,8 +64,8 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
             data['method_free'] = 'Free Download'
     
             #Check for SolveMedia Captcha image
-            solvemedia = re.search('<iframe src="(http://api.solvemedia.com.+?)"', html)
-            recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com.+?)">', html)
+            solvemedia = re.search('<iframe src="((?:http:)?//api.solvemedia.com[^"]+)', html)
+            recaptcha = re.search('<script type="text/javascript" src="(http://www.google.com[^"]+)', html)
     
             if solvemedia:
                 data.update(captcha_lib.do_solvemedia_captcha(solvemedia.group(1)))
