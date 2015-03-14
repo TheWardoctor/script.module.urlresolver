@@ -39,6 +39,9 @@ class LetwatchResolver(Plugin, UrlResolver, PluginSettings):
 
             if html.find('404 Not Found') >= 0:
                 raise Exception('File Removed')
+            
+            if html.find('Video is processing') >= 0:
+                raise Exception('File still being processed')
 
             packed = re.search('(eval\(function.*?)\s*</script>', html, re.DOTALL)
             if packed:
