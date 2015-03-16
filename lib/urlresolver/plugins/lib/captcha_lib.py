@@ -47,8 +47,26 @@ def get_response(img):
     finally:
         wdlg.close()
 
+def do_captcha(html):
+    solvemedia = re.search('<iframe src="((?:https?:)?//api.solvemedia.com[^"]+)', html)
+    recaptcha = re.search('<script\s+type="text/javascript"\s+src="(http://www.google.com[^"]+)', html)
+    
+    if solvemedia:
+        return do_solvemedia_captcha(solvemedia.group(1))
+    elif recaptcha:
+        return do_recaptcha(recaptcha.group(1))
+    else:
+        captcha = re.compile("left:(\d+)px;padding-top:\d+px;'>&#(.+?);<").findall(html)
+        result = sorted(captcha, key=lambda ltr: int(ltr[0]))
+        solution = ''.join(str(int(num[1]) - 48) for num in result)
+        if solution:
+            return {'code': solution}
+        else:
+            return {}
+
 def do_solvemedia_captcha(captcha_url):
-    common.addon.log_debug('SolveMedia Captcha')
+    common.addon.log_debug('SolveMedia Captcha: %s' % (captcha_url))
+    if captcha_url.startswith('//'): captcha_url = 'http:' + captcha_url
     html = net.http_GET(captcha_url).content
     data = {
             'adcopy_challenge': ''  # set to blank just in case not found; avoids exception on return
@@ -74,7 +92,8 @@ def do_solvemedia_captcha(captcha_url):
     return {'adcopy_challenge': data['adcopy_challenge'], 'adcopy_response': 'manual_challenge'}
 
 def do_recaptcha(captcha_url):
-    common.addon.log_debug('Google ReCaptcha')
+    common.addon.log_debug('Google ReCaptcha: %s' % (captcha_url))
+    if captcha_url.startswith('//'): captcha_url = 'http:' + captcha_url
     html = net.http_GET(captcha_url).content
     part = re.search("challenge \: \\'(.+?)\\'", html)
     captcha_img = 'http://www.google.com/recaptcha/api/image?c=' + part.group(1)
