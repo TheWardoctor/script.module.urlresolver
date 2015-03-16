@@ -56,6 +56,9 @@ class VideomegaResolver(Plugin,UrlResolver,PluginSettings):
                 if r:
                     stream_url=r.group(1)
                     stream_url=stream_url.replace(" ","%20")
+            else:
+                r = re.search('<source src="([^"]+)" type="video[^"]*"/>',html)
+                if r: stream_url = r.group(1)
             if stream_url:
                 #sleep(6)
                 xbmc.sleep(6000)
