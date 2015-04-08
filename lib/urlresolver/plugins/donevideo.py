@@ -38,59 +38,44 @@ class DonevideoResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
         self.net = Net()
 
-
     def get_media_url(self, host, media_id):
-        try:
-            url = self.get_url(host, media_id)
-            html = self.net.http_GET(url).content
-            dialog = xbmcgui.DialogProgress()
-            dialog.create('Resolving', 'Resolving Donevideo Link...')       
-            dialog.update(0)
+        url = self.get_url(host, media_id)
+        html = self.net.http_GET(url).content
 
-            data = {}
-            r = re.findall(r'type="(?:hidden|submit)?" name="(.+?)"\s* value="?(.+?)">', html)
-            for name, value in r:
-                data[name] = value
-                
-            html = net.http_POST(url, data).content
-
-            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
-            for name, value in r:
-                data[name] = value
-            data.update(captcha_lib.do_captcha(html))
+        data = {}
+        r = re.findall(r'type="(?:hidden|submit)?" name="(.+?)"\s* value="?(.+?)">', html)
+        for name, value in r:
+            data[name] = value
             
-            html = net.http_POST(url, data).content
-    
-            sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
-            sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
-            sPattern += '\s+?</script>'
-            r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
+        html = net.http_POST(url, data).content
+
+        r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
+        for name, value in r:
+            data[name] = value
+        data.update(captcha_lib.do_captcha(html))
+        
+        html = net.http_POST(url, data).content
+
+        sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
+        sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
+        sPattern += '\s+?</script>'
+        r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
+        if r:
+            sJavascript = r.group(1)
+            sUnpacked = jsunpack.unpack(sJavascript)
+            sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
+            sPattern += '"custommode='
+            r = re.search(sPattern, sUnpacked)
             if r:
-                sJavascript = r.group(1)
-                sUnpacked = jsunpack.unpack(sJavascript)
-                sPattern  = '<embed id="np_vid"type="video/divx"src="(.+?)'
-                sPattern += '"custommode='
-                r = re.search(sPattern, sUnpacked)
-                if r:
-                    dialog.update(100)
-                    dialog.close()
-                    return r.group(1)
+                return r.group(1)
 
-            else:
-                    num = re.compile('donevideo\|(.+?)\|http').findall(html)
-                    pre = 'http://'+num[0]+'.donevideo.com:182/d/'
-                    preb = re.compile('image\|(.+?)\|video\|(.+?)\|').findall(html)
-                    for ext, link in preb:
-                        r = pre+link+'/video.'+ext
-                        dialog.update(100)
-                        dialog.close()
-                        return r
-
-        except Exception, e:
-            common.addon.log('**** Donevideo Error occured: %s' % e)
-            common.addon.show_small_popup('Error', str(e), 5000, '')
-            return self.unresolvable(code=0, msg=e)
-            
+        else:
+                num = re.compile('donevideo\|(.+?)\|http').findall(html)
+                pre = 'http://'+num[0]+'.donevideo.com:182/d/'
+                preb = re.compile('image\|(.+?)\|video\|(.+?)\|').findall(html)
+                for ext, link in preb:
+                    r = pre+link+'/video.'+ext
+                    return r
         
     def get_url(self, host, media_id):
         return 'http://www.donevideo.com/%s' % media_id 
