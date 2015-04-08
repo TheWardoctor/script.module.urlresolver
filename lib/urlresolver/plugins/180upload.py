@@ -16,13 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import re
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from lib import jsunpack
-import re, urllib2, os, xbmcgui, xbmc
 from lib import captcha_lib
 
 net = Net()
@@ -46,62 +46,55 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
             return stream_url
 
     def __get_link(self, url):
-        try:
-            headers = {
-                       'User-Agent': USER_AGENT
-                       }
-            common.addon.log_debug('180upload: get_link: %s' % (url))
-            html = net.http_GET(url, headers).content
-
-            #Re-grab data values
-            data = {}
-            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)"', html)
-
-            if r:
-                for name, value in r:
-                    data[name] = value
-            else:
-                raise Exception('Unable to resolve 180Upload Link')
-
-            # ignore captchas in embedded pages
-            if 'embed' not in url:
-                data.update(captcha_lib.do_captcha(html))
-
-            common.addon.log_debug('180Upload - Requesting POST URL: %s with data: %s' % (url, data))
-            data['referer'] = url
-            html = net.http_POST(url, data, headers).content
-
-            # try download link
-            link = re.search('id="lnk_download[^"]*" href="([^"]+)', html)
-            stream_url = None
-            if link:
-                common.addon.log_debug('180Upload Download Found: %s' % link.group(1))
-                stream_url = link.group(1)
-            else:
-                # try flash player link
-                packed = re.search('id="player_code".*?(eval.*?)</script>', html, re.DOTALL)
-                if packed:
-                    js = jsunpack.unpack(packed.group(1))
-                    link = re.search('name="src"\s*value="([^"]+)', js.replace('\\', ''))
-                    if link:
-                        common.addon.log_debug('180Upload Src Found: %s' % link.group(1))
-                        stream_url = link.group(1)
-                    else:
-                        link = re.search("'file'\s*,\s*'([^']+)", js.replace('\\', ''))
-                        if link:
-                            common.addon.log_debug('180Upload Link Found: %s' % link.group(1))
-                            stream_url = link.group(1)
-                
-                if stream_url:
-                    return stream_url + '|User-Agent=%s' % (USER_AGENT)
+        headers = {
+                   'User-Agent': USER_AGENT
+                   }
+        common.addon.log_debug('180upload: get_link: %s' % (url))
+        html = net.http_GET(url, headers).content
+        
+        #Re-grab data values
+        data = {}
+        r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)"', html)
+        
+        if r:
+            for name, value in r:
+                data[name] = value
+        else:
+            raise UrlResolver.ResolverError('Unable to resolve link')
+        
+        # ignore captchas in embedded pages
+        if 'embed' not in url:
+            data.update(captcha_lib.do_captcha(html))
+        
+        common.addon.log_debug('180Upload - Requesting POST URL: %s with data: %s' % (url, data))
+        data['referer'] = url
+        html = net.http_POST(url, data, headers).content
+        
+        # try download link
+        link = re.search('id="lnk_download[^"]*" href="([^"]+)', html)
+        stream_url = None
+        if link:
+            common.addon.log_debug('180Upload Download Found: %s' % link.group(1))
+            stream_url = link.group(1)
+        else:
+            # try flash player link
+            packed = re.search('id="player_code".*?(eval.*?)</script>', html, re.DOTALL)
+            if packed:
+                js = jsunpack.unpack(packed.group(1))
+                link = re.search('name="src"\s*value="([^"]+)', js.replace('\\', ''))
+                if link:
+                    common.addon.log_debug('180Upload Src Found: %s' % link.group(1))
+                    stream_url = link.group(1)
                 else:
-                    raise Exception('Unable to resolve 180Upload Link')
-        except urllib2.URLError as e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' % (e.code, url))
-            return self.unresolvable(code=3, msg=e)
-        except Exception as e:
-            common.addon.log_error('**** 180upload Error occured: %s' % e)
-            return self.unresolvable(code=0, msg=e)
+                    link = re.search("'file'\s*,\s*'([^']+)", js.replace('\\', ''))
+                    if link:
+                        common.addon.log_debug('180Upload Link Found: %s' % link.group(1))
+                        stream_url = link.group(1)
+        
+        if stream_url:
+            return stream_url + '|User-Agent=%s' % (USER_AGENT)
+        else:
+            raise UrlResolver.ResolverError('Unable to resolve link')
 
     def get_url(self, host, media_id):
         return 'http://www.180upload.com/%s' % media_id
