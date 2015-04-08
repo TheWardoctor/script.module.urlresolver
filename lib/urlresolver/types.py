@@ -168,7 +168,7 @@ class HostedMediaFile:
                         common.addon.log_error('HTTP Error (%d) resolving: %s - %s' % (e.code, resolver.name, self._url))
                         return UrlResolver.unresolvable(code=3, msg=e)
                     except Exception as e:
-                        common.addon.log_error('Unknown Error resolving: %s - %s' % (e, resolver.name, self._url))
+                        common.addon.log_error('Unknown Error (%s) resolving: %s - %s' % (e, resolver.name, self._url))
                         return UrlResolver.unresolvable(code=0, msg=e)
             except Exception as e:
                 common.addon.log_notice("Resolver '%s' crashed: %s. Ignoring" % (resolver.name, e))
