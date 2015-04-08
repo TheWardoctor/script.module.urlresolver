@@ -35,27 +35,17 @@ class VidziResolver(Plugin, UrlResolver, PluginSettings):
         self.net = Net()
 
     def get_media_url(self, host, media_id):
-        try:
-            web_url = self.get_url(host, media_id)
-            html = self.net.http_GET(web_url).content
+        web_url = self.get_url(host, media_id)
+        html = self.net.http_GET(web_url).content
 
-            if '404 Not Found' in html:
-                raise Exception('File Not Found or removed')
+        if '404 Not Found' in html:
+            raise UrlResolver.ResolverError('File Not Found or removed')
 
-            r = re.search('.+file:\s"(.+?)"', html)
-            if not r:
-                raise Exception('Unable to locate link')
-            else:
-                stream_url = r.group(1)
-                return stream_url + '|Referer=http://vidzi.tv/nplayer/jwplayer.flash.swf'
-
-        except urllib2.HTTPError, e:
-            common.addon.log_error(self.name + ': got http error %d fetching %s' %
-                                   (e.code, web_url))
-            return self.unresolvable(code=3, msg=e)
-        except Exception, e:
-            common.addon.log_error('**** Vidzi Error occured: %s' % e)
-            return self.unresolvable(code=0, msg=e)
+        r = re.search('.+file:\s"(.+?)"', html)
+        if r:
+            return r.group(1) + '|Referer=http://vidzi.tv/nplayer/jwplayer.flash.swf'
+        else:
+            raise UrlResolver.ResolverError('Unable to locate link')
 
     def get_url(self, host, media_id):
         return 'http://%s/%s.html' % (host, media_id)

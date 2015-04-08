@@ -19,7 +19,9 @@ Special thanks for help with this resolver go out to t0mm0, jas0npc,
 mash2k3, Mikey1234,voinage and of course Eldorado. Cheers guys :)
 """
 
-import re, os, xbmc
+import re
+import os
+import xbmc
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
@@ -32,7 +34,7 @@ net = Net()
 class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "movreel"
-    domains = [ "movreel.com" ]
+    domains = ["movreel.com"]
     profile_path = common.profile_path
     cookie_file = os.path.join(profile_path, '%s.cookies' % name)
 
@@ -46,41 +48,36 @@ class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             pass
                 
     def get_media_url(self, host, media_id):
-        try:
-            net.set_cookies(self.cookie_file)
-            web_url = self.get_url(host, media_id)
-            html = self.net.http_GET(web_url).content
-            if re.search('This server is in maintenance mode', html):
-                raise Exception('File is currently unavailable on the host')
-            
-            data = {}
-            r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)"', html)
-            if r:
-                for name, value in r:
-                    data[name] = value
-                data['referer'] = web_url 
-            else:
-                raise Exception('Cannot find data values')
-            data['btn_download']='Continue to Video'
-            
-            r = re.search('<span id="countdown_str">Wait <span id=".+?">(.+?)</span> seconds</span>', html)
-            if r:
-                wait_time = r.group(1)
-            else:
-                wait_time  = 2 # default to 2 seconds
-            xbmc.sleep(int(wait_time) * 1000)
+        net.set_cookies(self.cookie_file)
+        web_url = self.get_url(host, media_id)
+        html = self.net.http_GET(web_url).content
+        if re.search('This server is in maintenance mode', html):
+            raise UrlResolver.ResolverError('File is currently unavailable on the host')
+        
+        data = {}
+        r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)"', html)
+        if r:
+            for name, value in r:
+                data[name] = value
+            data['referer'] = web_url
+        else:
+            raise UrlResolver.ResolverError('Cannot find data values')
+        data['btn_download'] = 'Continue to Video'
+        
+        r = re.search('<span id="countdown_str">Wait <span id=".+?">(.+?)</span> seconds</span>', html)
+        if r:
+            wait_time = r.group(1)
+        else:
+            wait_time = 2  # default to 2 seconds
+        xbmc.sleep(int(wait_time) * 1000)
 
-            html = net.http_POST(web_url, data).content
-            
-            r = re.search('href="([^"]+)">Download Link', html)
-            if r:
-                return r.group(1)
-            else:
-                raise Exception('Unable to locate Download Link')
-
-        except Exception, e:
-            common.addon.log('**** Movreel Error occured: %s' % e)
-            return self.unresolvable(code=0, msg='Exception: %s' % e)
+        html = net.http_POST(web_url, data).content
+        
+        r = re.search('href="([^"]+)">Download Link', html)
+        if r:
+            return r.group(1)
+        else:
+            raise UrlResolver.ResolverError('Unable to locate Download Link')
 
     def get_url(self, host, media_id):
         return 'http://www.movreel.com/%s' % media_id

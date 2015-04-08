@@ -20,7 +20,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, urllib2
+import re
 from urlresolver import common
 from lib import captcha_lib
 
