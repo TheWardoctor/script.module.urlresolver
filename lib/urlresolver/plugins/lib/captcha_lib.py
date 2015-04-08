@@ -25,7 +25,7 @@ import xbmc
 import os
 
 net = Net()
-IMG_FILE = 'captcha_img.gif'
+IMG_FILE = 'captcha_img.png'
 
 def get_response(img):
     try:
@@ -80,11 +80,14 @@ def do_solvemedia_captcha(captcha_url):
     except: pass
     
     #Check for alternate puzzle type - stored in a div
-    alt_puzzle = re.search('<div><iframe src="(/papi/media.+?)"', html)
-    if alt_puzzle:
-        open(captcha_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % alt_puzzle.group(1)).content)
+    alt_frame = re.search('<div><iframe src="(/papi/media[^"]+)', html)
+    if alt_frame:
+        html = net.http_GET("http://api.solvemedia.com%s" % alt_frame.group(1)).content
+        alt_puzzle = re.search('<div\s+id="typein">\s*<img\s+src="data:image/png;base64,([^"]+)', html, re.DOTALL)
+        if alt_puzzle:
+            open(captcha_img, 'wb').write(alt_puzzle.group(1).decode('base64'))
     else:
-        open(captcha_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(/papi/media.+?)"', html).group(1)).content)
+        open(captcha_img, 'wb').write(net.http_GET("http://api.solvemedia.com%s" % re.search('<img src="(/papi/media[^"]+)"', html).group(1)).content)
             
     solution = get_response(captcha_img)
     data['adcopy_response'] = solution
