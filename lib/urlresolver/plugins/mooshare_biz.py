@@ -24,7 +24,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 
-class AllmyvideosResolver(Plugin, UrlResolver, PluginSettings):
+class MooShareResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "mooshare"
     domains = [ "mooshare.biz" ]

@@ -27,7 +27,7 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 
-class VideomegaResolver(Plugin, UrlResolver, PluginSettings):
+class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "videomega"
     domains = ["videomega.tv", "movieshd.co"]

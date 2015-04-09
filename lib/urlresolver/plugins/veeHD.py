@@ -24,7 +24,7 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from t0mm0.common.net import Net
 
-class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
+class VeeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "veeHD"
     domains = ["veehd.com"]

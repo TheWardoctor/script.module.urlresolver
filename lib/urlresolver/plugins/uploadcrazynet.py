@@ -24,7 +24,7 @@ import urllib
 from urlresolver import common
 import re
 
-class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
+class UploadCrazyResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "uploadcrazy.net"
     domains = ["uploadcrazy.net"]

@@ -24,7 +24,7 @@ import re,urllib2,os,json,time,sys
 from urlresolver import common
 from time import time as wait
 
-class bayfilesResolver(Plugin, UrlResolver, PluginSettings):
+class BayfilesResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "bayfiles"
     domains = [ "bayfiles.com" ]

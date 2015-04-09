@@ -23,7 +23,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 
-class AllmyvideosResolver(Plugin, UrlResolver, PluginSettings):
+class MegaVidsResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "mega-vids"
     domains = [ "mega-vids.com" ]

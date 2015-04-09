@@ -26,7 +26,7 @@ from lib import jsunpack
 
 USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:30.0) Gecko/20100101 Firefox/30.0'
 
-class vidto(Plugin, UrlResolver, PluginSettings):
+class VidtoResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "vidto"
     domains = ["vidto.me"]

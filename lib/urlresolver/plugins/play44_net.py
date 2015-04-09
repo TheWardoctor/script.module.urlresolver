@@ -24,7 +24,7 @@ import urllib
 from urlresolver import common
 import re
 
-class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
+class Play44Resolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "play44.net"
     domains = ["play44.net"]

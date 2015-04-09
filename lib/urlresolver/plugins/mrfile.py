@@ -23,7 +23,7 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 import re
 
-class mrfileResolver(Plugin, UrlResolver, PluginSettings):
+class MrFileResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "mrfile"
     domains = ["mrfile.me"]

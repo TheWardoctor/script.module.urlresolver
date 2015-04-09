@@ -28,7 +28,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 
-class purevid(Plugin, UrlResolver, SiteAuth, PluginSettings):
+class PurevidResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "purevid"
     domains = ["purevid.com"]

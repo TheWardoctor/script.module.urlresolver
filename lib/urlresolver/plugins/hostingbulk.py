@@ -26,7 +26,7 @@ import urllib2, urllib
 from urlresolver import common
 from lib import jsunpack
 
-class hostingbulkResolver(Plugin, UrlResolver, PluginSettings):
+class HostingBulkResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "hostingbulk"
     domains = [ "hostingbulk.com" ]

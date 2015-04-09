@@ -25,7 +25,7 @@ import urllib2
 from urlresolver import common
 import os
 
-class crunchyrollResolver(Plugin, UrlResolver, PluginSettings):
+class CrunchyRollResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "crunchyroll"
     domains = [ "crunchyroll.com" ]

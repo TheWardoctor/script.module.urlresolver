@@ -25,7 +25,7 @@ from urlresolver import common
 from lib import jsunpack
 import re
 
-class CloudyvideosResolver(Plugin, UrlResolver, PluginSettings):
+class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "cloudyvideos"
     domains = ["cloudyvideos.com"]

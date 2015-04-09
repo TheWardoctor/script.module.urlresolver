@@ -27,7 +27,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 import time
 
-class sockshareResolver(Plugin, UrlResolver, PluginSettings):
+class SockshareResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "sockshare"
     domains = ["sockshare.com"]
