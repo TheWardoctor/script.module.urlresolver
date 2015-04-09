@@ -157,18 +157,18 @@ class HostedMediaFile:
                     self._host, self._media_id = resolver.get_host_and_id(self._url)
                     try:
                         stream_url = resolver.get_media_url(self._host, self._media_id)
-                        if self.__test_stream(stream_url):
+                        if stream_url and self.__test_stream(stream_url):
                             self.__resolvers = [resolver]  # Found a valid resolver, ignore the others
                             self._valid_url = True
                             return stream_url
                     except UrlResolver.ResolverError as e:
-                        common.addon.log_error('Resolver Error (%s) occurred: %s - %s' % (e, resolver.name, self._url))
+                        common.addon.log_error('Resolver Error: %s - %s - %s' % (e, resolver.name, self._url))
                         return UrlResolver.unresolvable(code=0, msg=e)
                     except urllib2.HTTPError as e:
-                        common.addon.log_error('HTTP Error (%d) resolving: %s - %s' % (e.code, resolver.name, self._url))
+                        common.addon.log_error('HTTP Error: %s - %s - %s - %s' % (e.code, resolver.name, self._url))
                         return UrlResolver.unresolvable(code=3, msg=e)
                     except Exception as e:
-                        common.addon.log_error('Unknown Error (%s) resolving: %s - %s' % (e, resolver.name, self._url))
+                        common.addon.log_error('Unknown Error: %s - %s - %s' % (e, resolver.name, self._url))
                         return UrlResolver.unresolvable(code=0, msg=e)
             except Exception as e:
                 common.addon.log_notice("Resolver '%s' crashed: %s. Ignoring" % (resolver.name, e))
