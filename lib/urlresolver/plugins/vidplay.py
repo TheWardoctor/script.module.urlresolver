@@ -41,7 +41,7 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
         embed_url = 'http://vidplay.net/vidembed-%s' % (media_id)
         response = urllib2.urlopen(embed_url)
         if response.getcode() == 200 and response.geturl() != embed_url and response.geturl()[-3:].lower() in ['mp4', 'avi', 'mkv']:
-            return response.geturl()
+            return response.geturl() + '|User-Agent=%s' % (USER_AGENT)
 
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
@@ -62,13 +62,18 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
         html = self.net.http_POST(web_url, data).content
         r = re.search('id="downloadbutton".*?href="([^"]+)', html)
         if r:
-            return r.group(1)
+            stream_url = r.group(1)
         else:
             r = re.search("file\s*:\s*'([^']+)", html)
             if r:
-                return r.group(1)
+                stream_url = r.group(1)
             else:
                 raise UrlResolver.ResolverError('Unable to resolve VidPlay Link')
+
+        if stream_url:
+            return stream_url + '|User-Agent=%s' % (USER_AGENT)
+        else:
+            raise UrlResolver.ResolverError('Unable to resolve link')
 
     def get_url(self, host, media_id):
         return 'http://vidplay.net/%s' % media_id
