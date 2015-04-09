@@ -25,19 +25,15 @@ from urlresolver import common
 from lib import jsunpack
 from lib import captcha_lib
 
-net = Net()
-
 class LimevideoResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "limevideo"
     domains = [ "limevideo.net" ]
 
-
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-
 
     def get_media_url(self, host, media_id):
         url = self.get_url(host, media_id)
@@ -49,14 +45,14 @@ class LimevideoResolver(Plugin, UrlResolver, PluginSettings):
             data[name] = value
         data.update({'method_free': 'Continue to Video'})
 
-        html = net.http_POST(url, data).content
+        html = self.net.http_POST(url, data).content
 
         r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
         for name, value in r:
             data[name] = value
         data.update(captcha_lib.do_captcha(html))
 
-        html = net.http_POST(url, data).content
+        html = self.net.http_POST(url, data).content
         sPattern = '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
         sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
         sPattern += '\s+?</script>'

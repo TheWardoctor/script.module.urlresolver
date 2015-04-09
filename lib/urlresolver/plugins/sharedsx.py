@@ -16,20 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import re
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
-from time import sleep
-import re
-import os
 
-net = Net()
 class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "sharedsx"
-    domains = [ "shared.sx" ]
+    domains = ["shared.sx"]
     
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -71,10 +68,10 @@ class SharedsxResolver(Plugin, UrlResolver, PluginSettings):
         return r[0]
     
     def get_url(self, host, media_id):
-        return 'http://shared.sx/%s' % media_id 
+        return 'http://shared.sx/%s' % media_id
     
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
+        r = re.search('//(.+?)/([0-9a-zA-Z]+)', url)
         if r:
             return r.groups()
         else:

@@ -29,9 +29,7 @@ from urlresolver.plugnplay import Plugin
 from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver import common
 
-net = Net()
-
-class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
+class MovreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "movreel"
     domains = ["movreel.com"]
@@ -48,7 +46,7 @@ class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             pass
                 
     def get_media_url(self, host, media_id):
-        net.set_cookies(self.cookie_file)
+        self.net.set_cookies(self.cookie_file)
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
         if re.search('This server is in maintenance mode', html):
@@ -71,7 +69,7 @@ class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             wait_time = 2  # default to 2 seconds
         xbmc.sleep(int(wait_time) * 1000)
 
-        html = net.http_POST(web_url, data).content
+        html = self.net.http_POST(web_url, data).content
         
         r = re.search('href="([^"]+)">Download Link', html)
         if r:
@@ -83,7 +81,7 @@ class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return 'http://www.movreel.com/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
+        r = re.search('//(.+?)/([0-9a-zA-Z]+)', url)
         if r:
             return r.groups()
         else:
@@ -102,7 +100,7 @@ class movreelResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             login = self.get_setting('username')
             password = self.get_setting('password')
             data = {'op': 'login', 'login': login, 'password': password}
-            html = net.http_POST(loginurl, data).content
+            html = self.net.http_POST(loginurl, data).content
             if re.search('op=logout', html):
                 self.net.save_cookies(self.cookie_file)
                 common.addon.log('LOGIN SUCCESSFUL')

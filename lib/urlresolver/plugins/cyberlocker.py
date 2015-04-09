@@ -16,25 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import re
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, os, urllib2
-import xbmcgui
 from urlresolver import common
 from lib import jsunpack
-
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
-
-net = Net()
 
 class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "cyberlocker"
-    domains = [ "cyberlocker.ch" ]
-
+    domains = ["cyberlocker.ch"]
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -54,7 +47,7 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
                 data[name] = value
                 data['method_free'] = 'Wait for 0 seconds'
             
-        html = net.http_POST(url, data).content
+        html = self.net.http_POST(url, data).content
         
         sPattern = '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
         sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'
@@ -68,7 +61,6 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search(sPattern, sUnpacked)
             if r:
                 return r.group(1)
-
         else:
             num = re.compile('cyberlocker\|(.+?)\|http').findall(html)
             pre = 'http://'+num[0]+'.cyberlocker.ch:182/d/'
@@ -79,7 +71,6 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_url(self, host, media_id):
         return 'http://cyberlocker.ch/%s' % media_id 
-        
 
     def get_host_and_id(self, url):
         r = re.search('//(.+?)/([0-9a-zA-Z]+)',url)
@@ -88,7 +79,6 @@ class CyberlockerResolver(Plugin, UrlResolver, PluginSettings):
         else:
             return False
         return('host', 'media_id')
-
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False

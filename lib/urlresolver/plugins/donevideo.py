@@ -20,18 +20,15 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import re, xbmcgui
+import re
 from urlresolver import common
 from lib import jsunpack
 from lib import captcha_lib
-
-net = Net()
 
 class DonevideoResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "donevideo"
     domains = [ "donevideo.com" ]
-
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -47,14 +44,14 @@ class DonevideoResolver(Plugin, UrlResolver, PluginSettings):
         for name, value in r:
             data[name] = value
             
-        html = net.http_POST(url, data).content
+        html = self.net.http_POST(url, data).content
 
         r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)">', html)
         for name, value in r:
             data[name] = value
         data.update(captcha_lib.do_captcha(html))
         
-        html = net.http_POST(url, data).content
+        html = self.net.http_POST(url, data).content
 
         sPattern =  '<script type=(?:"|\')text/javascript(?:"|\')>(eval\('
         sPattern += 'function\(p,a,c,k,e,d\)(?!.+player_ads.+).+np_vid.+?)'

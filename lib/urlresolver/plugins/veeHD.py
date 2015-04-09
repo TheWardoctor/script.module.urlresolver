@@ -24,12 +24,10 @@ from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from t0mm0.common.net import Net
 
-net = Net()
-
 class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "veeHD"
-    domains = [ "veehd.com" ]
+    domains = ["veehd.com"]
     profile_path = common.profile_path
     cookie_file = os.path.join(profile_path, '%s.cookies' % name)
     
@@ -97,7 +95,7 @@ class veeHDResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         terms = 'on'
         remember = 'on'
         data = {'ref': ref, 'uname': login, 'pword': pword, 'submit': submit, 'terms': terms, 'remember_me': remember}
-        html = net.http_POST(loginurl, data).content
+        html = self.net.http_POST(loginurl, data).content
         self.net.save_cookies(self.cookie_file)
         if re.search('my dashboard', html):
             return True

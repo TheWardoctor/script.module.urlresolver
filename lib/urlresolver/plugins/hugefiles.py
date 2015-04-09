@@ -24,8 +24,6 @@ import re
 from urlresolver import common
 from lib import captcha_lib
 
-net = Net()
-
 class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "hugefiles"
@@ -57,7 +55,7 @@ class HugefilesResolver(Plugin, UrlResolver, PluginSettings):
         data.update(captcha_lib.do_captcha(html))
 
         common.addon.log_debug('HugeFiles - Requesting POST URL: %s DATA: %s' % (url, data))
-        html = net.http_POST(url, data).content
+        html = self.net.http_POST(url, data).content
         r = re.search('fileUrl\s*=\s*"([^"]+)', html)
         if r:
             return r.group(1)

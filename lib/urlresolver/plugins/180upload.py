@@ -25,7 +25,6 @@ from urlresolver import common
 from lib import jsunpack
 from lib import captcha_lib
 
-net = Net()
 USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:36.0) Gecko/20100101 Firefox/36.0'
 
 class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
@@ -50,7 +49,7 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                    'User-Agent': USER_AGENT
                    }
         common.addon.log_debug('180upload: get_link: %s' % (url))
-        html = net.http_GET(url, headers).content
+        html = self.net.http_GET(url, headers).content
         
         #Re-grab data values
         data = {}
@@ -68,7 +67,7 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
         
         common.addon.log_debug('180Upload - Requesting POST URL: %s with data: %s' % (url, data))
         data['referer'] = url
-        html = net.http_POST(url, data, headers).content
+        html = self.net.http_POST(url, data, headers).content
         
         # try download link
         link = re.search('id="lnk_download[^"]*" href="([^"]+)', html)
