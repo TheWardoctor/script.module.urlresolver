@@ -73,9 +73,10 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
 
             # try download link
             link = re.search('id="lnk_download[^"]*" href="([^"]+)', html)
+            stream_url = None
             if link:
                 common.addon.log_debug('180Upload Download Found: %s' % link.group(1))
-                return link.group(1)
+                stream_url = link.group(1)
             else:
                 # try flash player link
                 packed = re.search('id="player_code".*?(eval.*?)</script>', html, re.DOTALL)
@@ -84,14 +85,17 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                     link = re.search('name="src"\s*value="([^"]+)', js.replace('\\', ''))
                     if link:
                         common.addon.log_debug('180Upload Src Found: %s' % link.group(1))
-                        return link.group(1)
+                        stream_url = link.group(1)
                     else:
                         link = re.search("'file'\s*,\s*'([^']+)", js.replace('\\', ''))
                         if link:
                             common.addon.log_debug('180Upload Link Found: %s' % link.group(1))
-                            return link.group(1)
-
-                raise Exception('Unable to resolve 180Upload Link')
+                            stream_url = link.group(1)
+                
+                if stream_url:
+                    return stream_url + '|User-Agent=%s' % (USER_AGENT)
+                else:
+                    raise Exception('Unable to resolve 180Upload Link')
         except urllib2.URLError as e:
             common.addon.log_error(self.name + ': got http error %d fetching %s' % (e.code, url))
             return self.unresolvable(code=3, msg=e)
