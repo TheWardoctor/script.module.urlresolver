@@ -39,10 +39,10 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         # try embedded link first to avoid captcha, try direct link if it doesn't work
-            stream_url = self.__get_link('http://180upload.com/embed-%s.html' % media_id)
-            if not stream_url:
-                stream_url = self.__get_link(self.get_url(host, media_id))
-            return stream_url
+        stream_url = self.__get_link('http://180upload.com/embed-%s.html' % media_id)
+        if not stream_url:
+            stream_url = self.__get_link(self.get_url(host, media_id))
+        return stream_url
 
     def __get_link(self, url):
         headers = {

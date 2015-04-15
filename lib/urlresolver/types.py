@@ -163,12 +163,15 @@ class HostedMediaFile:
                             return stream_url
                     except UrlResolver.ResolverError as e:
                         common.addon.log_error('Resolver Error: %s - %s - %s' % (e, resolver.name, self._url))
+                        common.addon.log_debug(traceback.format_exc())
                         return UrlResolver.unresolvable(code=0, msg=e)
                     except urllib2.HTTPError as e:
                         common.addon.log_error('HTTP Error: %s - %s - %s - %s' % (e.code, resolver.name, self._url))
+                        common.addon.log_debug(traceback.format_exc())
                         return UrlResolver.unresolvable(code=3, msg=e)
                     except Exception as e:
                         common.addon.log_error('Unknown Error: %s - %s - %s' % (e, resolver.name, self._url))
+                        common.addon.log_error(traceback.format_exc())
                         return UrlResolver.unresolvable(code=0, msg=e)
             except Exception as e:
                 common.addon.log_notice("Resolver '%s' crashed: %s. Ignoring" % (resolver.name, e))
