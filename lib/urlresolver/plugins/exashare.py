@@ -39,45 +39,28 @@ class ExashareResolver(Plugin,UrlResolver,PluginSettings):
         self.net=Net()
         
     #UrlResolver methods
-    def get_media_url(self,host,media_id):
-        base_url='http://www.'+host+'.com/'+media_id
-        #base_url='http://www.'+host+'.com/embed-'+media_id+'-640x400.html'
-        headers={'User-Agent':self.USER_AGENT,'Referer':'http://www.'+host+'.com/'}
-        try:
-            try: html=self.net.http_GET(base_url).content
-            except: html=self.net.http_GET(base_url,headers=headers).content
-            stream_url=re.findall('file:\s*"([^"]+)"',html)[0]
-            if self.get_setting('login')=='true' :  
-                cookies={}
-                for cookie in self.net._cj:
-                    cookies[cookie.name]=cookie.value
-                if len(cookies)>0 : 
-                    stream_url=stream_url+'|'+urllib.urlencode({'Cookie':urllib.urlencode(cookies)})
-            common.addon.log('stream_url : '+stream_url)
-            xbmc.sleep(7000)
-            return stream_url
-        except urllib2.HTTPError,e:
-            e=e.code
-            common.addon.log_error(self.name+': got Http error %s fetching %s'%(e,base_url))
-            return self.unresolvable(code=3,msg=e)
-        except urllib2.URLError,e:
-            e=str(e.args)
-            common.addon.log_error(self.name + ': got Url error %s fetching %s' % (e, base_url))
-            return self.unresolvable(code=3, msg=e)
-        except IndexError,e:
-            if re.search("""File Not Found""",html):
-                e='File not found or removed'
-                common.addon.log('**** Exashare Error occured: %s'%e)
-                return self.unresolvable(code=1,msg=e)
-            else:
-                common.addon.log('**** Exashare Error occured: %s'%e)
-                return self.unresolvable(code=0,msg=e) 
-        except Exception,e:
-            common.addon.log('**** Exashare Error occured: %s'%e)
-            return self.unresolvable(code=0,msg=e)
+    def get_media_url(self, host, media_id):
+        base_url = 'http://www.' + host + '.com/' + media_id
+        # base_url='http://www.'+host+'.com/embed-'+media_id+'-640x400.html'
+        headers = {'User-Agent': self.USER_AGENT, 'Referer': 'http://www.' + host + '.com/'}
+        try: html = self.net.http_GET(base_url).content
+        except: html = self.net.http_GET(base_url, headers=headers).content
+        if re.search("""File Not Found""", html):
+            raise UrlResolver.ResolverError('File not found or removed')
+
+        stream_url = re.findall('file:\s*"([^"]+)"', html)[0]
+        if self.get_setting('login') == 'true':
+            cookies = {}
+            for cookie in self.net._cj:
+                cookies[cookie.name] = cookie.value
+            if len(cookies) > 0:
+                stream_url = stream_url + '|' + urllib.urlencode({'Cookie': urllib.urlencode(cookies)})
+        common.addon.log('stream_url : ' + stream_url)
+        xbmc.sleep(7000)
+        return stream_url
 
     def get_url(self,host,media_id):
-        return 'http://www.exashare.com/%s'%media_id
+        return 'http://www.exashare.com/%s' % media_id
 
     def get_host_and_id(self,url):
         #r=re.search('http://(www.)?(.+?).com/(embed\-)?(.+)(\-[0-9]+x[0-9]+.html)?', url)

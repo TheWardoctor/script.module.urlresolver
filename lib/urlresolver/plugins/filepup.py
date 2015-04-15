@@ -36,20 +36,13 @@ class FilePupResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        try:
-            resp = self.net.http_GET(web_url)
-            html = resp.content
-            r = re.search('<source\s+src\s*=\s*"([^"]+)', html)
-            if r:
-                return r.group(1)
-            else:
-                raise Exception('Unable to resolve FilePup link')
-        except urllib2.HTTPError as e:
-            common.addon.log_error('%s: got http error %d fetching %s' % (self.name, e.code, web_url))
-            return self.unresolvable(code=3, msg=e)
-        except Exception as e:
-            common.addon.log_error('****%s Error occurred: %s' % (self.name, e))
-            return self.unresolvable(code=0, msg=e)
+        resp = self.net.http_GET(web_url)
+        html = resp.content
+        r = re.search('<source\s+src\s*=\s*"([^"]+)', html)
+        if r:
+            return r.group(1)
+        else:
+            raise UrlResolver.ResolverError('Unable to resolve FilePup link')
 
     def get_url(self, host, media_id):
         return 'http://filepup.net/play/%s' % (media_id)
