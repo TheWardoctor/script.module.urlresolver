@@ -20,7 +20,6 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import urllib2
 import xbmc
 from urlresolver import common
 from lib import jsunpack
@@ -66,7 +65,7 @@ class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
             return 'http://cloudyvideos.com/%s' % (media_id)
 
     def get_host_and_id(self, url):
-        r = re.search('http://(?:www.)?(.+?)/(?:embed-)?([\w]+)-', url)
+        r = re.search('http://(?:www.)?(.+?)/(?:embed-)?([\w]+)', url)
         if r:
             return r.groups()
         else:
