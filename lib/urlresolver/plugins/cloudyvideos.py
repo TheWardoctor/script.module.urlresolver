@@ -20,7 +20,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-import urllib2
+import xbmc
 from urlresolver import common
 from lib import jsunpack
 import re
@@ -39,13 +39,16 @@ class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
         form_values = {}
-        for i in re.finditer('<input type="hidden" name="(.*?)" value="(.*?)"', html):
+        for i in re.finditer('<input type="hidden" name="([^"]+)" value="([^"]+)', html):
             form_values[i.group(1)] = i.group(2)
+
+        xbmc.sleep(2000)
         html = self.net.http_POST(web_url, form_data=form_values).content
         
         r = re.search("file: '([^']+)'", html)
         if r:
             return r.group(1)
+
         for match in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
             js_data = jsunpack.unpack(match.group(1))
             match2 = re.search('<param\s+name="src"\s*value="([^"]+)', js_data)
@@ -59,10 +62,10 @@ class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
         raise UrlResolver.ResolverError('Unable to resolve cloudyvideos link. Filelink not found.')
 
     def get_url(self, host, media_id):
-            return 'http://cloudyvideos.com/embed-%s.html' % (media_id)
+            return 'http://cloudyvideos.com/%s' % (media_id)
 
     def get_host_and_id(self, url):
-        r = re.search('http://(?:www.)?(.+?)/embed-([\w]+)-', url)
+        r = re.search('http://(?:www.)?(.+?)/(?:embed-)?([\w]+)', url)
         if r:
             return r.groups()
         else:
