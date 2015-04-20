@@ -28,7 +28,10 @@ from urlresolver import common
 
 class TeramixerResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "teramixer"
+    name       = "teramixer"
+    domains    = [ 'teramixer.com' ]
+    useragent  = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:30.0) Gecko/20100101 Firefox/30.0'    
+
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -43,7 +46,7 @@ class TeramixerResolver(Plugin, UrlResolver, PluginSettings):
             encodedUrl = encodedUrl[9:]
             encodedUrl = base64.b64decode(encodedUrl)
             if not encodedUrl.startswith('aws'): encodedUrl = encodedUrl[1:]
-            stream_url = 'http://' + encodedUrl
+            stream_url = 'http://%s|User-Agent=%s' %(encodedUrl,self.useragent)
             return stream_url
         except IndexError as e:
             if re.search("""<title>File not found or deleted - Teramixer</title>""", html) :
