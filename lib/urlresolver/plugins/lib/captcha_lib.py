@@ -50,11 +50,14 @@ def get_response(img):
 def do_captcha(html):
     solvemedia = re.search('<iframe src="((?:https?:)?//api.solvemedia.com[^"]+)', html)
     recaptcha = re.search('<script\s+type="text/javascript"\s+src="(http://www.google.com[^"]+)', html)
+    xfilecaptcha = re.search('<img\s+src="([^"]+/captchas/[^"]+)', html)
     
     if solvemedia:
         return do_solvemedia_captcha(solvemedia.group(1))
     elif recaptcha:
         return do_recaptcha(recaptcha.group(1))
+    elif xfilecaptcha:
+        return do_xfilecaptcha(xfilecaptcha.group(1))
     else:
         captcha = re.compile("left:(\d+)px;padding-top:\d+px;'>&#(.+?);<").findall(html)
         result = sorted(captcha, key=lambda ltr: int(ltr[0]))
@@ -102,3 +105,9 @@ def do_recaptcha(captcha_url):
     captcha_img = 'http://www.google.com/recaptcha/api/image?c=' + part.group(1)
     solution = get_response(captcha_img)
     return {'recaptcha_challenge_field': part.group(1), 'recaptcha_response_field': solution}
+
+def do_xfilecaptcha(captcha_url):
+    common.addon.log_debug('XFileLoad ReCaptcha: %s' % (captcha_url))
+    if captcha_url.startswith('//'): captcha_url = 'http:' + captcha_url
+    solution = get_response(captcha_url)
+    return {'code': solution}
