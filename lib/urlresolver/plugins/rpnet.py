@@ -51,11 +51,14 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         url = url + query
         response = self.net.http_GET(url).content
         response = json.loads(response)
-        link = response['links'][0]
-        if 'generated' in link:
-            return link['generated']
-        elif 'error' in link:
-            raise UrlResolver.ResolverError(link['error'])
+        if response['links']:
+            link = response['links'][0]
+            if 'generated' in link:
+                return link['generated']
+            elif 'error' in link:
+                raise UrlResolver.ResolverError(link['error'])
+        else:
+            raise UrlResolver.ResolverError('No Link Returned')
 
     def get_url(self, host, media_id):
         return media_id
