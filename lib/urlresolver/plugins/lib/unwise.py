@@ -124,7 +124,7 @@ def resolve_var(HTML, key): #this should probably be located elsewhere
         else:
             key = key.split("\\.")
             if len(key) == 2:
-                tmp2 = re.compile(r'[^\w\.]' + key[0] + '\s*=\s*\{.*' + key[1] + '\s*:\s*[\"\'](.*?)[\"\']').search(tmp1) #for 'vars = { key: "value" }', cloudy
+                tmp2 = re.compile(r'[^\w\.]' + key[0] + '\s*=\s*\{.*[^\w\.]' + key[1] + '\s*:\s*[\"\'](.*?)[\"\']').search(tmp1) #for 'vars = { key: "value" }', cloudy
             if tmp2:
                 tmp2 = tmp2.group(1)
             else:
