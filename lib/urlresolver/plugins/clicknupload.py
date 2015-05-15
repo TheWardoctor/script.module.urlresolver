@@ -22,6 +22,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 import re
 from urlresolver import common
+from lib import captcha_lib
 
 USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:30.0) Gecko/20100101 Firefox/30.0'
 MAX_TRIES = 3
@@ -46,7 +47,8 @@ class ClickNUploadResolver(Plugin, UrlResolver, PluginSettings):
             for name, value in r:
                 data[name] = value
             data['method_free'] = 'Free Download'
-             
+            data.update(captcha_lib.do_captcha(html))
+            
             html = self.net.http_POST(web_url, data).content
             
             if '>File Download Link Generated<' in html:
