@@ -30,7 +30,7 @@ MAX_TRIES=3
 class TheVideoResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "thevideo"
-    domains = [ "thevideo.me" ]
+    domains = ["thevideo.me"]
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -39,53 +39,20 @@ class TheVideoResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        headers = {
-            'User-Agent': USER_AGENT,
-            'Referer': web_url
-        }
-
         html = self.net.http_GET(web_url).content
-        js = ''
-        tries=1
-        while not js and tries<=MAX_TRIES:
-            r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
-            data={}
-            for name, value in r:
-                data[name] = value
-            data[u"imhuman"] = "Proceed to video"; 
-            r = re.findall(r"type:\s*'hidden',\s*id:\s*'([^']+).*?value:\s*'([^']+)", html)
-            for name, value in r:
-                data[name] = value
-                                                                              
-            cookies={}
-            for match in re.finditer("\$\.cookie\('([^']+)',\s*'([^']+)",html):
-                key,value = match.groups()
-                cookies[key]=value
-            cookies['ref_url']=web_url
-            headers['Cookie']=urllib.urlencode(cookies)
-
-            html = self.net.http_POST(web_url, data, headers=headers).content
-            r = re.search("<script type='text/javascript'>(eval\(function\(p,a,c,k,e,d\).*?)</script>",html,re.DOTALL)
-            if r:
-                js = jsunpack.unpack(r.group(1))
-                break
-            tries += 1
-        else:
-            raise UrlResolver.ResolverError('Unable to resolve TheVideo link. Player config not found.')
-            
-        r = re.findall(r"label:\\'([^']+)p\\',file:\\'([^\\']+)", js)
+        r = re.findall(r"'label'\s*:\s*'([^']+)p'\s*,\s*'file'\s*:\s*'([^']+)", html)
         if not r:
             raise UrlResolver.ResolverError('Unable to locate link')
         else:
-            max_quality=0
+            max_quality = 0
             for quality, stream_url in r:
-                if int(quality)>=max_quality:
+                if int(quality) >= max_quality:
                     best_stream_url = stream_url
                     max_quality = int(quality)
             return best_stream_url
 
     def get_url(self, host, media_id):
-        return 'http://%s/%s' % (host, media_id)
+        return 'http://%s/embed-%s.html' % (host, media_id)
 
     def get_host_and_id(self, url):
         r = re.search('//(.+?)/(?:embed-)?([0-9a-zA-Z/]+)', url)
