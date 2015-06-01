@@ -33,23 +33,11 @@ class UploadcResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
         self.net = Net()
         # modified by mscreations. uploadc now needs the filename after the media id so make sure we match that
-        self.pattern = 'http://((?:www.)?uploadc.com)/([0-9a-zA-Z]+/[0-9a-zA-Z/._]+)'
+        self.pattern = 'http://((?:www.)?uploadc.com)/([0-9a-zA-Z]+)/[0-9a-zA-Z/._]+'
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-
-        data = {}
-        r = re.findall(r'type="hidden" name="(.+?)" value="(.+?)"', html)
-        if r:
-            for name, value in r:
-                data[name] = value
-            data['referer'] = web_url 
-        else:
-            raise UrlResolver.ResolverError('Cannot find data values')
-
-        html = self.net.http_POST(web_url, data).content
-        
         for match in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
             js_data = jsunpack.unpack(match.group(1))
             r = re.search('src="([^"]+)', js_data)
@@ -60,7 +48,8 @@ class UploadcResolver(Plugin, UrlResolver, PluginSettings):
         raise UrlResolver.ResolverError('File Not Found or removed')
 
     def get_url(self, host, media_id):
-            return 'http://www.uploadc.com/%s' % (media_id)
+        print media_id
+        return 'http://www.uploadc.com/embed-%s.html' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
