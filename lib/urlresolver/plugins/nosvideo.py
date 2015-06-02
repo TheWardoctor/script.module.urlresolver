@@ -27,7 +27,7 @@ from lib import jsunpack
 class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "nosvideo"
-    domains = ["nosvideo.com"]
+    domains = ["nosvideo.com", "noslocker.com"]
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -55,7 +55,7 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
         r = re.search('(eval\(function\(p,a,c,k,e,[dr].*)', html)
         if r:
             js = jsunpack.unpack(r.group(1))
-            r = re.search('playlist=(.*)&config=', js)
+            r = re.search('playlist=([^&]+)', js)
             if r:
                 html = self.net.http_GET(r.group(1)).content
                 r = re.search('<file>\s*(.*)\s*</file>', html)
@@ -81,6 +81,6 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?nosvideo.com/' +
+        return (re.match('http://(www.)?(nosvideo|noslocker).com/' +
                          '(?:\?v\=|embed/)[0-9A-Za-z]+', url) or
                          'nosvideo' in host)
