@@ -44,11 +44,14 @@ class UploadcResolver(Plugin, UrlResolver, PluginSettings):
             if r:
                 stream_url = r.group(1) + '|referer=' + web_url
                 return stream_url
+        
+        match = re.search("'file'\s*,\s*'([^']+)", html)
+        if match:
+            return match.group(1).replace(' ', '%20') + '|Referer=%s' % (web_url)
                 
         raise UrlResolver.ResolverError('File Not Found or removed')
 
     def get_url(self, host, media_id):
-        print media_id
         return 'http://www.uploadc.com/embed-%s.html' % (media_id)
 
     def get_host_and_id(self, url):
