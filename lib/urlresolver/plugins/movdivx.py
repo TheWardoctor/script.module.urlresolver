@@ -58,6 +58,10 @@ class MovDivxResolver(Plugin, UrlResolver, PluginSettings):
             match = re.search('name="src"\s*value="([^"]+)', js_data)
             if match:
                 return match.group(1)
+            else:
+                match = re.search('file\s*:\s*"([^"]+)', js_data)
+                if match:
+                    return match.group(1)
 
         raise UrlResolver.ResolverError('failed to parse link')
 
