@@ -91,7 +91,7 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                         stream_url = link.group(1)
         
         if stream_url:
-            return stream_url + '|User-Agent=%s' % (USER_AGENT)
+            return stream_url + '|User-Agent=%s&Referer=%s' % (USER_AGENT, url)
         else:
             raise UrlResolver.ResolverError('Unable to resolve link')
 
