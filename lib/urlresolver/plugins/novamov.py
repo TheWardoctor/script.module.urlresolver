@@ -28,6 +28,7 @@ class NovamovResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "novamov"
     domains = [ "novamov.com" ]
+    pattern = '//((?:www\.|embed\.)?novamov\.com)/(?:mobile/video\.php\?id=|video/|embed\.php\?v\=)(\w+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -58,7 +59,7 @@ class NovamovResolver(Plugin, UrlResolver, PluginSettings):
         return 'http://www.novamov.com/video/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//((?:www\.|embed\.)?novamov\.com)\/(?:(?:video/)|(?:embed\.php\?[\w\=\&]*v\=))(\w+)', url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
@@ -66,4 +67,4 @@ class NovamovResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www.|embed.)?novamov.com/(video/|embed.php\?)', url) or 'novamov' in host
+        return re.search(self.pattern, url) or 'novamov' in host
