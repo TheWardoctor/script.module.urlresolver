@@ -166,7 +166,7 @@ class HostedMediaFile:
                         common.addon.log_debug(traceback.format_exc())
                         return UrlResolver.unresolvable(code=0, msg=e)
                     except urllib2.HTTPError as e:
-                        common.addon.log_error('HTTP Error: %s - %s - %s - %s' % (e.code, resolver.name, self._url))
+                        common.addon.log_error('HTTP Error: %s - %s - %s' % (e.code, resolver.name, self._url))
                         common.addon.log_debug(traceback.format_exc())
                         return UrlResolver.unresolvable(code=3, msg=e)
                     except Exception as e:
