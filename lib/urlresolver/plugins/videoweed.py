@@ -28,6 +28,7 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "videoweed.es"
     domains = ["videoweed.es"]
+    pattern = '//((?:www\.|embed\.)?videoweed\.(?:es|com))/(?:mobile/video\.php\?id=|video/|embed\.php\?v=|file/)([0-9a-z]+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -57,8 +58,7 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
         return 'http://www.videoweed.es/file/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(?:embed.)?(.+?)/(?:video/|embed.php\?v=|file/)' + 
-                      '([0-9a-z]+)', url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
@@ -66,5 +66,4 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www.|embed.)?videoweed.(?:es|com)/(video/|file|embed.php\?|file/)' +
-                        '(?:[0-9a-z]+|width)', url) or 'videoweed' in host
+        return re.search(self.pattern, url) or 'videoweed' in host

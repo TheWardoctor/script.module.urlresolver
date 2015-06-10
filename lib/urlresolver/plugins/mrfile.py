@@ -35,13 +35,15 @@ class MrFileResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        html = self.net.http_GET(web_url).content
+        headers = {
+                   'User-Agent': common.IE_USER_AGENT}
+        html = self.net.http_GET(web_url, headers=headers).content
         if re.search('File was deleted', html):
             raise UrlResolver.ResolverError('File Not Found or removed')
         r = re.search("file: '([^']+)'", html)
         if not r:
             raise UrlResolver.ResolverError('Unable to resolve mrfile link. Filelink not found.')
-        return r.group(1)
+        return r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
 
     def get_url(self, host, media_id):
             return 'http://www.mrfile.me/embed-%s.html' % (media_id)

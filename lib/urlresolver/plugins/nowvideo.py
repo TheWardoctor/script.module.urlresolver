@@ -27,7 +27,8 @@ from lib import unwise
 class NowvideoResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "nowvideo"
-    domains = ["nowvideo.eu", "nowvideo.ch", "nowvideo.sx", "nowvideo.co"]
+    domains = ["nowvideo.eu", "nowvideo.ch", "nowvideo.sx", "nowvideo.co", "nowvideo.li"]
+    pattern = '((?:http://|www.|embed.)?nowvideo.(?:eu|sx|ch|co|li))/(?:mobile/video\.php\?id=|video/|embed\.php\?.*?v=)([0-9a-z]+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -77,7 +78,7 @@ class NowvideoResolver(Plugin, UrlResolver, PluginSettings):
         return 'http://embed.nowvideo.sx/embed.php?v=%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('((?:http://|www.|embed.)nowvideo.(?:eu|sx|ch|co))/(?:video/|embed.php\?.*?v=)([0-9a-z]+)', url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
@@ -85,4 +86,4 @@ class NowvideoResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('http://(www.|embed.)?nowvideo.(?:eu|sx|ch|co)/(video/|embed.php\?)(?:[0-9a-z]+|width)', url) or 'nowvideo' in host
+        return re.search(self.pattern, url) or 'nowvideo' in host
