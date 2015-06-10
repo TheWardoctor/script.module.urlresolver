@@ -26,13 +26,11 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 
-USER_AGENT = 'Apple-iPhone/701.341'
-
 class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "videomega"
     domains = ["videomega.tv"]
-    pattern = '//((?:www.)?videomega.tv)/(?:iframe|cdn|validatehash)\.php\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
+    pattern = '//((?:www.)?videomega.tv)/(?:(?:iframe|cdn|validatehash)\.php)?\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -42,14 +40,14 @@ class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {
-                   'User-Agent': USER_AGENT,
+                   'User-Agent': common.IOS_USER_AGENT,
                    'Referer': web_url
         }
         
         html = self.net.http_GET(web_url, headers=headers).content
         match = re.search('<source\s+src="([^"]+)', html)
         if match:
-            return match.group(1)
+            return match.group(1) + '|User-Agent=%s' % (common.IOS_USER_AGENT)
 
         raise UrlResolver.ResolverError('No playable video found.')
 

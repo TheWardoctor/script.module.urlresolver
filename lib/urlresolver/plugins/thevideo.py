@@ -24,7 +24,6 @@ import re, urllib
 from urlresolver import common
 from lib import jsunpack
 
-USER_AGENT='Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:30.0) Gecko/20100101 Firefox/30.0'
 MAX_TRIES=3
 
 class TheVideoResolver(Plugin, UrlResolver, PluginSettings):

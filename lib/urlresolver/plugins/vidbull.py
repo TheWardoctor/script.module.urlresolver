@@ -23,8 +23,6 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 
-USER_AGENT = 'Mozilla/5.0 (Linux; Android 4.4; Nexus 5 Build/BuildID) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36'
-
 class VidbullResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "vidbull"
@@ -38,7 +36,7 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         headers = {
-                   'User-Agent': USER_AGENT
+                   'User-Agent': common.IOS_USER_AGENT
                 }
         
         web_url = self.get_url(host, media_id)

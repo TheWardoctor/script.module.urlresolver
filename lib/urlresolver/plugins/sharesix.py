@@ -23,8 +23,6 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 
-USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:30.0) Gecko/20100101 Firefox/30.0'
-
 class SharesixResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "sharesix"
@@ -38,7 +36,7 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {
-            'User-Agent': USER_AGENT,
+            'User-Agent': common.IE_USER_AGENT,
             'Referer': web_url
         }
         # Otherwise just use the original url to get the content. For sharesix
@@ -55,7 +53,7 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
         
         r = re.search("var\s+lnk1\s*=\s*'(.*?)'", html)
         if r:
-            stream_url = r.group(1) + '|User-Agent=%s' % (USER_AGENT)
+            stream_url = r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
             return stream_url
         else:
             raise UrlResolver.ResolverError('Unable to locate link')

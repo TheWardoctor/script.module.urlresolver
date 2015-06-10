@@ -25,8 +25,6 @@ from urlresolver import common
 from lib import jsunpack
 import re
 
-USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:36.0) Gecko/20100101 Firefox/36.0'
-
 class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "cloudyvideos"
@@ -63,7 +61,7 @@ class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
                     stream_url = match2.group(1)
             
         if stream_url:
-            return stream_url + '|User-Agent=%s&Referer=%s' % (USER_AGENT, web_url)
+            return stream_url + '|User-Agent=%s&Referer=%s' % (common.IE_USER_AGENT, web_url)
 
         raise UrlResolver.ResolverError('Unable to resolve cloudyvideos link. Filelink not found.')
 
