@@ -28,7 +28,8 @@ USER_AGENT = 'Mozilla/5.0 (Linux; Android 4.4; Nexus 5 Build/BuildID) AppleWebKi
 class VidbullResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "vidbull"
-    domains = [ "vidbull.com" ]
+    domains = ["vidbull.com"]
+    pattern = '//((?:www.)?vidbull.com)/(?:embed-)?([0-9a-zA-Z]+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -49,10 +50,10 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
             raise UrlResolver.ResolverError('File Link Not Found')
 
     def get_url(self, host, media_id):
-        return 'http://www.vidbull.com/%s' % media_id 
+        return 'http://www.vidbull.com/%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/(?:embed-)?([0-9a-zA-Z]+)',url)
+        r = re.search(self.pattern,url)
         if r:
             return r.groups()
         else:
@@ -61,6 +62,4 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?vidbull.com/(?:embed-)?' +
-                         '[0-9A-Za-z]+', url) or
-                         'vidbull' in host)
+        return (re.search(self.pattern, url) or 'vidbull' in host)
