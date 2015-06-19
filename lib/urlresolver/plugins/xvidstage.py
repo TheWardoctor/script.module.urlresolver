@@ -39,10 +39,10 @@ class XvidstageResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-        sPattern = "src='http://xvidstage.com/player/swfobject.js'></script>.+?<script type='text/javascript'>eval.*?return p}\((.*?)</script>"# Modded
-        r = re.search(sPattern, html, re.DOTALL + re.IGNORECASE)
-        if r:
-            sJavascript = r.group(1)
+               
+        result = re.compile('(eval.*?\)\)\))').findall(html)[-1]
+        if result:
+            sJavascript = result
             sUnpacked = jsunpack.unpack(sJavascript)
             sPattern = "'file','(.+?)'"#modded
             r = re.search(sPattern, sUnpacked)
@@ -52,7 +52,7 @@ class XvidstageResolver(Plugin, UrlResolver, PluginSettings):
         raise UrlResolver.ResolverError('File Not Found or removed')
 
     def get_url(self, host, media_id):
-            return 'http://www.xvidstage.com/%s' % (media_id)
+            return 'http://www.xvidstage.com/embed-%s.html' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
