@@ -43,7 +43,7 @@ class TheFileResolver(Plugin, UrlResolver, PluginSettings):
             raise UrlResolver.ResolverError('Unable to resolve thefile link. Filelink not found.')
         
     def get_url(self, host, media_id):
-            return 'http://thefile.me/embed-%s.html' % (media_id)
+            return 'http://thefile.me/plugins/mediaplayer/site/_embed.php?u=%s' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(r'//(.+?)/(.+)', url)
