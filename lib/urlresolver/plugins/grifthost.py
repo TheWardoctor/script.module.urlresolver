@@ -1,6 +1,6 @@
 """
-cloudyvideos urlresolver plugin
-Copyright (C) 2015 Lynx187
+grifthost urlresolver plugin
+Copyright (C) 2015 tknorris
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ from urlresolver import common
 from lib import jsunpack
 import re
 
-class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
+class GrifthostResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "grifthost"
     domains = ["grifthost.com"]
