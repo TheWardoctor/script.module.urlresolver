@@ -30,7 +30,7 @@ class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "videomega"
     domains = ["videomega.tv"]
-    pattern = '//((?:www.)?videomega.tv)/(?:(?:iframe|cdn|validatehash)\.php)?\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
+    pattern = '//((?:www.)?videomega.tv)/(?:(?:iframe|cdn|validatehash|view)\.php)?\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
