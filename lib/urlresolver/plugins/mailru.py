@@ -31,7 +31,7 @@ class MailRuResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "mail.ru"
     domains = ["mail.ru"]
-    pattern = '//((?:videoapi.)?my\.mail\.ru)/(?:videos/embed/)?mail/([^/]+)/(?:video/)?(?:st|tv)/([a-zA-Z0-9]+)'
+    pattern = '//((?:videoapi.)?my\.mail\.ru)/(?:videos/embed/)?mail/([^/]+)/(?:video/)?(?:st|tv|archi)/([a-zA-Z0-9]+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
