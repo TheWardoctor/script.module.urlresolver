@@ -27,6 +27,7 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
     name = "sharesix"
     domains = ["sharesix.com"]
+    pattern = '//((?:www.)?sharesix.com)/f/([0-9A-Za-z]+)'
 
     def __init__(self):
         p = self.get_setting('priority') or 100
@@ -37,21 +38,20 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
         web_url = self.get_url(host, media_id)
         headers = {
             'User-Agent': common.IE_USER_AGENT,
-            'Referer': web_url
+            'Referer': web_url,
+            'Cookie': 'mbred=1'
         }
         # Otherwise just use the original url to get the content. For sharesix
-        html = self.net.http_GET(web_url).content
+        html = self.net.http_GET(web_url, headers=headers).content
         
         data = {}
-        r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
+        r = re.findall(r'type="hidden"\s*name="([^"]+)"\s*value="([^"]+)"', html)
         for name, value in r:
             data[name] = value
-        #data[u"method_premium"] = "Premium"
         data[u"method_free"] = "Free"
-        data[u"op"] = "download1"; data[u"referer"] = web_url; data[u"usr_login"] = ""
-        html = self.net.http_POST(web_url, data, headers=headers).content
         
-        r = re.search("var\s+lnk1\s*=\s*'(.*?)'", html)
+        html = self.net.http_POST(web_url, data, headers=headers).content
+        r = re.search("var\s+lnk1\s*=\s*'([^']+)", html)
         if r:
             stream_url = r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
             return stream_url
@@ -59,13 +59,13 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
             raise UrlResolver.ResolverError('Unable to locate link')
         
         if 'file you were looking for could not be found' in html:
-            raise UrlResolver.ResolverError ('File Not Found or removed')
+            raise UrlResolver.ResolverError('File Not Found or removed')
 
     def get_url(self, host, media_id):
-        return 'http://%s/%s' % (host, media_id)
+        return 'http://%s/f/%s' % (host, media_id)
         
     def get_host_and_id(self, url):
-        r = re.search('//(.+?)/([0-9a-zA-Z/]+)', url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
@@ -73,6 +73,4 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return (re.match('http://(www.)?sharesix.com/' +
-                         '[0-9A-Za-z]+', url) or
-                         'sharesix' in host)
+        return re.search(self.pattern, url) or 'sharesix' in host

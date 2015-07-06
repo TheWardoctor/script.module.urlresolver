@@ -1,9 +1,6 @@
 """
-    OVERALL CREDIT TO:
-        t0mm0, Eldorado, VOINAGE, BSTRDMKR, tknorris, smokdpi, TheHighway
-
     urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    Copyright (C) 2015 tknorris
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,46 +18,42 @@
 
 import re
 from t0mm0.common.net import Net
-from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
+from urlresolver import common
 
-class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
+class VshareEuResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "videomega"
-    domains = ["videomega.tv"]
-    pattern = '//((?:www.)?videomega.tv)/(?:(?:iframe|cdn|validatehash|view)\.php)?\?(?:ref|hashkey)=([a-zA-Z0-9]+)'
+    name = "vshare.eu"
+    domains = ['vshare.eu']
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-
-    def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
-        headers = {
-                   'User-Agent': common.IOS_USER_AGENT,
-                   'Referer': web_url
-        }
-        
-        html = self.net.http_GET(web_url, headers=headers).content
-        match = re.search('<source\s+src="([^"]+)', html)
-        if match:
-            return match.group(1) + '|User-Agent=%s' % (common.IOS_USER_AGENT)
-
-        raise UrlResolver.ResolverError('No playable video found.')
+        self.pattern = '//((?:www.)?vshare.eu)/(?:embed-|)?([0-9a-zA-Z/]+)'
 
     def get_url(self, host, media_id):
-        return 'http://videomega.tv/cdn.php?ref=%s' % (media_id)
+        return 'http://vshare.eu/embed-%s-720x400.html' % (media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
-        if r:
-            return r.groups()
-        else:
-            return False
+        if r: return r.groups()
+        else: return False
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.search(self.pattern, url) or 'videomega' in host
+        return re.search(self.pattern, url) or self.name in host
+
+    def get_media_url(self, host, media_id):
+        web_url = self.get_url(host, media_id)
+        html = self.net.http_GET(web_url).content
+        if '404 Not Found' in html or 'Has Been Removed' in html:
+            raise UrlResolver.ResolverError('The requested video was not found.')
+        
+        match = re.search('file\s*:\s*"([^"]+)', html)
+        if match:
+            return match.group(1)
+        
+        raise UrlResolver.ResolverError('No playable video found.')
