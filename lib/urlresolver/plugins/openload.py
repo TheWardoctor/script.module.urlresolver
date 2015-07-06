@@ -37,12 +37,14 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
+        if 'We are sorry!' in html:
+            raise UrlResolver.ResolverError('File Not Found or Removed.')
         
         match = re.search('<source\s+type="video/mp4"\s+src="([^"]+)', html)
         if match:
             return match.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
         
-        raise UrlResolver.ResolverError('Unable to resolve grifthost link. Filelink not found.')
+        raise UrlResolver.ResolverError('Unable to resolve openload.io link. Filelink not found.')
 
     def get_url(self, host, media_id):
             return 'http://openload.io/embed/%s' % (media_id)
