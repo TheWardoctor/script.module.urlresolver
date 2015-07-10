@@ -37,18 +37,19 @@ class VidziResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
+        print html
 
         if '404 Not Found' in html:
             raise UrlResolver.ResolverError('File Not Found or removed')
 
-        r = re.search('.+file:\s"(.+?)"', html)
+        r = re.search('file\s*:\s*"([^"]+)', html)
         if r:
             return r.group(1) + '|Referer=http://vidzi.tv/nplayer/jwplayer.flash.swf'
         else:
             raise UrlResolver.ResolverError('Unable to locate link')
 
     def get_url(self, host, media_id):
-        return 'http://%s/%s.html' % (host, media_id)
+        return 'http://%s/embed-%s.html' % (host, media_id)
 
     def get_host_and_id(self, url):
         r = re.search('http://(?:www\.|embed-)?(.+?)/(?:embed-)?([0-9a-zA-Z/]+)', url)
