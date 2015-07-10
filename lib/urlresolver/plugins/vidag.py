@@ -43,6 +43,10 @@ class VidAgResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search('file\s*:\s*"([^"]+)', js_data)
             if r:
                 return r.group(1)
+        
+        r = re.search('file\s*:\s*"([^"]+)', html)
+        if r:
+            return r.group(1)
 
         raise UrlResolver.ResolverError('File Not Found or removed')
 

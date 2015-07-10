@@ -55,6 +55,7 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
         r = re.search('(eval\(function\(p,a,c,k,e,[dr].*)', html)
         if r:
             js = jsunpack.unpack(r.group(1))
+            js = js.replace('\\', '')
             r = re.search('playlist=([^&]+)', js)
             if r:
                 html = self.net.http_GET(r.group(1)).content
@@ -64,7 +65,11 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
                 else:
                     raise UrlResolver.ResolverError('Unable to locate video file')
             else:
-                raise UrlResolver.ResolverError('Unable to locate playlist')
+                r = re.search("file\s*:\s*'([^']+)", js)
+                if r:
+                    return r.group(1)
+                else:
+                    raise UrlResolver.ResolverError('Unable to locate playlist')
         else:
             raise UrlResolver.ResolverError('Unable to locate packed data')
 
