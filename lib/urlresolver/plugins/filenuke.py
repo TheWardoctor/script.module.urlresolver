@@ -37,23 +37,16 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {
-            'User-Agent': common.IE_USER_AGENT,
-            'Referer': web_url
+                   'User-Agent': common.IE_USER_AGENT
         }
-        # Otherwise just use the original url to get the content. For sharesix
-        html = self.net.http_GET(web_url).content
-        
-        data = {
-                "method_free": "Free",
-                "op": "download1",
-                "referer": web_url,
-                "usr_login": ""
-                }
-        r = re.findall(r'type="hidden"\s*name="(.+?)"\s*value="(.*?)"', html)
-        for name, value in r:
-            data[name] = value
 
-        html = self.net.http_POST(web_url, data, headers=headers).content
+        html = self.net.http_GET(web_url, headers=headers).content
+        r = re.search('<a[^>]*id="go-next"[^>*]href="([^"]+)', html)
+        if r:
+            next_url = 'http://' + host + r.group(1)
+            print next_url
+            html = self.net.http_GET(next_url, headers=headers).content
+        
         if 'file you were looking for could not be found' in html:
             raise UrlResolver.ResolverError('File Not Found or removed')
         
