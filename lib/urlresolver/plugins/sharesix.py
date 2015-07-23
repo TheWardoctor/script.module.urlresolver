@@ -37,29 +37,25 @@ class SharesixResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {
-            'User-Agent': common.IE_USER_AGENT,
-            'Referer': web_url,
-            'Cookie': 'mbred=1'
+                   'User-Agent': common.IE_USER_AGENT
         }
-        # Otherwise just use the original url to get the content. For sharesix
+
         html = self.net.http_GET(web_url, headers=headers).content
+        r = re.search('<a[^>]*id="go-next"[^>*]href="([^"]+)', html)
+        if r:
+            next_url = 'http://' + host + r.group(1)
+            print next_url
+            html = self.net.http_GET(next_url, headers=headers).content
         
-        data = {}
-        r = re.findall(r'type="hidden"\s*name="([^"]+)"\s*value="([^"]+)"', html)
-        for name, value in r:
-            data[name] = value
-        data[u"method_free"] = "Free"
+        if 'file you were looking for could not be found' in html:
+            raise UrlResolver.ResolverError('File Not Found or removed')
         
-        html = self.net.http_POST(web_url, data, headers=headers).content
-        r = re.search("var\s+lnk1\s*=\s*'([^']+)", html)
+        r = re.search("var\s+lnk\d+\s*=\s*'(.*?)'", html)
         if r:
             stream_url = r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
             return stream_url
         else:
             raise UrlResolver.ResolverError('Unable to locate link')
-        
-        if 'file you were looking for could not be found' in html:
-            raise UrlResolver.ResolverError('File Not Found or removed')
 
     def get_url(self, host, media_id):
         return 'http://%s/f/%s' % (host, media_id)
