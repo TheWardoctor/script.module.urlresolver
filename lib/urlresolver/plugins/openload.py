@@ -40,9 +40,11 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
         if 'We are sorry!' in html:
             raise UrlResolver.ResolverError('File Not Found or Removed.')
         
-        match = re.search('<source\s+type="video/mp4"\s+src="([^"]+)', html)
+        match = re.search('attr\s*\(\s*"src"\s*,\s*"([^"]+)', html)
         if match:
-            return match.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
+            stream_url = match.group(1)
+            stream_url = stream_url.replace('\\/', '/')
+            return stream_url + '|User-Agent=%s' % (common.IE_USER_AGENT)
         
         raise UrlResolver.ResolverError('Unable to resolve openload.io link. Filelink not found.')
 
