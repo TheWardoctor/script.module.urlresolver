@@ -38,9 +38,9 @@ class FilePupResolver(Plugin, UrlResolver, PluginSettings):
         web_url = self.get_url(host, media_id)
         resp = self.net.http_GET(web_url)
         html = resp.content
-        r = re.search('<source\s+src\s*=\s*"([^"]+)', html)
+        r = re.search('<source[^>]*src\s*=\s*"([^"]+)', html)
         if r:
-            return r.group(1)
+            return r.group(1) + '|Referer=%s' % (web_url)
         else:
             raise UrlResolver.ResolverError('Unable to resolve FilePup link')
 
