@@ -62,11 +62,11 @@ class VKResolver(Plugin, UrlResolver, PluginSettings):
                 return purged_jsonvars[ls_url[0]].encode('utf-8')
             else:
                 if self.get_setting('auto_pick') == 'true':
-                    return purged_jsonvars['url%s' % (str(best))].encode('utf-8')
+                    return purged_jsonvars['url%s' % (str(best))].encode('utf-8') + '|User-Agent=%s' % (common.IE_USER_AGENT)
                 else:
                     result = xbmcgui.Dialog().select('Choose the link', lines)
             if result != -1:
-                return purged_jsonvars[ls_url[result]].encode('utf-8')
+                return purged_jsonvars[ls_url[result]].encode('utf-8') + '|User-Agent=%s' % (common.IE_USER_AGENT)
             else:
                 raise UrlResolver.ResolverError('No link selected')
         else:

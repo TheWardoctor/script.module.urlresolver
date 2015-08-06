@@ -32,8 +32,7 @@ class UploadcResolver(Plugin, UrlResolver, PluginSettings):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-        # modified by mscreations. uploadc now needs the filename after the media id so make sure we match that
-        self.pattern = 'http://((?:www.)?uploadc.com)/([0-9a-zA-Z]+)/[0-9a-zA-Z/._]+'
+        self.pattern = 'http://((?:www.)?uploadc.com)/([0-9a-zA-Z]+)'
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
