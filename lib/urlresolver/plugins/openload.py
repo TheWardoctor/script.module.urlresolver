@@ -40,9 +40,16 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
         if 'We are sorry!' in html:
             raise UrlResolver.ResolverError('File Not Found or Removed.')
         
+        stream_url = ''
         match = re.search('attr\s*\(\s*"src"\s*,\s*"([^"]+)', html)
         if match:
             stream_url = match.group(1)
+        else:
+            match = re.search('<source[^>]+src="([^"]+)', html)
+            if match:
+                stream_url = match.group(1)
+            
+        if stream_url:
             stream_url = stream_url.replace('\\/', '/')
             return stream_url + '|User-Agent=%s' % (common.IE_USER_AGENT)
         
