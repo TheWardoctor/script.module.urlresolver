@@ -226,7 +226,7 @@ class HostedMediaFile:
         try: http_code = urllib2.urlopen(request, timeout=15).getcode()
         except urllib2.URLError as e:
             # treat an unhandled url type as success
-            if 'unknown url type' in str(e.reason).lower():
+            if hasattr(e, 'reason') and 'unknown url type' in str(e.reason).lower():
                 return True
             else:
                 if isinstance(e, urllib2.HTTPError):

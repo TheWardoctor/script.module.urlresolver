@@ -34,7 +34,7 @@ class VidlockersResolver(Plugin, UrlResolver, PluginSettings):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-        self.pattern = 'http://((?:www.)?vidlockers.ag)/([A-Za-z0-9]+)/.*?\.html?'
+        self.pattern = 'http://((?:www.)?vidlockers.ag)/([A-Za-z0-9]+)/.*?'
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)

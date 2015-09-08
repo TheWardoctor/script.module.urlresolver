@@ -61,6 +61,10 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search("src='([^']+/videojs/[^']+)", html)
             if r:
                 html = self.net.http_GET(r.group(1)).content
+            else:
+                r = re.search('<iframe\s+src="([^"]+)', html)
+                if r:
+                    html = self.net.http_GET(r.group(1)).content
         
         return self.__find_links(html)
 
@@ -78,7 +82,11 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
             if r:
                 return r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
             else:
-                raise UrlResolver.ResolverError('Unable to locate playlist')
+                r = re.search('<source\s+src="([^"]+)', html)
+                if r:
+                    return r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
+                else:
+                    raise UrlResolver.ResolverError('Unable to locate playlist')
         
     def get_url(self, host, media_id):
         return 'http://nosvideo.com/?v=%s' % media_id
@@ -94,5 +102,5 @@ class NosvideoResolver(Plugin, UrlResolver, PluginSettings):
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?(nosvideo|noslocker).com/' +
-                         '(?:\?v\=|embed/)[0-9A-Za-z]+', url) or
+                         '(?:\?v\=|embed/)?[0-9A-Za-z]+', url) or
                          'nosvideo' in host)

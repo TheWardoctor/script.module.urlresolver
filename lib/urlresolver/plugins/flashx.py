@@ -44,7 +44,7 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
             stream_url = self.__get_link(web_url, headers)
         
         if stream_url is not None:
-            return stream_url
+            return stream_url + '|User-Agent=%s' % (common.IE_USER_AGENT)
 
         raise UrlResolver.ResolverError('File not found')
 
