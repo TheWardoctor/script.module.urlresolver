@@ -40,20 +40,63 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
         if 'We are sorry!' in html:
             raise UrlResolver.ResolverError('File Not Found or Removed.')
         
-        stream_url = ''
-        match = re.search('attr\s*\(\s*"src"\s*,\s*"([^"]+)', html)
-        if match:
-            stream_url = match.group(1)
-        else:
-            match = re.search('<source[^>]+src="([^"]+)', html)
-            if match:
-                stream_url = match.group(1)
-            
+        stream_url = self.__decode_O(html)
         if stream_url:
-            stream_url = stream_url.replace('\\/', '/')
             return stream_url + '|User-Agent=%s' % (common.IE_USER_AGENT)
         
         raise UrlResolver.ResolverError('Unable to resolve openload.io link. Filelink not found.')
+
+    def __decode_O(self, html):
+        match = re.search('<script[^>]*>\s*(O=.*?)</script>', html, re.DOTALL)
+        if match:
+            s = match.group(1)
+            
+            O = {
+                '___': 0,
+                '$$$$': "f",
+                '__$': 1,
+                '$_$_': "a",
+                '_$_': 2,
+                '$_$$': "b",
+                '$$_$': "d",
+                '_$$': 3,
+                '$$$_': "e",
+                '$__': 4,
+                '$_$': 5,
+                '$$__': "c",
+                '$$_': 6,
+                '$$$': 7,
+                '$___': 8,
+                '$__$': 9,
+                '$_': "constructor",
+                '$$': "return",
+                '_$': "o",
+                '_': "u",
+                '__': "t",
+            }
+            match = re.search('O\.\$\(O\.\$\((.*?)\)\(\)\)\(\);', s)
+            if match:
+                s1 = match.group(1)
+                s1 = s1.replace(' ', '')
+                s1 = s1.replace('(![]+"")', 'false')
+                s3 = ''
+                for s2 in s1.split('+'):
+                    if s2.startswith('O.'):
+                        s3 += str(O[s2[2:]])
+                    elif '[' in s2 and ']' in s2:
+                        key = s2[s2.find('[') + 3:-1]
+                        s3 += s2[O[key]]
+                    else:
+                        s3 += s2[1:-1]
+                
+                s3 = s3.replace('\\\\', '\\')
+                s3 = s3.decode('unicode_escape')
+                s3 = s3.replace('\\/', '/')
+                s3 = s3.replace('\\\\"', '"')
+                s3 = s3.replace('\\"', '"')
+                match = re.search('<source\s+src="([^"]+)', s3)
+                if match:
+                    return match.group(1)
 
     def get_url(self, host, media_id):
             return 'http://openload.io/embed/%s' % (media_id)
