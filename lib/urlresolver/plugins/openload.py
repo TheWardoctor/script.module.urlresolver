@@ -22,6 +22,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 import re
+from lib import jsunpack
 
 class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -47,7 +48,12 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
         raise UrlResolver.ResolverError('Unable to resolve openload.io link. Filelink not found.')
 
     def __decode_O(self, html):
-        match = re.search('<script[^>]*>\s*(O=.*?)</script>', html, re.DOTALL)
+        match = re.search('>\s*(eval\(function.*?)</script>', html, re.DOTALL)
+        if match:
+            html = jsunpack.unpack(match.group(1))
+            html = html.replace('\\\\', '\\')
+            
+        match = re.search('(O=.*?)(?:$|</script>)', html, re.DOTALL)
         if match:
             s = match.group(1)
             
