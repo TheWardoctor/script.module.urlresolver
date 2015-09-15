@@ -22,6 +22,7 @@ from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 import re
+import urllib
 from lib import jsunpack
 
 class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
@@ -48,14 +49,19 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
         raise UrlResolver.ResolverError('Unable to resolve openload.io link. Filelink not found.')
 
     def __decode_O(self, html):
-        match = re.search('>\s*(eval\(function.*?)</script>', html, re.DOTALL)
-        if match:
-            html = jsunpack.unpack(match.group(1))
+        try:
+            packed_data = re.search('>\s*(eval\s*\(function.*?)\s*</script>', html, re.DOTALL).group(1)
+            new_str = re.search("decodeURIComponent\('(.*?)'\)", packed_data).group(1)
+            new_str = urllib.unquote(new_str)
+            packed_data = re.sub('decodeURIComponent\(.*?\)', "'%s'" % (new_str), packed_data)
+            match = re.search(',\s*\((.*?)\)\.split\([\'"](.*?)[\'"]\)', packed_data)
+            if match:
+                split_str, delim = match.groups()
+                new_split_str = eval(split_str)
+                new_split_str = new_split_str.replace(delim, '|')
+                packed_data = re.sub(',\s*\(.*?\)\.split\(.*?\)', ", '%s'.split('%s')" % (new_split_str, '|'), packed_data)
+            html = jsunpack.unpack(packed_data)
             html = html.replace('\\\\', '\\')
-            
-        match = re.search('(O=.*?)(?:$|</script>)', html, re.DOTALL)
-        if match:
-            s = match.group(1)
             
             O = {
                 '___': 0,
@@ -80,29 +86,28 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
                 '_': "u",
                 '__': "t",
             }
-            match = re.search('O\.\$\(O\.\$\((.*?)\)\(\)\)\(\);', s)
-            if match:
-                s1 = match.group(1)
-                s1 = s1.replace(' ', '')
-                s1 = s1.replace('(![]+"")', 'false')
-                s3 = ''
-                for s2 in s1.split('+'):
-                    if s2.startswith('O.'):
-                        s3 += str(O[s2[2:]])
-                    elif '[' in s2 and ']' in s2:
-                        key = s2[s2.find('[') + 3:-1]
-                        s3 += s2[O[key]]
-                    else:
-                        s3 += s2[1:-1]
-                
-                s3 = s3.replace('\\\\', '\\')
-                s3 = s3.decode('unicode_escape')
-                s3 = s3.replace('\\/', '/')
-                s3 = s3.replace('\\\\"', '"')
-                s3 = s3.replace('\\"', '"')
-                match = re.search('<source\s+src="([^"]+)', s3)
-                if match:
-                    return match.group(1)
+            s1 = re.search('o\.\$\(o\.\$\((.*?)\)\(\)\)\(\);', html).group(1)
+            s1 = s1.replace(' ', '')
+            s1 = s1.replace('(![]+"")', 'false')
+            s3 = ''
+            for s2 in s1.split('+'):
+                if s2.startswith('o.'):
+                    s3 += str(O[s2[2:]])
+                elif '[' in s2 and ']' in s2:
+                    key = s2[s2.find('[') + 3:-1]
+                    s3 += s2[O[key]]
+                else:
+                    s3 += s2[1:-1]
+            
+            s3 = s3.replace('\\\\', '\\')
+            s3 = s3.decode('unicode_escape')
+            s3 = s3.replace('\\/', '/')
+            s3 = s3.replace('\\\\"', '"')
+            s3 = s3.replace('\\"', '"')
+            match = re.search('<source.+?src="([^"]+)', s3)
+            return match.group(1)
+        except Exception as e:
+            raise UrlResolver.ResolverError('Decode-O Parsing Failure: %s' % (e))
 
     def get_url(self, host, media_id):
             return 'http://openload.io/embed/%s' % (media_id)
