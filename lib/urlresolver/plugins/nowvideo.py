@@ -38,7 +38,7 @@ class NowvideoResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-        match1 = re.search('flashvars\.filekey\s*=\s*([^;]+)', html)
+        match1 = re.search('flashvars\.file[_]*key\s*=\s*([^;]+)', html)
         match2 = re.search('flashvars\.file\s*=\s*"([^"]+)', html)
         
         #get stream url from api
