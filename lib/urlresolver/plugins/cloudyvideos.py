@@ -44,7 +44,8 @@ class CloudyVideosResolver(Plugin, UrlResolver, PluginSettings):
             form_values[i.group(1)] = i.group(2)
 
         xbmc.sleep(2000)
-        html = self.net.http_POST(web_url, form_data=form_values).content
+        header = {'Referer': web_url}
+        html = self.net.http_POST(web_url, form_data=form_values, headers=header).content
         
         r = re.search("file\s*:\s*'([^']+)'", html)
         if r:
