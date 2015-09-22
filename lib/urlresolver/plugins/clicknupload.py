@@ -21,6 +21,7 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 import re
+import xbmc
 from urlresolver import common
 from lib import captcha_lib
 
@@ -47,13 +48,17 @@ class ClickNUploadResolver(Plugin, UrlResolver, PluginSettings):
                 data[name] = value
             data['method_free'] = 'Free Download'
             data.update(captcha_lib.do_captcha(html))
-            
-            html = self.net.http_POST(web_url, data).content
+            headers = {
+                'Referer': web_url
+            }
+            html = self.net.http_POST(web_url, data, headers=headers).content
+            if tries > 0:
+                xbmc.sleep(6000)
             
             if '>File Download Link Generated<' in html:
                 r = re.search("onClick\s*=\s*\"window\.open\('([^']+)", html)
                 if r:
-                    return  r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
+                    return r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
             
             tries = tries + 1
             
