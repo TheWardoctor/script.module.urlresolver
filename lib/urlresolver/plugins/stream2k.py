@@ -42,7 +42,7 @@ class Stream2kResolver(Plugin, UrlResolver, PluginSettings):
         sources = re.compile("sources: \[(.*?)\]", flags=re.S).findall(html)
 
         if sources:
-            cSources = sources[0].replace('\r', '').replace('\n', '').replace('\t', '').replace('\\', '')
+            cSources = sources[0].strip()
             cSources = cSources[:-1]
             cSources = '{"sources": [' + cSources + ']}'
 
