@@ -45,6 +45,9 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
             video_url = 'https://api.openload.io/1/file/dl?file=%s&ticket=%s' % (media_id, js_result['result']['ticket'])
             result = self.net.http_GET(video_url).content
             js_result = json.loads(result)
+            if js_result['status'] != 200:
+                raise UrlResolver.ResolverError(js_result['msg'])
+            
             return js_result['result']['url'] + '?mime=true'
         except Exception as e:
             raise UrlResolver.ResolverError('Exception in openload: %s' % (e))
