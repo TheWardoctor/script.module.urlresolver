@@ -39,7 +39,8 @@ class TheVideoResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-        r = re.findall(r"'label'\s*:\s*'([^']+)p'\s*,\s*'file'\s*:\s*'([^']+)", html)
+        print html
+        r = re.findall(r"'?label'?\s*:\s*'([^']+)p'\s*,\s*'?file'?\s*:\s*'([^']+)", html)
         if not r:
             raise UrlResolver.ResolverError('Unable to locate link')
         else:
