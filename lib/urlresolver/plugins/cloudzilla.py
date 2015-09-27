@@ -36,7 +36,6 @@ class CloudZillaResolver(Plugin, UrlResolver, PluginSettings):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        print web_url
         html = self.net.http_GET(web_url).content
         match = re.search('vurl\s*=\s*"([^"]+)', html)
         if match:

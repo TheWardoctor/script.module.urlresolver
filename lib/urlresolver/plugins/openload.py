@@ -24,6 +24,8 @@ from urlresolver import common
 import json
 import re
 import xbmc
+import urllib
+from lib import captcha_lib
 
 class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
@@ -41,8 +43,15 @@ class OpenLoadResolver(Plugin, UrlResolver, PluginSettings):
             ticket_url = 'https://api.openload.io/1/file/dlticket?file=%s' % (media_id)
             result = self.net.http_GET(ticket_url).content
             js_result = json.loads(result)
-            xbmc.sleep(js_result['result']['wait_time'] * 1000)
+            if js_result['status'] != 200:
+                raise UrlResolver.ResolverError(js_result['msg'])
             video_url = 'https://api.openload.io/1/file/dl?file=%s&ticket=%s' % (media_id, js_result['result']['ticket'])
+            captcha_url = js_result['result'].get('captcha_url', None)
+            if captcha_url:
+                captcha_response = captcha_lib.get_response(captcha_url)
+                if captcha_response:
+                    video_url += '&captcha_response=%s' % urllib.quote(captcha_response)
+            xbmc.sleep(js_result['result']['wait_time'] * 1000)
             result = self.net.http_GET(video_url).content
             js_result = json.loads(result)
             if js_result['status'] != 200:
