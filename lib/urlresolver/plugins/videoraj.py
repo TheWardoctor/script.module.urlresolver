@@ -82,8 +82,7 @@ class VideorajResolver(Plugin, UrlResolver, PluginSettings):
         #grab stream details
         html = self.net.http_GET(web_url).content
         html = unwise.unwise_process(html)
-        filekey = unwise.resolve_var(html, "flashvars.filekey")
-
+        filekey = unwise.resolve_var(html, "vars.key")
         error_url = None
         stream_url = None
         # try to resolve 3 times then give up
@@ -97,7 +96,7 @@ class VideorajResolver(Plugin, UrlResolver, PluginSettings):
 
                 if active:
                     stream_url = urllib.unquote(link)
-                    break;
+                    break
                 else:
                     # link inactive
                     error_url = link
@@ -114,7 +113,7 @@ class VideorajResolver(Plugin, UrlResolver, PluginSettings):
         return 'http://www.videoraj.ch/embed.php?id=%s' % media_id
 
     def get_host_and_id(self, url):
-        r = re.search('(https?://(?:www\.|embed\.)videoraj\.(?:ec|eu|sx|ch|com))/(?:video/|embed\.php\?id=)([0-9a-z]+)', url)
+        r = re.search('(https?://(?:www\.|embed\.)videoraj\.(?:ec|eu|sx|ch|com))/(?:v(?:ideo)*/|embed\.php\?id=)([0-9a-z]+)', url)
         if r:
             return r.groups()
         else:
@@ -122,4 +121,4 @@ class VideorajResolver(Plugin, UrlResolver, PluginSettings):
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match('https?://(?:www\.|embed\.)videoraj\.(?:ec|eu|sx|ch|com)/(?:video/|embed\.php\?id=)([0-9a-z]+)', url) or 'videoraj' in host
+        return re.match('https?://(?:www\.|embed\.)videoraj\.(?:ec|eu|sx|ch|com)/(?:v(?:ideo)*/|embed\.php\?id=)([0-9a-z]+)', url) or 'videoraj' in host
