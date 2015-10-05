@@ -44,7 +44,6 @@ class FilenukeResolver(Plugin, UrlResolver, PluginSettings):
         r = re.search('<a[^>]*id="go-next"[^>*]href="([^"]+)', html)
         if r:
             next_url = 'http://' + host + r.group(1)
-            print next_url
             html = self.net.http_GET(next_url, headers=headers).content
         
         if 'file you were looking for could not be found' in html:

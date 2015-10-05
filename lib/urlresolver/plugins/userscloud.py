@@ -1,6 +1,6 @@
+# -*- coding: UTF-8 -*-
 """
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    Copyright (C) 2014  smokdpi
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,59 +16,54 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import urllib
-import re
+
 from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
-from urlresolver import common
+from lib import jsunpack
+import urllib
+import re
 
-class TrollVidResolver(Plugin, UrlResolver, PluginSettings):
+
+class UsersCloudResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "trollvid.net"
-    domains = ["trollvid.net"]
-    
+    name = "userscloud"
+    domains = ["userscloud.com"]
+
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-        self.pattern = 'http://((?:sv\d*\.)?trollvid\.net)/embed\.php.file=([0-9a-zA-Z]+)' # http://sv3.trollvid.net/embed.php?file=([0-9a-zA-Z]+)&
-    
+        self.pattern = 'https://(userscloud\.com)/(?:embed-)*([a-zA-Z0-9]+)[/|-|$]*'
+        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko'
+        self.net.set_user_agent(self.user_agent)
+        self.headers = {'User-Agent': self.user_agent}
+
     def get_url(self, host, media_id):
-            return 'http://sv3.trollvid.net/embed.php?file=%s&w=800&h=600&bg=' % (media_id)
-    
+        return 'https://%s/%s' % (host, media_id)
+
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
         if r: return r.groups()
         else: return False
-    
+
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        return re.match(self.pattern, url) or self.name in host
-    
+        return re.match(self.pattern, url) or host in self.domains
+
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        self.headers['Referer'] = web_url
         stream_url = None
+        self.headers['Referer'] = web_url
         html = self.net.http_GET(web_url, headers=self.headers).content
-        r = re.search('clip\s*:\s*\n*\s*\{\s*\n*\s*\n*\s*\n*\s*url\s*:\s*"(http.+?)"', html)
+        r = re.search('>(eval\(function\(p,a,c,k,e,d\).+?)</script>', html, re.DOTALL)
         if r:
-            stream_url = urllib.unquote_plus(r.group(1))
-        else:
-            r = re.search('unescape\(atob\(\'(.+?)\'', html)
+            r = jsunpack.unpack(r.group(1))
+            r = re.search('param\sname\s*=\s*[\'"]src[\'"]\s*value\s*=\s*[\'"](.+?)[\'"]', r)
             if r:
-                try:
-                    stream_url = urllib.unquote_plus(self._decode_base64(r.group(1)))
-                except:
-                    stream_url = None
+                stream_url = r.group(1)
         if stream_url:
             return stream_url
         else:
             raise UrlResolver.ResolverError('File not found')
-
-    def _decode_base64(self, data):
-        missing_padding = 4 - len(data) % 4
-        if missing_padding:
-            data += b'='* missing_padding
-        return data.decode('base64')
