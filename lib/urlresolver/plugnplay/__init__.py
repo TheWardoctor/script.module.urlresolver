@@ -168,8 +168,8 @@ def load_plugin(mod):
     try:
         imported_module = __import__(mod.fname, globals(), locals())
         sys.modules[mod.fname] = imported_module
-    except:
-        common.addon.log_error('Unable to load plugin %s from %s.py' % (mod.name, mod.fname))
+    except Exception as e:
+        common.addon.log_error('Unable to load plugin %s from %s.py: %s' % (mod.name, mod.fname, e))
 
 def load_plugins():
     for d in plugin_dirs:
@@ -182,8 +182,8 @@ def load_plugins():
             try:
                 imported_module = __import__(mod_name, globals(), locals())
                 sys.modules[mod_name] = imported_module
-            except:
-                common.addon.log_error('Unable to load plugin %s' % (mod_name))
+            except Exception as e:
+                common.addon.log_error('Unable to load plugin %s: %s' % (mod_name, e))
 
 def scan_plugins(wrappercls):
     re_class = re.compile('class\s+(\w+).*Plugin')
