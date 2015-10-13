@@ -37,16 +37,18 @@ class DailymotionResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         link = self.net.http_GET(web_url).content
-        if link.find('"error":') >= 0:
-            err_title = re.compile('"title":"(.+?)"').findall(link)[0]
-            if not err_title:
-                err_title = 'Content not available.'
-            
-            err_message = re.compile('"message":"(.+?)"').findall(link)[0]
-            if not err_message:
-                err_message = 'No such video or the video has been removed due to copyright infringement issues.'
-            
-            raise UrlResolver.ResolverError(err_message)
+        try:
+            if link.find('"error":') >= 0:
+                err_title = re.compile('"title":"(.+?)"').findall(link)[0]
+                if not err_title:
+                    err_title = 'Content not available.'
+                
+                err_message = re.compile('"message":"(.+?)"').findall(link)[0]
+                if not err_message:
+                    err_message = 'No such video or the video has been removed due to copyright infringement issues.'
+                
+                raise UrlResolver.ResolverError(err_message)
+        except:pass
                 
         dm_live = re.compile('live_rtsp_url":"(.+?)"', re.DOTALL).findall(link)
         dm_1080p = re.compile('"1080":.+?"url":"(.+?)"', re.DOTALL).findall(link)
