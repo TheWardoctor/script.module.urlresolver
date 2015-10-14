@@ -98,7 +98,7 @@ class Unbaser(object):
         else:
             if base < 62:
                 self.ALPHABET[base] = self.ALPHABET[62][0:base]
-            elif base < 95:
+            elif 62 < base < 95:
                 self.ALPHABET[base] = self.ALPHABET[95][0:base]
             # Build conversion dictionary cache
             try:
