@@ -21,6 +21,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
+from urlresolver import common
 import urllib
 import re
 
@@ -34,14 +35,13 @@ class ZeroCastResolver(Plugin, UrlResolver, PluginSettings):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
-        self.pattern = 'http://(zerocast\.tv)/(?:embed|channel)\.php\?.*a=([0-9]+).+'
-        # 'http://zerocast.tv/embed|channel.php?a=1875&id=&width=640&height=480&autostart=true&strech=
-        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko'
+        self.pattern = 'http://.*?(zerocast\.tv)/((?:embed|(?:channels/)*chan(?:nel)*)\.php\?.*(?:a=[0-9]+|chan=[a-zA-Z0-9]+).*)'
+        self.user_agent = common.IE_USER_AGENT
         self.net.set_user_agent(self.user_agent)
         self.headers = {'User-Agent': self.user_agent}
 
     def get_url(self, host, media_id):
-        return 'http://zerocast.tv/embed.php?a=%s&id=&width=640&height=480&autostart=true&strech=' % media_id
+        return 'http://%s/%s' % (host, media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
@@ -55,9 +55,20 @@ class ZeroCastResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         self.headers['Referer'] = web_url
-        html = self.net.http_GET(web_url, headers=self.headers).content
-        r = re.search('file\s*:\s*["\'](.+?)["\']', html)
+        stream_url = None
+        if 'chan=' in web_url:
+            html = self.net.http_GET(web_url, headers=self.headers).content
+            r = re.search('<script\stype=[\'"]text/javascript[\'"]\ssrc=[\'"](.+?)[\'"]>', html)
+            if r:
+                web_url = r.group(1)
+        r = re.search('.+?a=([0-9]+).+', web_url)
         if r:
-            return r.group(1)
+            web_url = 'http://zerocast.tv/embed.php?a=%s&id=&width=640&height=480&autostart=true&strech=' % r.group(1)
+            html = self.net.http_GET(web_url, headers=self.headers).content
+            r = re.search('file\s*:\s*["\'](.+?)["\']', html)
+            if r:
+                stream_url = r.group(1)
+        if stream_url:
+            return stream_url
         else:
             raise UrlResolver.ResolverError('File not found')
