@@ -21,6 +21,7 @@ from t0mm0.common.net import Net
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
+from urlresolver import common
 import urllib
 import re
 import xbmcgui
@@ -36,7 +37,7 @@ class UpToBoxResolver(Plugin, UrlResolver, PluginSettings):
         self.priority = int(p)
         self.net = Net()
         self.pattern = 'http[s]*://(upto(?:box|stream)\.com)/([a-zA-Z0-9]+)'
-        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko'
+        self.user_agent = common.IE_USER_AGENT
         self.net.set_user_agent(self.user_agent)
         self.headers = {'User-Agent': self.user_agent}
 
