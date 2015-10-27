@@ -68,6 +68,13 @@ class ZeroCastResolver(Plugin, UrlResolver, PluginSettings):
             r = re.search('file\s*:\s*["\'](.+?)["\']', html)
             if r:
                 stream_url = r.group(1)
+            else:
+                r = re.search('curl\s*=\s*[\'"](.+?)[\'"]', html)
+                if r:
+                    try:
+                        stream_url = r.group(1).decode('base64', 'strict')
+                    except Exception:
+                        raise UrlResolver.ResolverError('Failed to decode url')
         if stream_url:
             return stream_url
         else:
