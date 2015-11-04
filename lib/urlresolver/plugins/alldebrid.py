@@ -113,29 +113,26 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_all_hosters(self):
         if self.allHosters is None:
             url = 'http://alldebrid.com/api.php?action=get_host'
-            self.allHosters = self.net.http_GET(url).content
+            html = self.net.http_GET(url).content
+            html = html.replace('"', '')
+            self.allHosters = html.split(',')
         return self.allHosters
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        if self.get_setting('login') == 'false':
-            return False
+        if self.get_setting('login') == 'false': return False
         common.addon.log('in valid_url %s : %s' % (url, host))
-        tmp = re.compile('//(.+?)/').findall(url)
-        domain = ''
-        if len(tmp) > 0 :
-            domain = tmp[0].replace('www.', '')
-            if 'megashares' in domain:
-                domain = 'megashares.com'
-            elif 'megashare' in domain:
-                domain = 'megashare.com'
-            elif 'mixture' in domain :
-                domain = 'mixturevideo.com'
-            common.addon.log('domain is %s ' % domain)
-        if (domain in self.get_all_hosters()) or (len(host) > 0 and host in self.get_all_hosters()):
+        if url:
+            match = re.search('//(.*?)/', url)
+            if match:
+                host = match.group(1)
+            else:
+                return False
+        
+        if host and any(item in host or host in item for item in self.get_all_hosters()):
             return True
-        else:
-            return False
+
+        return False
 
     def  checkLogin(self):
         url = 'http://alldebrid.com/service.php'
