@@ -98,7 +98,8 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 if pattern.findall(url):
                     return True
         elif host:
-            if host in self.hosts or any(item in host for item in self.hosts):
+            if host.startswith('www.'): host = host.replace('www.', '')
+            if host in self.hosts or any(host in item for item in self.hosts):
                 return True
 
         return False

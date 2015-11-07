@@ -120,7 +120,8 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     return True
         elif host:
             self.get_hosts()
-            if any(item in host or host in item for item in self.hosts):
+            if host.startswith('www.'): host = host.replace('www.', '')
+            if any(host in item for item in self.hosts):
                 return True
         return False
 

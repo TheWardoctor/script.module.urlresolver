@@ -92,7 +92,8 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     return True
         elif host:
             self.get_hosts()
-            if host in self.hosts or any(item in host for item in self.hosts):
+            if host.startswith('www.'): host = host.replace('www.', '')
+            if host in self.hosts or any(host in item for item in self.hosts):
                 return True
                  
         return False
