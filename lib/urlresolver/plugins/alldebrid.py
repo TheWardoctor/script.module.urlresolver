@@ -128,8 +128,9 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 host = match.group(1)
             else:
                 return False
-        
-        if host and any(item in host or host in item for item in self.get_all_hosters()):
+
+        if host.startswith('www.'): host = host.replace('www.', '')
+        if host and any(host in item for item in self.get_all_hosters()):
             return True
 
         return False
