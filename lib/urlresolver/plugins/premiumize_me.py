@@ -47,7 +47,7 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_media_url(self, host, media_id):
         username = self.get_setting('username')
         password = self.get_setting('password')
-        url = 'https://api.premiumize.me/pm-api/v1.php?'
+        url = 'http://api.premiumize.me/pm-api/v1.php?'
         query = urllib.urlencode({'method': 'directdownloadlink', 'params[login]': username, 'params[pass]': password, 'params[link]': media_id})
         url = url + query
         response = self.net.http_GET(url).content
@@ -74,7 +74,7 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             if not self.patterns or not self.hosts:
                 username = self.get_setting('username')
                 password = self.get_setting('password')
-                url = 'https://api.premiumize.me/pm-api/v1.php?'
+                url = 'http://api.premiumize.me/pm-api/v1.php?'
                 query = urllib.urlencode({'method': 'hosterlist', 'params[login]': username, 'params[pass]': password})
                 url = url + query
                 response = self.net.http_GET(url).content
