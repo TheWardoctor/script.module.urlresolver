@@ -16,28 +16,24 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 import re
-import urllib
+import urllib2
+import json
 import xbmcgui
+import xbmc
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import SiteAuth
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 from urlresolver import common
 from t0mm0.common.net import Net
-import simplejson as json
 
-# SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+CLIENT_ID = 'MUQMIQX6YWDSU'
 
 class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     implements = [UrlResolver, SiteAuth, PluginSettings]
     name = "realdebrid"
     domains = ["*"]
-    profile_path = common.profile_path
-    cookie_file = os.path.join(profile_path, '%s.cookies' % name)
-    media_url = None
 
     def __init__(self):
         p = self.get_setting('priority') or 1
@@ -45,39 +41,86 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         self.net = Net()
         self.hosters = None
         self.hosts = None
+
+    def get_media_url(self, host, media_id, retry=False):
         try:
-            os.makedirs(os.path.dirname(self.cookie_file))
-        except OSError:
-            pass
-
-    # UrlResolver methods
-    def get_media_url(self, host, media_id):
-        dialog = xbmcgui.Dialog()
-        url = 'https://real-debrid.com/ajax/unrestrict.php?link=%s' % media_id.replace('|User-Agent=Mozilla%2F5.0%20(Windows%20NT%206.1%3B%20rv%3A11.0)%20Gecko%2F20100101%20Firefox%2F11.0', '')
-        source = self.net.http_GET(url).content
-        jsonresult = json.loads(source)
-        if 'generated_links' in jsonresult:
-            generated_links = jsonresult['generated_links']
-            if len(generated_links) == 1:
-                return generated_links[0][2].encode('utf-8')
-            line = []
-            for link in generated_links:
-                extension = link[0].split('.')[-1]
-                line.append(extension.encode('utf-8'))
-            result = dialog.select('Choose the link', line)
-            if result != -1:
-                link = generated_links[result][2]
-                return link.encode('utf-8')
+            url = 'https://api.real-debrid.com/rest/1.0/unrestrict/link'
+            headers = {'Authorization': 'Bearer %s' % (self.get_setting('token'))}
+            data = {'link': media_id}
+            result = self.net.http_POST(url, form_data=data, headers=headers).content
+        except urllib2.HTTPError as e:
+            if not retry and e.code == 401:
+                self.refresh_token()
+                return self.get_media_url(host, media_id, retry=True)
             else:
-                raise UrlResolver.ResolverError('No generated_link')
-        elif 'main_link' in jsonresult:
-            return jsonresult['main_link'].encode('utf-8')
+                raise UrlResolver.ResolverError('Real Debrid Unrestrict Error: %s' % (e.code))
+        except Exception as e:
+            raise UrlResolver.ResolverError('Unexpected Exception during RD Unrestrict: %s' % (e))
         else:
-            if 'message' in jsonresult:
-                raise UrlResolver.ResolverError(jsonresult['message'].encode('utf-8'))
+            js_result = json.loads(result)
+            if 'download' in js_result:
+                return js_result['download']
             else:
-                raise UrlResolver.ResolverError('No generated_link and no main_link')
+                raise UrlResolver.ResolverError('No usable link from Real Debrid')
+        
+    # SiteAuth methods
+    def login(self):
+        if not self.get_setting('token'):
+            self.authorize_resolver()
 
+    def refresh_token(self):
+        url = 'https://api.real-debrid.com/oauth/v2/token'
+        client_id = self.get_setting('client_id')
+        client_secret = self.get_setting('client_secret')
+        refresh_token = self.get_setting('refresh')
+        data = {'client_id': client_id, 'client_secret': client_secret, 'code': refresh_token, 'grant_type': 'http://oauth.net/grant_type/device/1.0'}
+        common.addon.log_debug('Refreshing Expired Real Debrid Token: |%s|%s|' % (client_id, refresh_token))
+        try:
+            js_result = json.loads(self.net.http_POST(url, data).content)
+            common.addon.log_debug('Refreshed Real Debrid Token: |%s|' % (js_result))
+            self.set_setting('token', js_result['access_token'])
+            self.set_setting('refresh', js_result['refresh_token'])
+        except:
+            # empty all auth settings to force a re-auth on next use
+            self.set_setting('client_id', '')
+            self.set_setting('client_secret', '')
+            self.set_setting('token', '')
+            self.set_setting('refresh', '')
+            raise UrlResolver.ResolverError('Unable to Refresh Real Debrid Token')
+    
+    def authorize_resolver(self):
+        url = 'https://api.real-debrid.com/oauth/v2/device/code?client_id=%s&new_credentials=yes' % (CLIENT_ID)
+        js_result = json.loads(self.net.http_GET(url).content)
+        pd = xbmcgui.DialogProgress()
+        line1 = 'Go to URL: %s' % (js_result['verification_url'])
+        line2 = 'When prompted enter: %s' % (js_result['user_code'])
+        pd.create('URL Resolver Real Debrid Authorization', line1, line2)
+        interval = js_result['interval'] * 1000
+        device_code = js_result['device_code']
+        while True:
+            url = 'https://api.real-debrid.com/oauth/v2/device/credentials?client_id=%s&code=%s' % (CLIENT_ID, device_code)
+            try:
+                js_result = json.loads(self.net.http_GET(url).content)
+            except Exception as e:
+                common.addon.log_debug('Exception during RD auth: %s' % (e))
+                if pd.iscanceled(): return False
+            else:
+                break
+                xbmc.sleep(interval / 2)
+                if pd.iscanceled(): return False
+                xbmc.sleep(interval / 2)
+                if pd.iscanceled(): return False
+        pd.close()
+        url = 'https://api.real-debrid.com/oauth/v2/token'
+        data = {'client_id': js_result['client_id'], 'client_secret': js_result['client_secret'], 'code': device_code, 'grant_type': 'http://oauth.net/grant_type/device/1.0'}
+        self.set_setting('client_id', js_result['client_id'])
+        self.set_setting('client_secret', js_result['client_secret'])
+        common.addon.log_debug('Authorizing Real Debrid: %s' % (js_result['client_id']))
+        js_result = json.loads(self.net.http_POST(url, data).content)
+        common.addon.log_debug('Authorizing Real Debrid Result: |%s|' % (js_result))
+        self.set_setting('token', js_result['access_token'])
+        self.set_setting('refresh', js_result['refresh_token'])
+        
     def get_url(self, host, media_id):
         return media_id
 
@@ -87,11 +130,13 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_all_hosters(self):
         if self.hosters is None:
             try:
-                url = 'http://www.real-debrid.com/api/regex.php?type=all'
-                response = self.net.http_GET(url).content.lstrip('/').rstrip('/g')
-                delim = '/g,/|/g\|-\|/'
-                self.hosters = [re.compile(host) for host in re.split(delim, response)]
-            except:
+                url = 'https://api.real-debrid.com/rest/1.0/hosts/regex'
+                self.hosters = []
+                js_result = json.loads(self.net.http_GET(url).content)
+                regexes = [regex.lstrip('/').rstrip('/').replace('\/', '/') for regex in js_result]
+                self.hosters = [re.compile(regex) for regex in regexes]
+            except Exception as e:
+                common.addon.log_error('Error getting RD regexes: %s' % (e))
                 self.hosters = []
         common.addon.log_debug('RealDebrid hosters : %s' % self.hosters)
         return self.hosters
@@ -99,17 +144,16 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_hosts(self):
         if self.hosts is None:
             try:
-                url = 'https://real-debrid.com/api/hosters.php'
-                response = self.net.http_GET(url).content
-                response = response[1:-1]
-                self.hosts = response.split('","')
-            except:
+                url = 'https://api.real-debrid.com/rest/1.0/hosts/domains'
+                self.hosts = json.loads(self.net.http_GET(url).content)
+            except Exception as e:
+                common.addon.log_error('Error getting RD hosts: %s' % (e))
                 self.hosts = []
         common.addon.log_debug('RealDebrid hosts : %s' % self.hosts)
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
-        if self.get_setting('login') == 'false': return False
+        if self.get_setting('authorize') == 'false': return False
         common.addon.log_debug('in valid_url %s : %s' % (url, host))
         if url:
             self.get_all_hosters()
@@ -125,51 +169,14 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 return True
         return False
 
-    def checkLogin(self):
-        url = 'https://real-debrid.com/api/account.php'
-        if not os.path.exists(self.cookie_file):
-            return True
-        self.net.set_cookies(self.cookie_file)
-        source = self.net.http_GET(url).content
-        common.addon.log_debug(source)
-        if re.search('expiration', source):
-            common.addon.log_debug('checkLogin returning False')
-            return False
-        else:
-            common.addon.log_debug('checkLogin returning True')
-            return True
-
-    # SiteAuth methods
-    def login(self):
-        if self.checkLogin():
-            try:
-                common.addon.log_debug('Need to login since session is invalid')
-                import hashlib
-                login_data = urllib.urlencode({'user': self.get_setting('username'), 'pass': hashlib.md5(self.get_setting('password')).hexdigest()})
-                url = 'https://real-debrid.com/ajax/login.php?' + login_data
-                source = self.net.http_GET(url).content
-                if re.search('OK', source):
-                    self.net.save_cookies(self.cookie_file)
-                    self.net.set_cookies(self.cookie_file)
-                    return True
-            except:
-                    common.addon.log_debug('error with http_GET')
-                    dialog = xbmcgui.Dialog()
-                    dialog.ok(' Real-Debrid ', ' Unexpected error, Please try again.', '', '')
-            else:
-                return False
-        else:
-            return True
-
     # PluginSettings methods
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
-        xml += '<setting id="%s_login" ' % (self.__class__.__name__)
-        xml += 'type="bool" label="login" default="false"/>\n'
-        xml += '<setting id="%s_username" enable="eq(-1,true)" ' % (self.__class__.__name__)
-        xml += 'type="text" label="username" default=""/>\n'
-        xml += '<setting id="%s_password" enable="eq(-2,true)" ' % (self.__class__.__name__)
-        xml += 'type="text" label="password" option="hidden" default=""/>\n'
+        xml += '<setting id="%s_authorize" type="bool" label="Ask for Authorization on First Use" default="false"/>\n' % (self.__class__.__name__)
+        xml += '<setting id="%s_token" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
+        xml += '<setting id="%s_refresh" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
+        xml += '<setting id="%s_client_id" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
+        xml += '<setting id="%s_client_secret" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
         return xml
 
     # to indicate if this is a universal resolver

@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os    
+import os
 from t0mm0.common.addon import Addon
 import xbmc
 import xbmcaddon
