@@ -191,14 +191,26 @@ def _update_settings_xml():
     new_xml += '<category label="URLResolver">\n'
     new_xml += '\t<setting default="true" id="allow_universal" label="Enable Universal Resolvers" type="bool"/>\n'
     new_xml += '</category>\n'
-    new_xml += '<category label="Resolvers 1">\n'
+    new_xml += '<category label="Universal Resolvers">\n'
 
     xml_text = '<settings>'
+    uni_text = '<settings>'
     for imp in sorted(PluginSettings.implementors(), key=lambda x: x.name.upper()):
-        xml_text += '<setting label="' + imp.name + '" type="lsep"/>'
-        xml_text += imp.get_settings_xml()
+        if imp.isUniversal():
+            uni_text += '<setting label="' + imp.name + '" type="lsep"/>'
+            uni_text += imp.get_settings_xml()
+        else:
+            xml_text += '<setting label="' + imp.name + '" type="lsep"/>'
+            xml_text += imp.get_settings_xml()
+    uni_text += '</settings>'
     xml_text += '</settings>'
     
+    settings_xml = xml.dom.minidom.parseString(uni_text)
+    for element in settings_xml.getElementsByTagName('setting'):
+        new_xml += '\t' + element.toprettyxml()
+
+    new_xml += '</category>\n'
+    new_xml += '<category label="Resolvers 1">\n'
     i = 0
     cat_count = 2
     settings_xml = xml.dom.minidom.parseString(xml_text)
