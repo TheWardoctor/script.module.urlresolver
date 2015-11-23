@@ -42,12 +42,12 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         self.patterns = []
         self.priority = int(p)
         self.net = Net()
+        self.scheme = 'https' if self.get_setting('use_https') == 'true' else 'http'
 
-    #UrlResolver methods
     def get_media_url(self, host, media_id):
         username = self.get_setting('username')
         password = self.get_setting('password')
-        url = 'http://api.premiumize.me/pm-api/v1.php?'
+        url = '%s://api.premiumize.me/pm-api/v1.php?' % (self.scheme)
         query = urllib.urlencode({'method': 'directdownloadlink', 'params[login]': username, 'params[pass]': password, 'params[link]': media_id})
         url = url + query
         response = self.net.http_GET(url).content
@@ -74,7 +74,7 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             if not self.patterns or not self.hosts:
                 username = self.get_setting('username')
                 password = self.get_setting('password')
-                url = 'http://api.premiumize.me/pm-api/v1.php?'
+                url = '%s://api.premiumize.me/pm-api/v1.php?' % (self.scheme)
                 query = urllib.urlencode({'method': 'hosterlist', 'params[login]': username, 'params[pass]': password})
                 url = url + query
                 response = self.net.http_GET(url).content
@@ -84,8 +84,8 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 common.addon.log_debug(log_msg)
                 self.hosts = result['tldlist']
                 self.patterns = [re.compile(regex) for regex in result['regexlist']]
-        except:
-            pass
+        except Exception as e:
+            common.addon.log_error('Error getting Premiumize hosts: %s' % (e))
 
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
@@ -99,22 +99,18 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     return True
         elif host:
             if host.startswith('www.'): host = host.replace('www.', '')
-            if host in self.hosts or any(host in item for item in self.hosts):
+            if any(host in item for item in self.hosts):
                 return True
 
         return False
 
-    #PluginSettings methods
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
-        xml += '<setting id="%s_login" ' % (self.__class__.__name__)
-        xml += 'type="bool" label="login" default="false"/>\n'
-        xml += '<setting id="%s_username" enable="eq(-1,true)" ' % (self.__class__.__name__)
-        xml += 'type="text" label="Customer ID" default=""/>\n'
-        xml += '<setting id="%s_password" enable="eq(-2,true)" ' % (self.__class__.__name__)
-        xml += 'type="text" label="PIN" option="hidden" default=""/>\n'
+        xml += '<setting id="%s_use_https" type="bool" label="Use HTTPS" default="false"/>\n' % (self.__class__.__name__)
+        xml += '<setting id="%s_login" type="bool" label="login" default="false"/>\n' % (self.__class__.__name__)
+        xml += '<setting id="%s_username" enable="eq(-1,true)" type="text" label="Customer ID" default=""/>\n' % (self.__class__.__name__)
+        xml += '<setting id="%s_password" enable="eq(-2,true)" type="text" label="PIN" option="hidden" default=""/>\n' % (self.__class__.__name__)
         return xml
 
-    #to indicate if this is a universal resolver
     def isUniversal(self):
         return True
