@@ -68,10 +68,31 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             raise UrlResolver.ResolverError('Unexpected Exception during RD Unrestrict: %s' % (e))
         else:
             js_result = json.loads(result)
-            if 'download' in js_result:
-                return js_result['download']
+            links = []
+            link = self.__get_link(js_result)
+            if link is not None: links.append(link)
+            if 'alternative' in js_result:
+                for alt in js_result['alternative']:
+                    link = self.__get_link(alt)
+                    if link is not None: links.append(link)
+                    
+            if len(links) == 1:
+                return links[0][1]
+            elif len(links) > 1:
+                sd = xbmcgui.Dialog()
+                ret = sd.select('Select a Link', [link[0] for link in links])
+                if ret > -1:
+                    return links[ret][1]
             else:
                 raise UrlResolver.ResolverError('No usable link from Real Debrid')
+        
+    def __get_link(self, link):
+        if 'download' in link:
+            if 'quality' in link:
+                label = '[%s] %s' % (link['quality'], link['download'])
+            else:
+                label = link['download']
+        return (label, link['download'])
         
     # SiteAuth methods
     def login(self):
