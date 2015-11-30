@@ -20,6 +20,7 @@
 """
 
 import re
+from lib import jsunpack
 from t0mm0.common.net import Net
 from urlresolver import common
 from urlresolver.plugnplay.interfaces import UrlResolver
@@ -40,14 +41,16 @@ class VideoMegaResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {
-                   'User-Agent': common.IOS_USER_AGENT,
-                   'Referer': web_url
+            'User-Agent': common.IOS_USER_AGENT,
+            'Referer': web_url
         }
         
         html = self.net.http_GET(web_url, headers=headers).content
-        match = re.search('<source\s+src="([^"]+)', html)
-        if match:
-            return match.group(1) + '|User-Agent=%s' % (common.IOS_USER_AGENT)
+        if jsunpack.detect(html):
+            js_data = jsunpack.unpack(html)
+            match = re.search('"src"\s*,\s*"([^"]+)', js_data)
+            if match:
+                return match.group(1) + '|User-Agent=%s' % (common.IOS_USER_AGENT)
 
         raise UrlResolver.ResolverError('No playable video found.')
 

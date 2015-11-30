@@ -80,7 +80,7 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             url = 'http://premium.rpnet.biz/hoster2.json'
             response = self.net.http_GET(url).content
             common.addon.log_debug('rpnet hosts: %s' % response)
-            self.hosts = json.loads(response)
+            self.hosts = json.loads(response)['supported']
     
     def valid_url(self, url, host):
         if self.get_setting('enabled') == 'false': return False
@@ -92,7 +92,8 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     return True
         elif host:
             self.get_hosts()
-            if host in self.hosts or any(item in host for item in self.hosts):
+            if host.startswith('www.'): host = host.replace('www.', '')
+            if host in self.hosts or any(host in item for item in self.hosts):
                 return True
                  
         return False
