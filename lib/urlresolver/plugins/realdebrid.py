@@ -63,7 +63,15 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     self.set_setting('token', '')
                     raise UrlResolver.ResolverError('Real Debrid Auth Failed & No Refresh Token')
             else:
-                raise UrlResolver.ResolverError('Real Debrid Unrestrict Error: %s' % (e.code))
+                try:
+                    js_result = json.loads(e.read())
+                    if 'error' in js_result:
+                        msg = js_result['error']
+                    else:
+                        msg = 'Unknown Error (1)'
+                except:
+                    msg = 'Unknown Error (2)'
+                raise UrlResolver.ResolverError('Real Debrid Error: %s (%s)' % (msg, e.code))
         except Exception as e:
             raise UrlResolver.ResolverError('Unexpected Exception during RD Unrestrict: %s' % (e))
         else:
