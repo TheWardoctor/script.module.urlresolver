@@ -84,7 +84,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                     link = self.__get_link(alt)
                     if link is not None: links.append(link)
                     
-            if len(links) == 1:
+            if len(links) == 1 or self.get_setting('autopick') == 'true':
                 return links[0][1]
             elif len(links) > 1:
                 sd = xbmcgui.Dialog()
@@ -212,6 +212,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     # PluginSettings methods
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
+        xml += '<setting id="%s_autopick" type="bool" label="Choose Primary Link Automatically" default="false"/>\n' % (self.__class__.__name__)
         xml += '<setting id="%s_authorize" type="bool" label="Ask for Authorization When Needed" default="false"/>\n' % (self.__class__.__name__)
         xml += '<setting type="lsep" label="***Real-Debrid Authorization is performed on first use***"/>\n'
         xml += '<setting id="%s_token" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
