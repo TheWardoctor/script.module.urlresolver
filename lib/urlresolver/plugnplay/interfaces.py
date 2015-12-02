@@ -354,7 +354,7 @@ class PluginSettings(Interface):
         Returns:
             A string containing the value stored for the requested setting.
         '''
-        return common.addon.get_setting('%s_%s' % (self.__class__.__name__, key))
+        return addon.getSetting('%s_%s' % (self.__class__.__name__, key))
 
 ''' Dummy class for uninitialized plugins
     All bounded methods should be declared as "non_implemented" 
