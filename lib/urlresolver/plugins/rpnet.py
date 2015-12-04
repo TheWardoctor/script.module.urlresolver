@@ -51,7 +51,7 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         url = url + query
         response = self.net.http_GET(url).content
         response = json.loads(response)
-        if response['links']:
+        if 'links' in response and response['links']:
             link = response['links'][0]
             if 'generated' in link:
                 return link['generated']
