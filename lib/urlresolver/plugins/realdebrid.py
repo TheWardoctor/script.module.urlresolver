@@ -212,9 +212,9 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     # PluginSettings methods
     def get_settings_xml(self):
         xml = PluginSettings.get_settings_xml(self)
+        xml += '<setting id="%s_authorize" type="bool" label="I have a Real Debrid Account" default="false"/>\n' % (self.__class__.__name__)
+        xml += '<setting type="lsep" label="***RD Authorization will be performed when you select the first RD link***"/>\n'
         xml += '<setting id="%s_autopick" type="bool" label="Choose Primary Link Automatically" default="false"/>\n' % (self.__class__.__name__)
-        xml += '<setting id="%s_authorize" type="bool" label="Ask for Authorization When Needed" default="false"/>\n' % (self.__class__.__name__)
-        xml += '<setting type="lsep" label="***Real-Debrid Authorization is performed on first use***"/>\n'
         xml += '<setting id="%s_token" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
         xml += '<setting id="%s_refresh" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
         xml += '<setting id="%s_client_id" visible="false" type="text" default=""/>\n' % (self.__class__.__name__)
