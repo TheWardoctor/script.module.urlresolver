@@ -100,7 +100,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 label = '[%s] %s' % (link['quality'], link['download'])
             else:
                 label = link['download']
-        return (label, link['download'])
+            return (label, link['download'])
         
     # SiteAuth methods
     def login(self):
