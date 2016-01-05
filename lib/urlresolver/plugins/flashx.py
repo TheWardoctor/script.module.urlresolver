@@ -22,6 +22,7 @@ from urlresolver.plugnplay import Plugin
 from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 import re
+import xbmc
 from lib import jsunpack
 
 class FlashxResolver(Plugin, UrlResolver, PluginSettings):
@@ -38,26 +39,43 @@ class FlashxResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {'Referer': web_url}
-        stream_url = self.__get_link(web_url, headers)
+        stream_url = self.__get_link(web_url, media_id, headers)
         if stream_url is None:
             headers['User-Agent'] = common.IOS_USER_AGENT
-            stream_url = self.__get_link(web_url, headers)
+            stream_url = self.__get_link(web_url, media_id, headers)
         
         if stream_url is not None:
             return stream_url + '|User-Agent=%s' % (common.IE_USER_AGENT)
 
         raise UrlResolver.ResolverError('File not found')
 
-    def __get_link(self, web_url, headers):
+    def __get_link(self, web_url, media_id, headers):
         html = self.net.http_GET(web_url, headers=headers).content
-        for match in re.finditer('(eval\(function\(p,a,c,k,e,d\).*?)</script>', html, re.DOTALL):
-            js = jsunpack.unpack(match.group(1))
-            match2 = re.search('file\s*:\s*"([^"]+(?:video|mobile)[^"]+)', js)
-            if match2:
-                return match2.group(1)
+        data = {}
+        r = re.findall(r'type="hidden"\s*name="([^"]+)"\s*value="([^"]+)', html)
+        for name, value in r:
+            data[name] = value
+        data['imhuman'] = 'Proceed+to+video'
+        url = 'http://www.flashx.tv/dl?%s' % (media_id)
+        xbmc.sleep(6000)
+        html = self.net.http_POST(url, form_data=data, headers=headers).content
+        
+        best = 0
+        best_link = ''
+        for packed in re.findall("<script[^>]*>(eval\(function.*?)</script>", html, re.DOTALL):
+            unpacked = jsunpack.unpack(packed)
+            for stream in re.findall('file\s*:\s*"(http.*?)"\s*,\s*label\s*:\s*"(\d+)', unpacked, re.DOTALL):
+                if int(stream[1]) > best:
+                    best = int(stream[1])
+                    best_link = stream[0]
+
+        if best_link:
+            return best_link
+        else:
+            raise UrlResolver.ResolverError('Unable to resolve Flashx link. Filelink not found.')
         
     def get_url(self, host, media_id):
-        return 'http://flashx.tv/embed-%s.html' % media_id
+        return 'http://www.flashx.tv/%s.html' % media_id
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url)
