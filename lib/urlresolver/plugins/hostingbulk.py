@@ -71,7 +71,6 @@ class HostingBulkResolver(Plugin, UrlResolver, PluginSettings):
             r = None
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match('http://(?:www.|)hostingbulk.com/(.+)', url) or 'hostingbulk' in host
 
     def get_settings_xml(self):

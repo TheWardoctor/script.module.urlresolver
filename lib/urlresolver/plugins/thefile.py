@@ -53,5 +53,4 @@ class TheFileResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match(r'http://(www.)?thefile.me/.+', url) or 'thefile' in host

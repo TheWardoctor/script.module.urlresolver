@@ -116,7 +116,6 @@ class SockshareResolver(Plugin, UrlResolver, PluginSettings):
                 return False
             
     def valid_url(self, url, host):
-            if self.get_setting('enabled') == 'false': return False
             return (re.match('http://(www.)?(sockshare).com/' +  '(file|embed)/[0-9A-Z]+', url) or 'sockshare' in host)
 
     def login_stale(self):

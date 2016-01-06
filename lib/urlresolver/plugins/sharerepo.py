@@ -71,7 +71,6 @@ class SharerepoResolver(Plugin, UrlResolver, PluginSettings):
         return('host', 'media_id')
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?sharerepo.com/(f/)?' +
                          '[0-9A-Za-z]+', url) or
                          'sharerepo' in host)

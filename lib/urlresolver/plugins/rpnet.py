@@ -83,7 +83,6 @@ class RPnetResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             self.hosts = json.loads(response)['supported']
     
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         if self.get_setting('login') == 'false': return False
         if url:
             self.get_all_hosters()

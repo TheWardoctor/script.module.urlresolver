@@ -66,5 +66,4 @@ class MovzapZuzVideoResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match('http://(?:www.|)(?:movzap|zuzvideo).com/[0-9A-Za-z]+', url) or 'movzap' in host or 'zuzvideo' in host

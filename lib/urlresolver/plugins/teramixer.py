@@ -67,8 +67,6 @@ class TeramixerResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false':
-            return False
         return re.match('http://(www.)?teramixer.com/(embed/)?[0-9A-Za-z]+', url) or 'teramixer.com' in host
 
     def get_settings_xml(self):

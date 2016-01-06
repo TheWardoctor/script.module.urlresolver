@@ -94,7 +94,6 @@ class VidxdenResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(?:www.)?(vidxden|divxden|vidbux).(com|to)/' +
                          '(embed-)?[0-9a-z]+', url) or
                 'vidxden' in host or 'divxden' in host or

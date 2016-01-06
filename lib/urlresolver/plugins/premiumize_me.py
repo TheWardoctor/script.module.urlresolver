@@ -88,7 +88,6 @@ class PremiumizeMeResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             common.addon.log_error('Error getting Premiumize hosts: %s' % (e))
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         if self.get_setting('login') == 'false': return False
 
         self.get_all_hosters()

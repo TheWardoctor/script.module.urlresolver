@@ -59,5 +59,4 @@ class VidbullResolver(Plugin, UrlResolver, PluginSettings):
         return('host', 'media_id')
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.search(self.pattern, url) or 'vidbull' in host)

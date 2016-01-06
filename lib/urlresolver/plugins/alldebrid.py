@@ -119,7 +119,6 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         return self.allHosters
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         if self.get_setting('login') == 'false': return False
         common.addon.log('in valid_url %s : %s' % (url, host))
         if url:

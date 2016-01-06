@@ -108,7 +108,6 @@ class OneeightyuploadResolver(Plugin, UrlResolver, PluginSettings):
                 return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?180upload.com/' +
                          '[0-9A-Za-z]+', url) or
                          '180upload' in host)

@@ -59,5 +59,4 @@ class BayfilesResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match(r'http://(bayfiles).com/file/uMXL/([a-zA-Z0-9._/]+)', url) or 'bayfiles' in host)

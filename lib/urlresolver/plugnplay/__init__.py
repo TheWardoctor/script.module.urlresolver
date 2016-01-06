@@ -194,7 +194,7 @@ def scan_plugins(wrappercls):
             found_plugin = None
             mod_name = basename(f[:-3])
             for line in open(f, 'r'):
-                if None == found_plugin:
+                if found_plugin is None:
                     res = re_class.match(line)
                     if res:
                         found_plugin = wrappercls()
@@ -204,7 +204,7 @@ def scan_plugins(wrappercls):
                     found_plugin.proc_plugin_line(line)
                     if found_plugin.plugin_ready():
                         _enabled = common.addon.get_setting('%s_enabled' % found_plugin.class_name)
-                        if _enabled == "false": break
+                        if _enabled != "true": break
                         _priority = common.addon.get_setting('%s_priority' % found_plugin.class_name)
                         try:
                             found_plugin.priority = int(_priority)

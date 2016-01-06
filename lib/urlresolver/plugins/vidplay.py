@@ -88,7 +88,6 @@ class VidplayResolver(Plugin, UrlResolver, PluginSettings):
                 return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?vidplay.net/' +
                          '[0-9A-Za-z]+', url) or
                          'vidplay' in host)

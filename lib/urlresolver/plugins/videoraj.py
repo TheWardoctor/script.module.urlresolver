@@ -120,5 +120,4 @@ class VideorajResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match('https?://(?:www\.|embed\.)videoraj\.(?:ec|eu|sx|ch|com)/(?:v(?:ideo)*/|embed\.php\?id=)([0-9a-z]+)', url) or 'videoraj' in host

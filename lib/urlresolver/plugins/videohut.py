@@ -50,7 +50,6 @@ class VideoHutResolver(Plugin, UrlResolver, PluginSettings):
         else: return False
     
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match(self.pattern, url) or self.name in host
     
     def __get_stream_url(self, media_id, filekey, error_num=0, error_url=None):

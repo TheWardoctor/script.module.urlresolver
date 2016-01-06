@@ -72,7 +72,6 @@ class FacebookResolver(Plugin, UrlResolver, PluginSettings):
         return r.groups()
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match('https?://(www\.)?facebook.com/video/embed?video_id=(\w+)', url) or \
                self.name in host
 

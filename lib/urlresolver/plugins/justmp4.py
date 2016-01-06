@@ -45,7 +45,6 @@ class Justmp4Resolver(Plugin, UrlResolver, PluginSettings):
         else: return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match(self.pattern, url) or self.name in host or self.hostname2 in host
 
     def get_media_url(self, host, media_id):

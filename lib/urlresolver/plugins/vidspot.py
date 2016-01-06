@@ -69,5 +69,4 @@ class VidSpotResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?vidspot.net/[0-9A-Za-z]+', url) or re.match('http://(www.)?vidspot.net/embed-[0-9A-Za-z]+[\-]*\d*[x]*\d*.*[html]*', url) or 'vidspot' in host)

@@ -65,5 +65,4 @@ class MooShareResolver(Plugin, UrlResolver, PluginSettings):
         return('host', 'media_id')
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?mooshare.biz/[0-9A-Za-z]+', url) or re.match('http://(www.)?mooshare.biz/embed-[0-9A-Za-z]+[\-]*\d*[x]*\d*.*[html]*', url) or 'mooshare' in host)

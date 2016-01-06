@@ -57,5 +57,4 @@ class FilehootResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.search(self.pattern, url) or 'filehoot' in host
