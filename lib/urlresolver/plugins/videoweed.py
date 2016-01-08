@@ -38,21 +38,22 @@ class VideoweedResolver(Plugin, UrlResolver, PluginSettings):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-        html = unwise.unwise_process(html)
-        filekey = unwise.resolve_var(html, "flashvars.filekey")
-
-        #use api to find stream address
-        api_call = ('http://www.videoweed.es/api/player.api.php?user=undefined&codes=1&file=%s' +
-                    '&pass=undefined&key=%s') % (media_id, filekey)
-
-        api_html = self.net.http_GET(api_call).content
-        rapi = re.search('url=(.+?)&title=', api_html)
-        if rapi:
-            stream_url = rapi.group(1)
-        else:
-            raise UrlResolver.ResolverError('File Not Found or removed')
+        form_values = {}
+        for i in re.finditer('<input type="hidden" name="([^"]+)" value="([^"]+)', html):
+            form_values[i.group(1)] = i.group(2)
+        html = self.net.http_POST(web_url, form_data=form_values).content
+        match = re.search('flashvars.filekey\s*=\s*"([^"]+)', html)
+        if match:
+            filekey = match.group(1)
+            
+            # use api to find stream address
+            api_call = ('http://www.videoweed.es/api/player.api.php?user=undefined&codes=1&file=%s&pass=undefined&key=%s') % (media_id, filekey)
+            api_html = self.net.http_GET(api_call).content
+            rapi = re.search('url=(.+?)&title=', api_html)
+            if rapi:
+                return rapi.group(1)
         
-        return stream_url
+        raise UrlResolver.ResolverError('File Not Found or removed')
 
     def get_url(self, host, media_id):
         return 'http://www.videoweed.es/file/%s' % media_id
