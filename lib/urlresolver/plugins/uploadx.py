@@ -1,6 +1,6 @@
 '''
-vidzi urlresolver plugin
-Copyright (C) 2014 Eldorado
+clicknupload urlresolver plugin
+Copyright (C) 2015 tknorris
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,47 +21,60 @@ from urlresolver.plugnplay.interfaces import UrlResolver
 from urlresolver.plugnplay.interfaces import PluginSettings
 from urlresolver.plugnplay import Plugin
 import re
-from lib import jsunpack
+import xbmc
 from urlresolver import common
+from lib import captcha_lib
 
-class VidziResolver(Plugin, UrlResolver, PluginSettings):
+MAX_TRIES = 3
+
+class UploadXResolver(Plugin, UrlResolver, PluginSettings):
     implements = [UrlResolver, PluginSettings]
-    name = "vidzi"
-    domains = ["vidzi.tv"]
+    name = "uploadx"
+    domains = ["uploadx.org"]
 
     def __init__(self):
         p = self.get_setting('priority') or 100
         self.priority = int(p)
         self.net = Net()
+        self.pattern = '//((?:www.)?uploadx.org)/([0-9a-zA-Z/]+)'
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-
-        if '404 Not Found' in html:
-            raise UrlResolver.ResolverError('File Not Found or removed')
-
-        r = re.search('file\s*:\s*"([^"]+)', html)
-        if r:
-            return r.group(1) + '|Referer=http://vidzi.tv/nplayer/jwplayer.flash.swf'
-        else:
-            for match in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
-                js_data = jsunpack.unpack(match.group(1))
-                r = re.search('file\s*:\s*"([^"]+)', js_data)
+        tries = 0
+        while tries < MAX_TRIES:
+            data = {}
+            r = re.findall(r'type="hidden"\s*name="([^"]+)"\s*value="([^"]+)', html)
+            for name, value in r:
+                data[name] = value
+            data['method_free'] = 'Free Download+>>'
+            data.update(captcha_lib.do_captcha(html))
+            headers = {
+                'Referer': web_url
+            }
+            common.addon.log_debug(data)
+            html = self.net.http_POST(web_url, data, headers=headers).content
+            if tries > 0:
+                xbmc.sleep(6000)
+            
+            if 'File Download Link Generated' in html:
+                r = re.search('href="([^"]+)[^>]+id="downloadbtn"', html)
                 if r:
-                    return r.group(1)
-                
+                    return r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
+            
+            tries = tries + 1
+            
         raise UrlResolver.ResolverError('Unable to locate link')
 
     def get_url(self, host, media_id):
-        return 'http://%s/embed-%s.html' % (host, media_id)
-
+        return 'http://%s/%s' % (host, media_id)
+        
     def get_host_and_id(self, url):
-        r = re.search('http://(?:www\.|embed-)?(.+?)/(?:embed-)?([0-9a-zA-Z/]+)', url)
+        r = re.search(self.pattern, url)
         if r:
             return r.groups()
         else:
             return False
 
     def valid_url(self, url, host):
-        return (re.match('http://(www\.|embed-)?vidzi.tv/(?:embed-)?[0-9A-Za-z]+', url) or 'vidzi' in host)
+        return re.search(self.pattern, url) or self.name in host

@@ -88,7 +88,6 @@ class DonevideoResolver(Plugin, UrlResolver, PluginSettings):
 
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?donevideo.com/' +
                          '[0-9A-Za-z]+', url) or
                          'donevideo' in host)

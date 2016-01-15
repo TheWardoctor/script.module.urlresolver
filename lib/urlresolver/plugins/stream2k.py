@@ -87,8 +87,6 @@ class Stream2kResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false':
-            return False
         return re.search(self.pattern, url) or 'stream2k' in host
 
     def get_settings_xml(self):

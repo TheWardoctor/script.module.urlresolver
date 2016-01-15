@@ -80,6 +80,5 @@ class VidtoResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match('http://(www.)?vidto.me/' +
                         '[0-9A-Za-z]+', url) or 'vidto.me' in host)

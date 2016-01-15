@@ -66,7 +66,6 @@ class VideoTankerResolver(Plugin, UrlResolver, PluginSettings):
         return r.groups()
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match('http://(www\.)?videotanker.co/player/embed_player\.php\?vid\=(\w+)', url) or \
                self.name in host
 

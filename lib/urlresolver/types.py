@@ -246,6 +246,7 @@ class HostedMediaFile:
         resolvers = []
         found = False
         for resolver in UrlResolver.implementors():
+            if resolver.get_setting('enabled') != 'true': continue
             if (self._domain in resolver.domains) or any(self._domain in domain for domain in resolver.domains):
                 found = True
                 resolvers.append(resolver)

@@ -47,7 +47,6 @@ class MediaPlayBoxResolver(Plugin, UrlResolver, PluginSettings):
         else: return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.match(self.pattern, url) or host in self.domains
 
     def get_media_url(self, host, media_id):

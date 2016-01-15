@@ -75,9 +75,7 @@ class PurevidResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
             return False
 
     def valid_url(self, url, host):                 
-        if self.get_setting('login') == 'false':        
-            return False
-        common.addon.log(url)
+        if self.get_setting('login') == 'false': return False
         return 'purevid' in url
 
     #SiteAuth methods

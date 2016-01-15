@@ -100,7 +100,7 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 label = '[%s] %s' % (link['quality'], link['download'])
             else:
                 label = link['download']
-        return (label, link['download'])
+            return (label, link['download'])
         
     # SiteAuth methods
     def login(self):
@@ -192,7 +192,6 @@ class RealDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
         common.addon.log_debug('RealDebrid hosts : %s' % self.hosts)
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         if self.get_setting('authorize') == 'false': return False
         common.addon.log_debug('in valid_url %s : %s' % (url, host))
         if url:

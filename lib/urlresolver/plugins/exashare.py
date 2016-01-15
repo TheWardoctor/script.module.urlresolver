@@ -79,8 +79,7 @@ class ExashareResolver(Plugin,UrlResolver,PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled')=='false' or self.get_setting('login')=='false': 
-            return False
+        if self.get_setting('login')=='false': return False
         return re.match('http://(?:www.)?exashare.com/(?:embed\-)?[0-9A-Za-z]+(?:\-[0-9]+x[0-9]+.html)?',url) or 'exashare.com' in host
 
     #SiteAuth methods

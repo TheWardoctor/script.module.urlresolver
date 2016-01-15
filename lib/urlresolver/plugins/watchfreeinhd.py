@@ -53,5 +53,4 @@ class WatchFreeResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return (re.match(r'http://www.(watchfreeinhd).com/([0-9A-Za-z]+)', url) or 'watchfree' in host)

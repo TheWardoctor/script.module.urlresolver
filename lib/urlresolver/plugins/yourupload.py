@@ -82,8 +82,7 @@ class YourUploadResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
-        elif ('yourupload.com' in url) or ('yourupload.com' in host): return True
+        if ('yourupload.com' in url) or ('yourupload.com' in host): return True
         elif ('yourupload.com' in url) and ('embed' in url): return True
         elif 'yourupload.com/embed' in url: return True
         elif 'embed.yourupload.com' in url: return True

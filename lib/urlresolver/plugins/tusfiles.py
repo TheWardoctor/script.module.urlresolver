@@ -56,5 +56,4 @@ class TusfilesResolver(Plugin, UrlResolver, PluginSettings):
             return False
 
     def valid_url(self, url, host):
-        if self.get_setting('enabled') == 'false': return False
         return re.search('//(?:www.)?tusfiles.net/(embed-)?[0-9a-z]+', url) or 'tusfiles' in host
