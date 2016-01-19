@@ -20,7 +20,9 @@ from urlparse import urlparse
 from urlresolver import common
 from plugnplay.interfaces import UrlResolver
 from plugnplay.interfaces import SiteAuth
-import re, sys
+import re
+import sys
+import urllib
 import traceback
 
 class HostedMediaFile:
@@ -213,11 +215,13 @@ class HostedMediaFile:
         Returns True if the stream_url gets a non-failure http status (i.e. <400) back from the server
         otherwise return False
         
-        Intended to catch stream urls returned by resolvers that would fail to playback 
+        Intended to catch stream urls returned by resolvers that would fail to playback
         '''
         # parse_qsl doesn't work because it splits elements by ';' which can be in a non-quoted UA
         try: headers = dict([item.split('=') for item in (stream_url.split('|')[1]).split('&')])
         except: headers = {}
+        for header in headers:
+            headers[header] = urllib.unquote(headers[header])
         common.addon.log_debug('Setting Headers on UrlOpen: %s' % (headers))
     
         request = urllib2.Request(stream_url.split('|')[0], headers=headers)
