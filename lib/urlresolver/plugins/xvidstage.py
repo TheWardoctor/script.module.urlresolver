@@ -1,6 +1,5 @@
 """
-urlresolver XBMC Addon
-Copyright (C) 2011 t0mm0
+urlresolver Kodi Addon
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,51 +14,42 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-
 import re
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+from lib import helpers, jsunpack
 from urlresolver import common
-from lib import jsunpack
+from urlresolver.resolver import UrlResolver, ResolverError
 
-class XvidstageResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+
+class XvidstageResolver(UrlResolver):
     name = "xvidstage"
     domains = ["xvidstage.com"]
+    pattern = '(?://|\.)(xvidstage\.com)/(?:embed-|)?([0-9A-Za-z]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern ='http://((?:www.)?xvidstage.com)/([0-9A-Za-z]+)'
-        # http://xvidstage.com/59reflvbp02z
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        html = self.net.http_GET(web_url).content
-               
-        result = re.compile('(eval.*?\)\)\))').findall(html)[-1]
-        if result:
-            sJavascript = result
-            sUnpacked = jsunpack.unpack(sJavascript)
-            sPattern = "'file','(.+?)'"#modded
-            r = re.search(sPattern, sUnpacked)
-            if r:
-                return r.group(1)
+        headers = {'User-Agent': common.FF_USER_AGENT}
+        response = self.net.http_GET(web_url, headers=headers)
+        html = response.content
+        data = helpers.get_hidden(html)
+        headers['Cookie'] = response.get_headers(as_dict=True).get('Set-Cookie', '')
+        html = self.net.http_POST(web_url, headers=headers, form_data=data).content
+        html = html.encode("utf-8")
+
+        packed = re.findall('(eval\(function.*?)\s*</script>', html, re.DOTALL)
+        if packed:
+        
+            js = ''
+            for pack in packed:
+                js += jsunpack.unpack(pack)
+
+            sources = helpers.scrape_sources(js, patterns=['''(?P<url>[^"']+\.(?:m3u8|mp4))'''], result_blacklist='tmp')
             
-        raise UrlResolver.ResolverError('File Not Found or removed')
+            if sources: return helpers.pick_source(sources) + helpers.append_headers(headers)
+            
+        raise ResolverError('Unable to locate video')
 
     def get_url(self, host, media_id):
-            return 'http://www.xvidstage.com/embed-%s.html' % (media_id)
-
-    def get_host_and_id(self, url):
-        r = re.search(self.pattern, url)
-        if r:
-            return r.groups()
-        else:
-            return False
-
-    def valid_url(self, url, host):
-        return re.match(self.pattern, url) or self.name in host
+        return 'http://www.xvidstage.com/%s' % media_id

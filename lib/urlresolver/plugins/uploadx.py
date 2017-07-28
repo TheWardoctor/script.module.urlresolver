@@ -1,6 +1,5 @@
 '''
-clicknupload urlresolver plugin
-Copyright (C) 2015 tknorris
+uploadx urlresolver plugin
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,65 +15,43 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
 import re
-import xbmc
-from urlresolver import common
 from lib import captcha_lib
+from lib import helpers
+from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
+
+logger = common.log_utils.Logger.get_logger(__name__)
+logger.disable()
 
 MAX_TRIES = 3
 
-class UploadXResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class UploadXResolver(UrlResolver):
     name = "uploadx"
-    domains = ["uploadx.org"]
+    domains = ["uploadx.link", "uploadx.org"]
+    pattern = '(?://|\.)(uploadx\.(?:link|org))/([0-9a-zA-Z/]+)'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = '//((?:www.)?uploadx.org)/([0-9a-zA-Z/]+)'
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        html = self.net.http_GET(web_url).content
+        headers = {'User-Agent': common.RAND_UA}
+        html = self.net.http_GET(web_url, headers=headers).content
         tries = 0
         while tries < MAX_TRIES:
-            data = {}
-            r = re.findall(r'type="hidden"\s*name="([^"]+)"\s*value="([^"]+)', html)
-            for name, value in r:
-                data[name] = value
-            data['method_free'] = 'Free Download+>>'
+            data = helpers.get_hidden(html, index=0)
             data.update(captcha_lib.do_captcha(html))
-            headers = {
-                'Referer': web_url
-            }
-            common.addon.log_debug(data)
+            headers.update({'Referer': web_url})
             html = self.net.http_POST(web_url, data, headers=headers).content
-            if tries > 0:
-                xbmc.sleep(6000)
-            
-            if 'File Download Link Generated' in html:
-                r = re.search('href="([^"]+)[^>]+id="downloadbtn"', html)
-                if r:
-                    return r.group(1) + '|User-Agent=%s' % (common.IE_USER_AGENT)
-            
+
+            r = re.search('href="([^"]+)[^>]+>Click here to download<', html, re.DOTALL | re.I)
+            if r:
+                return r.group(1) + helpers.append_headers(headers)
+
             tries = tries + 1
-            
-        raise UrlResolver.ResolverError('Unable to locate link')
+
+        raise ResolverError('Unable to locate link')
 
     def get_url(self, host, media_id):
-        return 'http://%s/%s' % (host, media_id)
-        
-    def get_host_and_id(self, url):
-        r = re.search(self.pattern, url)
-        if r:
-            return r.groups()
-        else:
-            return False
-
-    def valid_url(self, url, host):
-        return re.search(self.pattern, url) or self.name in host
+        return 'https://uploadx.link/%s' % media_id

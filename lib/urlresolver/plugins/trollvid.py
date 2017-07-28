@@ -1,6 +1,5 @@
 """
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    urlresolver Kodi Addon
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,58 +15,40 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import urllib
 import re
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+import base64
+import urllib
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-class TrollVidResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
-    name = "trollvid.net"
-    domains = ["trollvid.net"]
-    
+class TrollVidResolver(UrlResolver):
+    name = 'trollvid.net'
+    domains = ['trollvid.net', 'trollvid.io', 'mp4edge.com']
+    pattern = '(?://|\.)(trollvid(?:\.net|\.io)|mp4edge\.com)/(?:embed\.php.file=|embed/|stream/)([0-9a-zA-Z]+)'
+
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern = 'http://((?:sv\d*\.)?trollvid\.net)/embed\.php.file=([0-9a-zA-Z]+)' # http://sv3.trollvid.net/embed.php?file=([0-9a-zA-Z]+)&
-    
-    def get_url(self, host, media_id):
-            return 'http://sv3.trollvid.net/embed.php?file=%s&w=800&h=600&bg=' % (media_id)
-    
-    def get_host_and_id(self, url):
-        r = re.search(self.pattern, url)
-        if r: return r.groups()
-        else: return False
-    
-    def valid_url(self, url, host):
-        return re.match(self.pattern, url) or self.name in host
-    
+        self.net = common.Net()
+
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        self.headers['Referer'] = web_url
-        stream_url = None
-        html = self.net.http_GET(web_url, headers=self.headers).content
-        r = re.search('clip\s*:\s*\n*\s*\{\s*\n*\s*\n*\s*\n*\s*url\s*:\s*"(http.+?)"', html)
-        if r:
-            stream_url = urllib.unquote_plus(r.group(1))
-        else:
-            r = re.search('unescape\(atob\(\'(.+?)\'', html)
-            if r:
-                try:
-                    stream_url = urllib.unquote_plus(self._decode_base64(r.group(1)))
-                except:
-                    stream_url = None
-        if stream_url:
-            return stream_url
-        else:
-            raise UrlResolver.ResolverError('File not found')
 
-    def _decode_base64(self, data):
-        missing_padding = 4 - len(data) % 4
-        if missing_padding:
-            data += b'='* missing_padding
-        return data.decode('base64')
+        html = self.net.http_GET(web_url).content
+        stream_url = None
+        try: stream_url = re.search('url\s*:\s*"(http.+?)"', html).group(1)
+        except: pass
+
+        if not stream_url:
+            try: stream_url = re.search('unescape\(\'(http.+?)\'', html).group(1)
+            except: pass
+
+        if not stream_url:
+            try: stream_url = base64.b64decode(re.search('atob\(\'(.+?)\'', html).group(1))
+            except: pass
+
+        if not stream_url:
+            raise ResolverError('File not found')
+
+        return urllib.unquote_plus(stream_url)
+
+    def get_url(self, host, media_id):
+        return 'http://trollvid.net/embed/%s' % media_id

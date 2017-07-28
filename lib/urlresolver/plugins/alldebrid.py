@@ -1,6 +1,5 @@
 """
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0, JUL1EN094
+    urlresolver Kodi Addon
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,93 +15,59 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, sys
-import random
+import os
 import re
-import urllib, urllib2
-
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import SiteAuth
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
+import urllib
+import json
+from lib import helpers
 from urlresolver import common
-import simplejson as json
-import xbmc,xbmcplugin,xbmcgui,xbmcaddon, datetime
-import cookielib
-from t0mm0.common.net import Net
+from urlresolver.common import i18n
+from urlresolver.resolver import UrlResolver, ResolverError
 
-#SET ERROR_LOGO# THANKS TO VOINAGE, BSTRDMKR, ELDORADO
-error_logo = os.path.join(common.addon_path, 'resources', 'images', 'redx.png')
+logger = common.log_utils.Logger.get_logger(__name__)
+logger.disable()
 
-class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
-    implements = [UrlResolver, SiteAuth, PluginSettings]
+class AllDebridResolver(UrlResolver):
     name = "AllDebrid"
-    domains = [ '*']
-    profile_path = common.profile_path    
+    domains = ['*']
+    profile_path = common.profile_path
     cookie_file = os.path.join(profile_path, '%s.cookies' % name)
     media_url = None
-    allHosters = None
-
 
     def __init__(self):
-        p = self.get_setting('priority') or 1
-        self.priority = int(p)
-        self.net = Net()
+        self.hosts = None
+        self.net = common.Net()
         try:
             os.makedirs(os.path.dirname(self.cookie_file))
         except OSError:
             pass
 
-    #UrlResolver methods
     def get_media_url(self, host, media_id):
-        common.addon.log('in get_media_url %s : %s' % (host, media_id))
-        dialog = xbmcgui.Dialog()
-        try:
-            url = 'http://www.alldebrid.com/service.php?link=%s' % media_id
-            source = self.net.http_GET(url).content
-            source = source.decode('utf-8')
-        except Exception, e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            common.addon.log(str(exc_type) + " : " + fname + " : " + str(exc_tb.tb_lineno))
-            dialog.ok(' all-Debrid ', ' all-Debrid server timed out ', '', '')
-            return self.unresolvable(3,'alldebrid : error contacting the site')
-        common.addon.log('************* %s' % source.encode('utf-8'))
-
-        if re.search('login', source):
-            dialog.ok(' All Debrid Message ', ' Your account may have Expired, please check by going to the website ', '', '')
-            return self.unresolvable(0,'alldebrid : Your account may have expired')
-        if re.search('Hoster unsupported or under maintenance', source):
-            dialog.ok(' All Debrid Message ', ' Sorry this hoster is not supported, change the priority level in resolver settings for this host ', '', '')
-            return self.unresolvable(2,'alldebrid : pb for supporting this hoster')
-        #Go
-        finallink = ''
-        #try json return
-        try:
-            link      = json.loads(source)
-            streaming = link['streaming']
-            line      = [] 
-            for item in streaming :
-                line.append(item.encode('utf-8'))
-            result = xbmcgui.Dialog().select('Choose the link', line)
-            if result != -1 :
-                finallink = streaming[str(line[result])].encode('utf-8')                  
-        #classic method
-        except :
-            link =re.compile("href='(.+?)'").findall(source)
-            if len(link) != 0:
-                finallink = link[0].encode('utf-8')               
-        #end
-        common.addon.log('finallink is %s' % finallink)
-        if finallink != '' :
-            self.media_url = finallink
-            return finallink
-        #false/errors
-        elif 'Invalid link' in source :
-            common.addon.show_small_popup(title='[B][COLOR white]ALLDEBRID[/COLOR][/B]', msg='[COLOR red]INVALID LINK[/COLOR]', delay=15000, image=error_logo)
-            return self.unresolvable(1,'Invalid link')
-        else :
-            return self.unresolvable(0,'No generated_link')
+        source = None
+        logger.log('in get_media_url %s : %s' % (host, media_id))
+        url = 'http://www.alldebrid.com/service.php?link=%s' % (media_id)
+        html = self.net.http_GET(url).content
+        if html == 'login':
+            raise ResolverError('alldebrid: Authentication Error')
+    
+        try: js_data = json.loads(html)
+        except: js_data = {}
+        if js_data.get('error'):
+            raise ResolverError('alldebrid: %s' % (js_data['error']))
+        
+        if 'streaming' in js_data:
+            source = helpers.pick_source(js_data['streaming'].items())
+        elif 'link' in js_data:
+            source = js_data['link']
+        else:
+            match = re.search('''class=["']link_dl['"][^>]+href=["']([^'"]+)''', html)
+            if match:
+                source = match.group(1)
+        
+        if source:
+            return source.encode('utf-8')
+        else:
+            raise ResolverError('alldebrid: no stream returned')
 
     def get_url(self, host, media_id):
         return media_id
@@ -110,17 +75,18 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
     def get_host_and_id(self, url):
         return 'www.alldebrid.com', url
 
+    @common.cache.cache_method(cache_limit=8)
     def get_all_hosters(self):
-        if self.allHosters is None:
-            url = 'http://alldebrid.com/api.php?action=get_host'
-            html = self.net.http_GET(url).content
-            html = html.replace('"', '')
-            self.allHosters = html.split(',')
-        return self.allHosters
+        url = 'http://alldebrid.com/api.php?action=get_host'
+        html = self.net.http_GET(url).content
+        html = html.replace('"', '')
+        return html.split(',')
 
     def valid_url(self, url, host):
-        if self.get_setting('login') == 'false': return False
-        common.addon.log_debug('in valid_url %s : %s' % (url, host))
+        if self.hosts is None:
+            self.hosts = self.get_all_hosters()
+            
+        logger.log_debug('in valid_url %s : %s' % (url, host))
         if url:
             match = re.search('//(.*?)/', url)
             if match:
@@ -129,57 +95,32 @@ class AllDebridResolver(Plugin, UrlResolver, SiteAuth, PluginSettings):
                 return False
 
         if host.startswith('www.'): host = host.replace('www.', '')
-        if host and any(host in item for item in self.get_all_hosters()):
+        if host and any(host in item for item in self.hosts):
             return True
 
         return False
 
-    def  checkLogin(self):
-        url = 'http://alldebrid.com/service.php'
-        if not os.path.exists(self.cookie_file):
-               return True
-        self.net.set_cookies(self.cookie_file)
-        source =  self.net.http_GET(url).content
-        common.addon.log(source)
-        if re.search('login', source):
-            common.addon.log('checkLogin returning False')
-            return False
-        else:
-            common.addon.log('checkLogin returning True')
-            return True
-
-    #SiteAuth methods
     def login(self):
-        if self.checkLogin():
-            try:
-                common.addon.log('Need to login since session is invalid')
-                login_data = urllib.urlencode({'action' : 'login','login_login' : self.get_setting('username'), 'login_password' : self.get_setting('password')})
-                url = 'http://alldebrid.com/register/?' + login_data
-                source = self.net.http_GET(url).content
-                if re.search('Control panel', source):
-                    self.net.save_cookies(self.cookie_file)
-                    self.net.set_cookies(self.cookie_file)
-                    return True
-            except:
-                    common.addon.log('error with http_GET')
-                    dialog = xbmcgui.Dialog()
-                    dialog.ok(' Real-Debrid ', ' Unexpected error, Please try again.', '', '')
-            else:
-                return False
-        else:
+        username = self.get_setting('username')
+        password = self.get_setting('password')
+        login_data = urllib.urlencode({'action': 'login', 'login_login': username, 'login_password': password})
+        url = 'http://alldebrid.com/register/?%s' % (login_data)
+        html = self.net.http_GET(url).content
+        if '>Control panel<' in html:
+            self.net.save_cookies(self.cookie_file)
+            self.net.set_cookies(self.cookie_file)
             return True
+        else:
+            return False
 
-    #PluginSettings methods
-    def get_settings_xml(self):
-        xml = PluginSettings.get_settings_xml(self)
-        xml += '<setting id="AllDebridResolver_login" '
-        xml += 'type="bool" label="login" default="false"/>\n'
-        xml += '<setting id="AllDebridResolver_username" enable="eq(-1,true)" '
-        xml += 'type="text" label="username" default=""/>\n'
-        xml += '<setting id="AllDebridResolver_password" enable="eq(-2,true)" '
-        xml += 'type="text" label="password" option="hidden" default=""/>\n'
+    @classmethod
+    def get_settings_xml(cls):
+        xml = super(cls, cls).get_settings_xml(include_login=False)
+        xml.append('<setting id="%s_login" type="bool" label="%s" default="false"/>' % (cls.__name__, i18n('login')))
+        xml.append('<setting id="%s_username" enable="eq(-1,true)" type="text" label="%s" default=""/>' % (cls.__name__, i18n('username')))
+        xml.append('<setting id="%s_password" enable="eq(-2,true)" type="text" label="%s" option="hidden" default=""/>' % (cls.__name__, i18n('password')))
         return xml
 
-    #to indicate if this is a universal resolver
+    @classmethod
     def isUniversal(self):
         return True

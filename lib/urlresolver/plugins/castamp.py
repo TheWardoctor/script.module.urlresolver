@@ -1,6 +1,5 @@
 """
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
+    urlresolver Kodi Addon
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,23 +17,16 @@
 import random
 import re
 import math
-from t0mm0.common.net import Net
-from urlresolver.plugnplay.interfaces import UrlResolver
-from urlresolver.plugnplay.interfaces import PluginSettings
-from urlresolver.plugnplay import Plugin
 from urlresolver import common
+from urlresolver.resolver import UrlResolver, ResolverError
 
-
-class CastampResolver(Plugin, UrlResolver, PluginSettings):
-    implements = [UrlResolver, PluginSettings]
+class CastampResolver(UrlResolver):
     name = "castamp"
-    domains = [ "castamp.com" ]
+    domains = ["castamp.com"]
+    pattern = '(?://|\.)(castamp\.com)/embed\.php\?c=(.*?)&'
 
     def __init__(self):
-        p = self.get_setting('priority') or 100
-        self.priority = int(p)
-        self.net = Net()
-        self.pattern =  r"""(http://(?:www\.|)castamp\.com)/embed\.php\?c=(.*?)&"""
+        self.net = common.Net()
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
@@ -44,15 +36,15 @@ class CastampResolver(Plugin, UrlResolver, PluginSettings):
         flashplayer = ""
         file = ""
 
-        common.addon.log("*******************************************")
-        common.addon.log("web_url: " + web_url)
+        common.logger.log("*******************************************")
+        common.logger.log("web_url: " + web_url)
 
         pattern_flashplayer = r"""'flashplayer': \"(.*?)\""""
         r = re.search(pattern_flashplayer, html)
         if r:
             flashplayer = r.group(1)
 
-        pattern_streamer  = r"""'streamer': '(.*?)'"""
+        pattern_streamer = r"""'streamer': '(.*?)'"""
         r = re.search(pattern_streamer, html)
         if r:
             streamer = r.group(1)
@@ -71,18 +63,8 @@ class CastampResolver(Plugin, UrlResolver, PluginSettings):
         chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"
         string_length = 8
         randomstring = ''
-        for x in range(0, string_length):
+        for _x in range(0, string_length):
             rnum = int(math.floor(random.random() * len(chars)))
-            randomstring += chars[rnum:rnum+1]
+            randomstring += chars[rnum:rnum + 1]
         domainsa = randomstring
         return 'http://www.castamp.com/embed.php?c=%s&tk=%s' % (media_id, domainsa)
-
-    def get_host_and_id(self, url):
-        r = re.search(self.pattern, url)
-        if r:
-            return r.groups()
-        else:
-            return False
-
-    def valid_url(self, url, host):
-        return re.match(self.pattern, url)

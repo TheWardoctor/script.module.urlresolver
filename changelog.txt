@@ -1,3 +1,10 @@
+CREDITS: tknorris, lambda, t0mm0, Bstrdsmkr, Eldorado, jsergio
+
+[B]v4.0.00(Friday, 28 July 2017):[/B]
+- New Resolvers
+- Lots of Fixes
+- New TVADDONS.CO Site
+
 [B]Version 2.10.0[/B]
 - Code Base Changes:
     - Removed dependency in addon.xml for Youtube, Gotham users would not be able to install as official youtube addon only exists in Helix+ repo
